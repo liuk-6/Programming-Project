@@ -1,4 +1,10 @@
-Team members: Sophie, Diya, Sebastian, Nicolas, Sam and Katie
+Team members: 
+- Sophie
+- Diya
+- Sebastian
+- Nicolas
+- Sam
+- Katie
 
 Project Outline:
 
