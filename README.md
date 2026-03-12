@@ -1,10 +1,10 @@
 # Team members: 
-- Sophie
-- Diya
-- Sebastian
-- Nicolas
-- Sam
-- Katie
+- Sophie Flannery Leclerc 
+- Diya Reddy Sama 
+- Sebastian Aleman
+- Nicolas 
+- Sam Cumani 
+- Katie Liu
 
 # Project Outline:
 
