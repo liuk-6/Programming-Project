@@ -1,4 +1,4 @@
-Team members: 
+# Team members: 
 - Sophie
 - Diya
 - Sebastian
@@ -6,7 +6,7 @@ Team members:
 - Sam
 - Katie
 
-Project Outline:
+# Project Outline:
 
 HomeScreen:
 - Buttons to open graphs, map, etc
