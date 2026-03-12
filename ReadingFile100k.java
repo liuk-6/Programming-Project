@@ -1,7 +1,7 @@
 import java.io.File;
 import java.util.Scanner;
 
-class flights10k{
+class flights100k{
 
     public static void main(String[] args) {
 
