@@ -1,7 +1,8 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-class GroupProject{
+class ReadingFile2k{
 
     public static void main(String[] args) {
 
@@ -16,7 +17,7 @@ class GroupProject{
 
             scanner.close();
 
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             System.out.println("Error reading file");
         }
     }
