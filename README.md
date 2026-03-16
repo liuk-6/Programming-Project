@@ -2,7 +2,7 @@
 - Sophie Flannery Leclerc 
 - Diya Reddy Sama 
 - Sebastian Aleman
-- Nicolas 
+- Nicolas Gutierrez Abrante
 - Sam Cumani 
 - Katie Liu
 
