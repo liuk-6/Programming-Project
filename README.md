@@ -34,8 +34,8 @@ Classes:
 2) Flight class (type, destination, arrival, distance, constructors and methods) --> Sebastian (member 2)
 3) Use data to create bar chart and pie chart --> Sophie (member 3)
 5) Use data to create interactive map --> Diya  (member 3)
-6) Create main user interface(buttons etc) --> Nicholas (membor 4)
+6) Create main user interface(buttons etc) --> Nicolas (membor 4)
 7) the screens for different graphs, maps   --> Katie(member 5)
-8) Diya and Sophoe --> member 6 intergartion thing??
-9) 
+8) Diya and Sophoe --> member 6 integrartion thing??
+   
 
