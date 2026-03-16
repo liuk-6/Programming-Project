@@ -41,7 +41,7 @@ Classes:
 2) Flight class (type, destination, arrival, distance, constructors and methods)  
 3) Use data to create bar chart --> Sophie
 4) Use data to create pie chart --> Katie
-5) Use data to create interactive map 
+5) Use data to create interactive map --> Diya
 6) Create main user interface(the screens for different graphs, maps)
 7) 
 
