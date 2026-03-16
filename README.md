@@ -27,13 +27,6 @@ Purpose of classes:
   - Queries
   - Screen
 
-Members jobs:
-- Diya - Interactive map
-- Sophie - Create visualisations / Graphs
-- Sam - Compile work together
-- Katie - Design
-- Nicky - Clean code
-- Sebastian -  Screens 
 
 
 Classes:
