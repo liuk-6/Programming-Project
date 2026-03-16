@@ -23,6 +23,24 @@ void setup() {
 
   // Start on first screen
   currentScreen = screen1;
+  //Create lines array
+  String[] lines;
+
+  // Load all lines from the file
+  lines = loadStrings("flights2k.csv");
+
+  if (lines == null) {
+    println("Error reading file");
+    exit();
+  }
+
+  // Print each line
+  for (int i = 0; i < lines.length; i++) {
+    println(lines[i]);
+  }
+
+  
+
 }
 
 
