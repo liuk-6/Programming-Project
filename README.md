@@ -23,7 +23,7 @@ Purpose of classes:
   - Flights
   - Main
   - Visualisation
-  - Data loader
+  - Data loader and cleaning
   - Queries
   - Screen
 
@@ -35,4 +35,13 @@ Members jobs:
 - Nicky - Clean code
 - Sebastian -  Screens 
 
+
+Classes:
+1) Load and clean files --> Sam
+2) Flight class (type, destination, arrival, distance, constructors and methods)  
+3) Use data to create bar chart --> Sophie
+4) Use data to create pie chart --> Katie
+5) Use data to create interactive map 
+6) Create main user interface(the screens for different graphs, maps)
+7) 
 
