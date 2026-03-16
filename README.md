@@ -28,11 +28,11 @@ Purpose of classes:
   - Screen
 
 Members jobs:
-	Diya - Interactive map
-	Sophie - Create visualisations / Graphs
-	Sam - Compile work together 
-	Katie - Design 
-	Nicky - Clean code 
-	Sebastian -  Screens 
+- Diya - Interactive map
+- Sophie - Create visualisations / Graphs
+- Sam - Compile work together
+- Katie - Design
+- Nicky - Clean code
+- Sebastian -  Screens 
 
 
