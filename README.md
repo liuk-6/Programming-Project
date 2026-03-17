@@ -36,5 +36,5 @@ Classes:
 5) Use data to create interactive map --> Diya  (member 3)
 6) Create main user interface(buttons etc) --> Nicolas (membor 4)
 7) the screens for different graphs, maps   --> Katie(member 5)
-8) member 6 - integration --> member 6   
+8) member 6 - integration --> Sebastian
 
