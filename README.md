@@ -6,6 +6,9 @@
 - Sam Cumani 
 - Katie Liu
 
+# How to run it:
+
+
 # Project Outline:
 
 HomeScreen:
