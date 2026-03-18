@@ -1,9 +1,16 @@
 Table table;
+Flight flight;
 
-class FlightsToArray
+void setup() 
 {
+  table = loadTable("flights2k.csv", "header");
   ArrayList<Flight> flights = new ArrayList<Flight>();
+  for (int row = 0; row < table.getRowCount(); row++)
+  {
+    flights.add(new Flight(row));
+  }
 }
+
 
 class Flight
 {
@@ -22,13 +29,21 @@ class Flight
   boolean diverted;
   int distance;
   
-  Flight(int row)
+  Flight(int rowIndex)
   {
-    int rowIndex = row;
-  }
-  
-  void setup()
-  {
-    table = loadTable("flights2k.csv");
+    date = table.getRow(rowIndex).getString("FL_DATE");
+    carrier = table.getRow(rowIndex).getString("MKT_CARRIER");
+    flightNumber = table.getRow(rowIndex).getInt("MKT_CARRIER_FL_NUM");
+    origin = table.getRow(rowIndex).getString("ORIGIN");
+    originCityName = table.getRow(rowIndex).getString("ORIGIN_CITY_NAME");
+    destination = table.getRow(rowIndex).getString("DEST");
+    destinationCityName = table.getRow(rowIndex).getString("DEST_CITY_NAME");
+    scheduledDepartureTime = table.getRow(rowIndex).getInt("CRS_DEP_TIME");
+    actualDepartureTime = table.getRow(rowIndex).getInt("DEP_TIME");
+    scheduledArrivalTime = table.getRow(rowIndex).getInt("CRS_ARR_TIME");
+    actualArrivalTime = table.getRow(rowIndex).getInt("ARR_TIME");
+    cancelled = (table.getRow(rowIndex).getInt("CANCELLED") == 1) ? true : false;
+    diverted = (table.getRow(rowIndex).getInt("DIVERTED") == 1) ? true : false;
+    distance = table.getRow(rowIndex).getInt("DISTANCE");
   }
 }
