@@ -1,31 +1,24 @@
-class Screen{
+class Screen {
   ArrayList<Widget> widgets = new ArrayList<Widget>();
-  color bg;
-
-  Screen(color bg) {
-    this.bg = bg;
-  }
-
-  void addWidget(Widget w) {
-    widgets.add(w);
-  }
 
   void draw() {
-    background(bg);
+    drawBackground();
     for (Widget w : widgets) {
       w.draw();
     }
   }
 
-  Widget getEvent(int mx, int my) {
-    for (Widget w : widgets) {
-      if (w.isInside(mx, my)) return w;
-    }
-    return null;
-  } 
-  void updateHover(int mx, int my){
-    for (Widget w : widgets) {
-      w.hover = w.isInside(mx, my);
-    }
+  void drawBackground() {
+    background(100); // default
   }
+
+  void mousePressed() {
+    for (Widget w : widgets) w.mousePressed();
+  }
+
+  void mouseMoved() {
+    for (Widget w : widgets) w.mouseMoved();
+  }
+
+  void keyPressed(char k) {}
 }
