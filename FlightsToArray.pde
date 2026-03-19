@@ -1,17 +1,3 @@
-Table table;
-Flight flight;
-
-void setup() 
-{
-  table = loadTable("flights2k.csv", "header");
-  ArrayList<Flight> flights = new ArrayList<Flight>();
-  for (int row = 0; row < table.getRowCount(); row++)
-  {
-    flights.add(new Flight(row));
-  }
-}
-
-
 class Flight
 {
   String date;
