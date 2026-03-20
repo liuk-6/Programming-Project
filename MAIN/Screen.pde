@@ -27,10 +27,10 @@ class HomeScreen extends Screen{
   HomeScreen(){
   int buttonW = 180;
   int buttonH = 50;
-  int yPos = SCREENY - buttonH - 60; // 20 px padding from bottom
-  float x1 = SCREENX * 1/4.0 - buttonW/2;  // 1st button
-  float x2 = SCREENX * 2/4.0 - buttonW/2;  // 2nd button (middle)
-  float x3 = SCREENX * 3/4.0 - buttonW/2;  // 3rd button
+  int yPos = height - buttonH - 60; // 20 px padding from bottom
+  float x1 = width * 1/4.0 - buttonW/2;  // 1st button
+  float x2 = width * 2/4.0 - buttonW/2;  // 2nd button (middle)
+  float x3 = width * 3/4.0 - buttonW/2;  // 3rd button
   buttons.add(new Button(x1, yPos, buttonW, buttonH, "Queries", "queries"));
   buttons.add(new Button(x2, yPos, buttonW, buttonH, "Flights", "flights"));
   buttons.add(new Button(x3, yPos, buttonW, buttonH, "Data", "data"));
@@ -75,8 +75,8 @@ class QueriesScreen extends Screen {
     // Add back button at bottom center
     int buttonW = 180;
     int buttonH = 50;
-    int x = SCREENX/2 - buttonW/2;
-    int y = SCREENY - buttonH - 40; // 40 px padding from bottom
+    int x = 50;
+    int y = 50;
     buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
   }
 
@@ -93,8 +93,8 @@ class FlightsScreen extends Screen {
   FlightsScreen() {
     int buttonW = 180;
     int buttonH = 50;
-    int x = SCREENX/2 - buttonW/2;
-    int y = SCREENY - buttonH - 40;
+    int x = 50;
+    int y = 50;
     buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
   }
 
@@ -109,10 +109,11 @@ class FlightsScreen extends Screen {
 class DataScreen extends Screen {
 
   DataScreen() {
+    
     int buttonW = 180;
     int buttonH = 50;
-    int x = SCREENX/2 - buttonW/2;
-    int y = SCREENY - buttonH - 40;
+    int x = 50;
+    int y = 50;
     buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
   }
 
