@@ -4,7 +4,7 @@ int home = 1;
 int queries =2;
 int flights = 3;
 int data = 4;
-
+int exit = 5;
 int currentScreen = home; 
 //homeScreen = 1; queriesScreen = 2; flightScreen =3; dataScreen =4;
 
@@ -86,8 +86,8 @@ void mousePressed() {
 
   else if (currentScreen == data)
     dataScreen.mousePressed();
-    
-  
+  else if (currentScreen == exit)
+    exit();    
 }
 
 

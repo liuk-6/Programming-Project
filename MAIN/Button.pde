@@ -38,6 +38,7 @@ class Button {
       if (type.equals("flights")) currentScreen = flights;
       if (type.equals("data"))currentScreen =data;
       if (type.equals("back")) currentScreen =home;
+      if (type.equals("exit")) currentScreen = exit;
     }
 
   }
@@ -65,26 +66,5 @@ class TextEntryButton extends Button{
       label = label +str(s);
     }
   
-  }
-  
-  
-
-}
-class TextButton extends Button{
-  int maxlen;
-  
-  TextButton(float x, float y, float w, float h, String label, String type, int mlen){
-    super(x,y,w,h,label,type);
-    this.maxlen = mlen;
-  }
-  
-  void append(char s){
-    if(s==BACKSPACE){
-      if(!label.equals("")){
-        label = label.substring(0, label.length()-1);
-      }
-    }
-    else if(label.length() < maxlen){
-      label = label + str(s);
   }
 }

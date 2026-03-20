@@ -34,6 +34,7 @@ class HomeScreen extends Screen{
   buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries"));
   buttons.add(new Button(x2, yPos, buttonW, buttonH, "FLIGHTS", "flights"));
   buttons.add(new Button(x3, yPos, buttonW, buttonH, "DATA", "data"));
+  buttons.add(new Button(50, 50, 180, 50, "EXIT", "exit"));
   
   
   }
@@ -82,7 +83,7 @@ class QueriesScreen extends Screen {
     int xq = width/2 -queryW/2;
     int yq = height/4;
     buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
-    buttons.add(new TextButton(xq,yq, queryW, queryH, "Enter query", "enter"));
+    buttons.add(new TextEntryButton(xq,yq, queryW, queryH, "Enter query", "enter", 15));
   }
 
   void drawBackground() {
