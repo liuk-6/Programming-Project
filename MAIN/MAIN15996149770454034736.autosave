@@ -4,7 +4,7 @@ int home = 1;
 int queries =2;
 int flights = 3;
 int data = 4;
-int exit = 5;
+
 int currentScreen = home; 
 //homeScreen = 1; queriesScreen = 2; flightScreen =3; dataScreen =4;
 
@@ -19,7 +19,6 @@ Flight flight;
 // Home Screen
 PImage planeHomeScreen;
 HomeScreen homeScreen;
-Screen current;
 
 QueriesScreen queriesScreen;
 FlightsScreen flightsScreen;
@@ -52,41 +51,31 @@ void setup() {
   flightsScreen = new FlightsScreen();
   dataScreen = new DataScreen();
   // Home Screen
-  planeHomeScreen = loadImage("PlaneImg.jpg");
+  planeHomeScreen = loadImage("PlaneImg.png");
   homeScreen = new HomeScreen();
-  current = homeScreen;
-
 }
 
 void draw() {
 
   // Draw screen buttons
-  if (currentScreen == home){
-    current=homeScreen;
+  if (currentScreen == home)
     homeScreen.draw();
-  }
 
-  else if (currentScreen == queries){
-    current = queriesScreen;
+  else if (currentScreen == queries)
     queriesScreen.draw();
-  }
 
-  else if (currentScreen == flights){
-    current = flightsScreen;
+  else if (currentScreen == flights)
     flightsScreen.draw();
-  }
 
-  else if (currentScreen == data){
-    current = dataScreen;
+  else if (currentScreen == data)
     dataScreen.draw();
-  }
+
 }
 
 
 // Mouse interaction
 void mousePressed() {
   if (currentScreen == home)
-    
     homeScreen.mousePressed();
 
   else if (currentScreen == queries)
@@ -97,8 +86,8 @@ void mousePressed() {
 
   else if (currentScreen == data)
     dataScreen.mousePressed();
-  else if (currentScreen == exit)
-    exit();    
+    
+  
 }
 
 
@@ -107,10 +96,11 @@ void mouseMoved() {
 
 // Key interaction
 void keyPressed() {
-  
-  if(current!=null){
-    if(keyCode==SHIFT) return;
-    
-    current.keyPressed(key);
-  }
+
+
+
+
+
+
+
 }

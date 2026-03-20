@@ -23,18 +23,17 @@ class Screen {
   void keyPressed(char k) {} //Optional if a feature is to be added
 }
 class HomeScreen extends Screen{
-
+  
   HomeScreen(){
-  int buttonW = 280;
+  int buttonW = 180;
   int buttonH = 50;
-  int yPos = height/2 - buttonH; // 20 px padding from bottom
+  int yPos = height - buttonH - 60; // 20 px padding from bottom
   float x1 = width * 1/4.0 - buttonW/2;  // 1st button
   float x2 = width * 2/4.0 - buttonW/2;  // 2nd button (middle)
   float x3 = width * 3/4.0 - buttonW/2;  // 3rd button
   buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries"));
   buttons.add(new Button(x2, yPos, buttonW, buttonH, "FLIGHTS", "flights"));
   buttons.add(new Button(x3, yPos, buttonW, buttonH, "DATA", "data"));
-  buttons.add(new Button(50, 50, 180, 50, "EXIT", "exit"));
   
   
   }
@@ -71,9 +70,6 @@ class HomeScreen extends Screen{
    }
 }
 class QueriesScreen extends Screen {
-  TextEntryButton inputButton;
-  TextEntryButton inputButton2;
-  boolean typingFirst = true;
 
   QueriesScreen() {
     // Add back button at bottom center
@@ -81,16 +77,12 @@ class QueriesScreen extends Screen {
     int buttonH = 50;
     int x = 50;
     int y = 50;
-    int queryW = width/4;
+    int queryW = width/2;
     int queryH = 50;
-    int xq = width/4 -queryW/2 +150;
-    int xq2 = width*3/4 -queryW/2 -150;
+    int xq = width/2 -queryW/2;
     int yq = height/4;
     buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15);
-    buttons.add(inputButton);
-    buttons.add(inputButton2);
+    buttons.add(new TextEntryButton(xq,yq, queryW, queryH, "Enter query", "enter",15));
   }
 
   void drawBackground() {
@@ -98,32 +90,7 @@ class QueriesScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--QUERIES--", width/2, 80);
-  }
-  void keyPressed(char k) {
-  if (typingFirst)
-    inputButton.addChar(k);
-  else
-    inputButton2.addChar(k);
-  }
-  
-  void mousePressed() {
-
-  // check first box
-  if (mouseX > inputButton.x && mouseX < inputButton.x + inputButton.w &&
-      mouseY > inputButton.y && mouseY < inputButton.y + inputButton.h) {
-    typingFirst = true;
-  }
-
-  // check second box
-  if (mouseX > inputButton2.x && mouseX < inputButton2.x + inputButton2.w &&
-      mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
-    typingFirst = false;
-  }
-
-  // keep normal button behaviour
-  for (Button b : buttons) b.click();
-  
+    text("Queries Screen", width/2, 80);
   }
 }
 class FlightsScreen extends Screen {
@@ -141,7 +108,7 @@ class FlightsScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--FLIGHTS--", width/2, 80);
+    text("Flights Screen", width/2, 80);
   }
 }
 class DataScreen extends Screen {
@@ -160,6 +127,6 @@ class DataScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--DATA--", width/2, 80);
+    text("Data Screen", width/2, 80);
   }
 }
