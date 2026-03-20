@@ -31,9 +31,9 @@ class HomeScreen extends Screen{
   float x1 = width * 1/4.0 - buttonW/2;  // 1st button
   float x2 = width * 2/4.0 - buttonW/2;  // 2nd button (middle)
   float x3 = width * 3/4.0 - buttonW/2;  // 3rd button
-  buttons.add(new Button(x1, yPos, buttonW, buttonH, "Queries", "queries"));
-  buttons.add(new Button(x2, yPos, buttonW, buttonH, "Flights", "flights"));
-  buttons.add(new Button(x3, yPos, buttonW, buttonH, "Data", "data"));
+  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries"));
+  buttons.add(new Button(x2, yPos, buttonW, buttonH, "FLIGHTS", "flights"));
+  buttons.add(new Button(x3, yPos, buttonW, buttonH, "DATA", "data"));
   
   
   }
@@ -77,7 +77,12 @@ class QueriesScreen extends Screen {
     int buttonH = 50;
     int x = 50;
     int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
+    int queryW = width/2;
+    int queryH = 50;
+    int xq = width/2 -queryW/2;
+    int yq = height/4;
+    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
+    buttons.add(new TextButton(xq,yq, queryW, queryH, "Enter query", "enter"));
   }
 
   void drawBackground() {
@@ -95,7 +100,7 @@ class FlightsScreen extends Screen {
     int buttonH = 50;
     int x = 50;
     int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
+    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
   }
 
   void drawBackground() {
@@ -114,7 +119,7 @@ class DataScreen extends Screen {
     int buttonH = 50;
     int x = 50;
     int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "Back", "back"));
+    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
   }
 
   void drawBackground() {

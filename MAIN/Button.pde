@@ -46,3 +46,45 @@ class Button {
     return mx > x && mx < x + w && my > y && my < y + h;
   }
 }
+class TextEntryButton extends Button{
+  int maxlen;
+  
+  TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars){
+    super(x,y,w,h,label,type);
+    this.maxlen = maxChars;
+    
+  }
+  
+  void addChar(char s){
+    if(s==BACKSPACE){
+      if(!label.equals("")){
+        label = label.substring(0,label.length()-1);
+      }
+    }
+    else if (label.length()<maxlen){
+      label = label +str(s);
+    }
+  
+  }
+  
+  
+
+}
+class TextButton extends Button{
+  int maxlen;
+  
+  TextButton(float x, float y, float w, float h, String label, String type, int mlen){
+    super(x,y,w,h,label,type);
+    this.maxlen = mlen;
+  }
+  
+  void append(char s){
+    if(s==BACKSPACE){
+      if(!label.equals("")){
+        label = label.substring(0, label.length()-1);
+      }
+    }
+    else if(label.length() < maxlen){
+      label = label + str(s);
+  }
+}

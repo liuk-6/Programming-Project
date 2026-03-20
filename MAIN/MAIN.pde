@@ -4,6 +4,7 @@ int home = 1;
 int queries =2;
 int flights = 3;
 int data = 4;
+
 int currentScreen = home; 
 //homeScreen = 1; queriesScreen = 2; flightScreen =3; dataScreen =4;
 
@@ -19,15 +20,15 @@ Flight flight;
 PImage planeHomeScreen;
 HomeScreen homeScreen;
 
-QueriesScreen queriesScreen = new QueriesScreen();
-FlightsScreen flightsScreen = new FlightsScreen();
-DataScreen dataScreen = new DataScreen();
+QueriesScreen queriesScreen;
+FlightsScreen flightsScreen;
+DataScreen dataScreen;
 
 /////////////////////////////////////////////
 
 /////////////////////////////////////////////
 void setup() {
-  size(800, 600);
+  fullScreen();
   textSize(18);
 
   // Load CSV
@@ -45,14 +46,16 @@ void setup() {
   {
     flights.add(new Flight(row));
   }
-  
+  // Screens setup
+  queriesScreen = new QueriesScreen();
+  flightsScreen = new FlightsScreen();
+  dataScreen = new DataScreen();
   // Home Screen
   planeHomeScreen = loadImage("PlaneImg.png");
   homeScreen = new HomeScreen();
 }
 
 void draw() {
-
 
   // Draw screen buttons
   if (currentScreen == home)
@@ -83,6 +86,8 @@ void mousePressed() {
 
   else if (currentScreen == data)
     dataScreen.mousePressed();
+    
+  
 }
 
 
