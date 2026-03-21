@@ -11,6 +11,10 @@ int currentScreen = home;
 // User selection for queries
 UserSelection selection;
 
+// Displaying flights data
+Table myData;
+TableDisplay myFlights;
+
 //SCREEN DIMENSIONS
 int SCREENX = 800;
 int SCREENY = 600;
@@ -61,7 +65,26 @@ void setup() {
   
   // User selection definition
   selection = new UserSelection("","");
+  
+  myData = new Table();
+  
+  //Setting table with columns
+  myData.addColumn("Flight ID");
+  myData.addColumn("Origin");
+  myData.addColumn("Departure");
+  myData.addColumn("Arrival");
+  myData.addColumn("Destination");
+  
+  // Adding data
+  TableRow row1 = myData.addRow();
+  row1.setString("Flight ID","09876");
+  row1.setString("Origin","Dublin");
+  row1.setString("Departure","05:50");
+  row1.setString("Arrival","10:20");
+  row1.setString("Destination","Tenerife");
 
+  // Initializing the actual table
+  myFlights = new TableDisplay(myData, 150, 200);
 }
 
 void draw() {

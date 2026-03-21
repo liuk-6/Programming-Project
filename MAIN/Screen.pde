@@ -25,14 +25,12 @@ class Screen {
 class HomeScreen extends Screen{
 
   HomeScreen(){
-  int buttonW = 280;
+  int buttonW = 280*2;
   int buttonH = 50;
   int yPos = height/2 - buttonH; // 20 px padding from bottom
   float x1 = width * 1/4.0 - buttonW/2;  // 1st button
-  float x2 = width * 2/4.0 - buttonW/2;  // 2nd button (middle)
-  float x3 = width * 3/4.0 - buttonW/2;  // 3rd button
+  float x3 = width * 3/4.0 - buttonW/2;  // 2nd button
   buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries"));
-  buttons.add(new Button(x2, yPos, buttonW, buttonH, "FLIGHTS", "flights"));
   buttons.add(new Button(x3, yPos, buttonW, buttonH, "DATA", "data"));
   buttons.add(new Button(50, 50, 180, 50, "EXIT", "exit"));
   
@@ -86,7 +84,10 @@ class QueriesScreen extends Screen {
     int xq = width/4 -queryW/2 +150;
     int xq2 = width*3/4 -queryW/2 -150;
     int yq = height/4;
+    int xs = xq2 + queryW +50;
+    
     buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
+    buttons.add(new Button(xs, yq, buttonW, buttonH, "Search", "flights"));
     inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15);
     inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15);
     buttons.add(inputButton);
@@ -151,7 +152,14 @@ class FlightsScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--FLIGHTS--", width/2, 80);
+    text("--FLIGHTS FOUND--", width/2, 80);
+  }
+  void draw() {
+    drawBackground();
+    for (Button b : buttons) {
+      b.display();
+    }
+    myFlights.display();
   }
 }
 class DataScreen extends Screen {
