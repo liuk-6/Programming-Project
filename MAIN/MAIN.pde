@@ -8,6 +8,9 @@ int exit = 5;
 int currentScreen = home; 
 //homeScreen = 1; queriesScreen = 2; flightScreen =3; dataScreen =4;
 
+// User selection for queries
+UserSelection selection;
+
 //SCREEN DIMENSIONS
 int SCREENX = 800;
 int SCREENY = 600;
@@ -55,6 +58,9 @@ void setup() {
   planeHomeScreen = loadImage("PlaneImg.jpg");
   homeScreen = new HomeScreen();
   current = homeScreen;
+  
+  // User selection definition
+  selection = new UserSelection("","");
 
 }
 
@@ -110,6 +116,7 @@ void keyPressed() {
   
   if(current!=null){
     if(keyCode==SHIFT) return;
+    
     
     current.keyPressed(key);
   }

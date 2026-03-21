@@ -102,9 +102,19 @@ class QueriesScreen extends Screen {
   }
   void keyPressed(char k) {
   if (typingFirst)
-    inputButton.addChar(k);
+    if(keyCode==ENTER){
+      selection.origin = inputButton.label;
+      println(selection.origin);
+    }else{
+          inputButton.addChar(k);
+    } 
   else
-    inputButton2.addChar(k);
+    if(keyCode==ENTER){
+      selection.destination = inputButton2.label;
+      println(selection.destination);
+    }else{
+          inputButton2.addChar(k);
+    } 
   }
   
   void mousePressed() {
