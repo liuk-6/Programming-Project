@@ -32,8 +32,28 @@ QueriesScreen queriesScreen;
 FlightsScreen flightsScreen;
 DataScreen dataScreen;
 
-/////////////////////////////////////////////
+//////////////////////METHODS///////////////////////
+void addFlightsToTable(ArrayList<Flight> flightsList) {
 
+  // remove existing rows (optional but recommended)
+  myData.clearRows();
+
+  for (Flight f : flightsList) {
+
+    TableRow row = myData.addRow();
+    
+    row.setString("Flight ID", str(f.flightNumber));
+    row.setString("Origin", f.origin);
+    row.setString("Departure", formatTime(f.scheduledDepartureTime));
+    row.setString("Arrival", formatTime(f.scheduledArrivalTime));
+    row.setString("Destination", f.destination);
+  }
+}
+String formatTime(int time) {
+
+  String t = nf(time, 4); // forces 4 digits
+  return t.substring(0,2) + ":" + t.substring(2,4);
+}
 /////////////////////////////////////////////
 void setup() {
   fullScreen();
@@ -54,6 +74,10 @@ void setup() {
   {
     flights.add(new Flight(row));
   }
+  // 
+  ArrayList<Flight> flightsList = new ArrayList<Flight>();
+
+  
   // Screens setup
   queriesScreen = new QueriesScreen();
   flightsScreen = new FlightsScreen();
@@ -76,6 +100,7 @@ void setup() {
   myData.addColumn("Destination");
   
   // Adding data
+  addFlightsToTable(flights);
   TableRow row1 = myData.addRow();
   row1.setString("Flight ID","09876");
   row1.setString("Origin","Dublin");
