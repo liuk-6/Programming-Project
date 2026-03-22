@@ -7,12 +7,17 @@
 - Katie Liu
 
 # How to run it:
-
+1. On the home screen decide whether you want to query about a flight or see data about the airport
+2. If its a query, type the queries button
+2.1 Now in queries screen type in origin and destination and press enter on both and search by clicking search
+2.2 Now you will see a table with the first 5 flights
+3. If its data, type data button
+3.1 
 
 # Project Outline:
 
 HomeScreen:
-- Buttons to open graphs, map, etc
+- Buttons to open queries or data screens
 - Intro
 
 Graphs:
