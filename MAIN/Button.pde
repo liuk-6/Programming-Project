@@ -35,7 +35,10 @@ class Button {
       println("Clicked "+type);
       // Decide what to do based on the button type
       if (type.equals("queries")) currentScreen = queries;
-      if (type.equals("flights")) currentScreen = flights;
+      if (type.equals("flights")) {
+        searchFlight();
+        currentScreen = flights;
+      }
       if (type.equals("data"))currentScreen =data;
       if (type.equals("back")) currentScreen =home;
       if (type.equals("exit")) currentScreen = exit;
