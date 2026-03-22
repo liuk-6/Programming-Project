@@ -1,3 +1,5 @@
+import java.util.Collections;
+import java.util.Comparator;
 ///////////// CONSTANT VALUES////////////////
 String[] lines;
 int home = 1;
@@ -9,7 +11,6 @@ int currentScreen = home;
 
 
 UserSelection selection;
-
 
 Table myData;
 TableDisplay myFlights;
@@ -31,9 +32,10 @@ QueriesScreen queriesScreen;
 FlightsScreen flightsScreen;
 DataScreen dataScreen;
 
-ArrayList<Flight> flightsList;
-ArrayList<UserSelection> searchHistory;
-ArrayList<Flight> results;
+ArrayList<Flight> flightsList;  //list where all the flights are stored
+ArrayList<UserSelection> searchHistory; // input
+ArrayList<Flight> results; //if flights found they will be stored in result
+String flightsFound ="";
 
 //////////////////////METHODS///////////////////////
 void addFlightsToTable(ArrayList<Flight> list) {
@@ -61,15 +63,18 @@ void searchFlight() {
       results.add(f);
     }
   }
+  Collections.sort(results, new Comparator<Flight>(){
+    public int compare(Flight a, Flight b){
+      return a.scheduledDepartureTime - b.scheduledDepartureTime;
+    }
+  });
   ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
   int count = min(5, results.size());
   for (int i = 0; i < count; i++) {
-    int randomIndex = (int)random(results.size());
-    fiveFlights.add(results.get(randomIndex));
-    results.remove(randomIndex);
+    fiveFlights.add(results.get(i));
   }
   addFlightsToTable(fiveFlights);
-  println(fiveFlights.size() + " flights found");
+  flightsFound = " flights found: "+ results.size();
 }
 /////////////////////////////////////////////
 
