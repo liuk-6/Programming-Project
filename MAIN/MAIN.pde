@@ -9,16 +9,13 @@ int graphs = 4;
 int exit = 5;
 int currentScreen = home;
 
-
 UserSelection selection;
 
 Table myData;
 TableDisplay myFlights;
 
-
 int SCREENX = 800;
 int SCREENY = 600;
-
 
 Table table;
 Flight flight;
@@ -29,6 +26,8 @@ HomeScreen homeScreen;
 Screen current;
 PImage planeHomeScreen;
 PImage SearchButton;
+PImage sunset;
+PImage arrow;
 
 QueriesScreen queriesScreen;
 FlightsScreen flightsScreen;
@@ -71,7 +70,7 @@ void searchFlight() {
     }
   });
   ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
-  int count = min(5, results.size());
+  int count = min(8, results.size());
   for (int i = 0; i < count; i++) {
     fiveFlights.add(results.get(i));
   }
@@ -112,6 +111,8 @@ void setup() {
   backgroundImg = loadImage("BackgroundImg.jpg");
   planeHomeScreen = loadImage("PlaneImg.png");
   SearchButton = loadImage("SearchButton.png");
+  arrow = loadImage("Arrow.png");
+  sunset = loadImage("Sunset.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 
@@ -128,7 +129,7 @@ void setup() {
 
   addFlightsToTable(flightsList);
 
-  myFlights = new TableDisplay(myData, 150, 200);
+  myFlights = new TableDisplay(myData, 50, 150);
 }
 
 void draw() {

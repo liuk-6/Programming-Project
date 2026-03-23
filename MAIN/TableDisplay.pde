@@ -9,10 +9,10 @@ class TableDisplay {
     this.x = x;
     this.y = y;
   }
-
+ //|----|-------------1200------------|----|
   void display() {
     float rowHeight = 60;
-    float colWidth = 250;
+    float colWidth = 220;
     
     // Set global text alignment for the table
     textAlign(CENTER, CENTER); // This centers horizontally and vertically
