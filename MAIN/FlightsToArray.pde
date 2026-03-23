@@ -1,3 +1,5 @@
+// Flight class to store each flight from the flights.csv file
+// as an object to be stored in an arrayList
 class Flight
 {
   String date;
@@ -15,6 +17,7 @@ class Flight
   boolean diverted;
   int distance;
   
+  //assign only needed columns to variables through constructor
   Flight(int rowIndex)
   {
     date = table.getRow(rowIndex).getString("FL_DATE");
