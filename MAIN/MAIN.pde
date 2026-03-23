@@ -5,7 +5,7 @@ String[] lines;
 int home = 1;
 int queries = 2;
 int flights = 3;
-int data = 4;
+int graphs = 4;
 int exit = 5;
 int currentScreen = home;
 
@@ -24,13 +24,15 @@ Table table;
 Flight flight;
 
 // Home Screen
-PImage planeHomeScreen;
+PImage backgroundImg;
 HomeScreen homeScreen;
 Screen current;
+PImage planeHomeScreen;
+PImage SearchButton;
 
 QueriesScreen queriesScreen;
 FlightsScreen flightsScreen;
-DataScreen dataScreen;
+GraphsScreen graphsScreen;
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
 ArrayList<UserSelection> searchHistory; // input
@@ -79,7 +81,7 @@ void searchFlight() {
 /////////////////////////////////////////////
 
 void setup() {
-  fullScreen();
+  size(1200,700);
   textSize(18);
 
   // Load CSV
@@ -103,10 +105,13 @@ void setup() {
   // Screens setup
   queriesScreen = new QueriesScreen();
   flightsScreen = new FlightsScreen();
-  dataScreen = new DataScreen();
+  graphsScreen = new GraphsScreen();
 
   // Home Screen
   planeHomeScreen = loadImage("PlaneImg.jpg");
+  backgroundImg = loadImage("BackgroundImg.jpg");
+  planeHomeScreen = loadImage("PlaneImg.png");
+  SearchButton = loadImage("SearchButton.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 
@@ -136,9 +141,9 @@ void draw() {
   } else if (currentScreen == flights) {
     current = flightsScreen;
     flightsScreen.draw();
-  } else if (currentScreen == data) {
-    current = dataScreen;
-    dataScreen.draw();
+  } else if (currentScreen == graphs) {
+    current = graphsScreen;
+    graphsScreen.draw();
   }
 }
 
@@ -149,8 +154,8 @@ void mousePressed() {
     queriesScreen.mousePressed();
   else if (currentScreen == flights)
     flightsScreen.mousePressed();
-  else if (currentScreen == data)
-    dataScreen.mousePressed();
+  else if (currentScreen == graphs)
+    graphsScreen.mousePressed();
   else if (currentScreen == exit)
     exit();
 }

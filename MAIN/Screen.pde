@@ -25,33 +25,26 @@ class Screen {
 class HomeScreen extends Screen{
 
   HomeScreen(){
-  int buttonW = 280*2;
+  int buttonW = 80*2;
   int buttonH = 50;
   int yPos = height/2 - buttonH; // 20 px padding from bottom
-  float x1 = width * 1/4.0 - buttonW/2;  // 1st button
-  float x3 = width * 3/4.0 - buttonW/2;  // 2nd button
-  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries"));
-  buttons.add(new Button(x3, yPos, buttonW, buttonH, "DATA", "data"));
-  buttons.add(new Button(50, 50, 180, 50, "EXIT", "exit"));
+  float x1 = width * 3/8.0 - buttonW/2;  // 1st button
+  float x3 = width * 5/8.0 - buttonW/2;  // 2nd button
+  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
+  buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
+  buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
   
   
   }
   void draw() {
   drawBackground();   // draws the plane
+  fill(255);
+  textAlign(CENTER);
+  textSize(60);
+  text("F  L  I  G  H  T   S  C  A  N  N  E  R", width/2, height/3);
+  textSize(18);
+  text("Select a button to explore flight data", width/2, 150);
   for (Button b : buttons) b.display();  // draws buttons on top
-  }
-    //Card Size
-  void drawCard()  {
-    int cardX = 30;
-    int cardY = 30;
-    int cardW = width - 60;
-    int cardH = height - 60;
-    
-    fill(255);
-
-    stroke(0);
-    rect(cardX, cardY, cardW, cardH, 20);
-
   }
   
   void planeImage(int x, int y)  {
@@ -65,7 +58,29 @@ class HomeScreen extends Screen{
       
    }
    void drawBackground(){
-       image(planeHomeScreen, 0, 0, width, height);
+     image(backgroundImg, 0, 0, width, height);
+     
+     fill(69, 87, 107, 200);
+     rect(0, 0, width, height);
+     
+     // Rectangular Box
+     noStroke();
+     fill(196, 196, 196, 200);
+     rect(0, height * 0.75, width, height * 0.55);
+     
+     //Plane Shadow
+     noStroke();
+     fill(0, 70);
+     ellipse( width/2, height/1.95 + 200, 800, 80);
+     
+     //Line at top
+     fill(255, 50);
+     noStroke();
+     rect(0, 70, width, 2);
+     
+     imageMode(CENTER);
+     image(planeHomeScreen, width/2, height/1.5, width * 0.85, height*0.8);
+     imageMode(CORNER);
    }
 }
 class QueriesScreen extends Screen {
@@ -77,30 +92,48 @@ class QueriesScreen extends Screen {
     // Add back button at bottom center
     int buttonW = 180;
     int buttonH = 50;
-    int x = 50;
-    int y = 50;
+    int x = 30;
+    int y = 22;
     int queryW = width/4;
     int queryH = 50;
     int xq = width/4 -queryW/2 +150;
     int xq2 = width*3/4 -queryW/2 -150;
     int yq = height/4;
     int xs = xq2 + queryW +50;
-    
-    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
-    buttons.add(new Button(xs, yq, buttonW, buttonH, "Search", "flights"));
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15);
+
+    textAlign(CENTER);
+    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
+    textAlign(CORNER);
+    buttons.add(new Button(xs, yq, buttonW, buttonH, "Search", "flights", 20, false));
+    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15, 20, false);
+    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15, 20, false);
     buttons.add(inputButton);
     buttons.add(inputButton2);
   }
 
   void drawBackground() {
-    background(220, 240, 255);
+    background(206, 216, 222);
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--QUERIES--", width/2, 80);
+    text("--QUERIES--", width/2, 130);
+    
+    //Line at top
+     fill(255, 50);
+     noStroke();
+     rect(0, 70, width, 2);
+    
   }
+  
+  void draw(){
+    drawBackground();
+    
+    for(Button b : buttons){
+      b.display();
+    }
+    image(SearchButton, 1080.0, 192.0, 20.0, 20.0);
+  }
+
   void keyPressed(char k) {
   if (typingFirst)
     if(keyCode==ENTER){
@@ -142,9 +175,11 @@ class FlightsScreen extends Screen {
   FlightsScreen() {
     int buttonW = 180;
     int buttonH = 50;
-    int x = 50;
-    int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
+    int x = 30;
+    int y = 22;
+    textAlign(CENTER);
+    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
+    textAlign(CORNER);;
   }
 
   void drawBackground() {
@@ -166,22 +201,29 @@ class FlightsScreen extends Screen {
     myFlights.display();
   }
 }
-class DataScreen extends Screen {
+class GraphsScreen extends Screen {
 
-  DataScreen() {
+  GraphsScreen() {
     
     int buttonW = 180;
     int buttonH = 50;
-    int x = 50;
-    int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
+    int x = 30;
+    int y = 22;
+    textAlign(CENTER);
+    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
+    textAlign(CORNER);
   }
 
   void drawBackground() {
-    background(220, 255, 220);
+    background(209, 222, 218);
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--DATA--", width/2, 80);
+    text("--Graphs--", width/2, 130);
+    
+    //Line at top
+     fill(255, 50);
+     noStroke();
+     rect(0, 70, width, 2);
   }
 }
