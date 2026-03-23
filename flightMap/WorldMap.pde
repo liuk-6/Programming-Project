@@ -1,25 +1,50 @@
 class WorldMap {
-  PImage mapImg;
+  PShape mapShape;
+
+  // Use viewBox values
+  float svgMinX = 11.1;
+  float svgMinY = -2.5;
+  float svgWidth = 937.81;
+  float svgHeight = 545;
+
+  // Continental US bounds for lat/lon
+  float minLon = -125;
+  float maxLon = -66;
+  float minLat = 24;
+  float maxLat = 50;
 
   WorldMap(String filename) {
-    mapImg = loadImage(filename);
+    mapShape = loadShape(filename);
   }
 
   void display() {
-    image(mapImg, 0, 0, width, height);
+    float scale = min(width / svgWidth, height / svgHeight);
+
+    float drawW = svgWidth * scale;
+    float drawH = svgHeight * scale;
+
+    float offsetX = (width - drawW) / 2;
+    float offsetY = (height - drawH) / 2;
+
+    shape(mapShape, offsetX, offsetY, drawW, drawH);
   }
 
   PVector geoToScreen(float lat, float lon) {
+    // Map lon/lat to SVG coordinates
+    float x = map(lon, minLon, maxLon, svgMinX, svgMinX + svgWidth);
+    float y = map(lat, maxLat, minLat, svgMinY, svgMinY + svgHeight);
 
-    // USA bounds (approx)
-    float minLon = -173;
-    float maxLon = -66;
-    float minLat = 17;
-    float maxLat = 71;
+    // Scale to screen
+    float scale = min(width / svgWidth, height / svgHeight);
+    float drawW = svgWidth * scale;
+    float drawH = svgHeight * scale;
 
-    float x = map(lon, minLon, maxLon, 0, width);
-    float y = map(lat, maxLat, minLat, 0, height);
+    float offsetX = (width - drawW) / 2;
+    float offsetY = (height - drawH) / 2;
 
-    return new PVector(x, y);
+    return new PVector(
+      offsetX + (x - svgMinX) * scale,
+      offsetY + (y - svgMinY) * scale
+    );
   }
 }
