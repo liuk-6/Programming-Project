@@ -188,10 +188,6 @@ class FlightsScreen extends Screen {
     textSize(40);
     textAlign(CENTER, 80);
     text("--FLIGHTS FOUND--", width/2, 80);
-    textSize(20);
-    fill(0);
-    textAlign(LEFT, TOP);
-    text(flightsFound, 20, height - 40);
   }
   void draw() {
     drawBackground();
