@@ -85,6 +85,7 @@ class TextEntryButton extends Button{
   
   void addChar(char s){
     if(s==BACKSPACE){
+      if(label.equals("Enter origin")||label.equals("Enter destination")) label = "";
       if(!label.equals("")){
         label = label.substring(0,label.length()-1);
       }

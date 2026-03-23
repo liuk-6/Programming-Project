@@ -99,12 +99,12 @@ class QueriesScreen extends Screen {
     int xq = width/4 -queryW/2 +100;
     int xq2 = width*3/4 -queryW/2 -100;
     int yq = height/4;
-    int xs = xq2 + queryW +110 ;
+    int xs = xq2 + queryW;
 
     textAlign(CENTER);
     buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
     textAlign(CORNER);
-    buttons.add(new Button(xs, yq, 60, 50, "", "flights", 20, false));
+    buttons.add(new Button(xs+110, yq, 60, 50, "", "flights", 20, false));
     inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15, 20, false);
     inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15, 20, false);
     buttons.add(inputButton);
