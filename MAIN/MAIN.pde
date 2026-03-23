@@ -71,7 +71,7 @@ void searchFlight() {
     }
   });
   ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
-  int count = min(5, results.size());
+  int count = min(8, results.size());
   for (int i = 0; i < count; i++) {
     fiveFlights.add(results.get(i));
   }
@@ -128,7 +128,7 @@ void setup() {
 
   addFlightsToTable(flightsList);
 
-  myFlights = new TableDisplay(myData, 150, 200);
+  myFlights = new TableDisplay(myData, 50, 150);
 }
 
 void draw() {
