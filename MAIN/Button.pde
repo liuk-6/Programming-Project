@@ -42,6 +42,7 @@ class Button {
       if (type.equals("data"))currentScreen =data;
       if (type.equals("back")) currentScreen =home;
       if (type.equals("exit")) currentScreen = exit;
+      if (type.equals("backQ")) currentScreen = queries;
     }
 
   }

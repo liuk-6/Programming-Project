@@ -144,7 +144,7 @@ class FlightsScreen extends Screen {
     int buttonH = 50;
     int x = 50;
     int y = 50;
-    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "back"));
+    buttons.add(new Button(x, y, buttonW, buttonH, "BACK", "backQ"));
   }
 
   void drawBackground() {
@@ -153,10 +153,6 @@ class FlightsScreen extends Screen {
     textSize(40);
     textAlign(CENTER, 80);
     text("--FLIGHTS FOUND--", width/2, 80);
-    textSize(20);
-    fill(0);
-    textAlign(LEFT, TOP);
-    text(flightsFound, 20, height - 40);
   }
   void draw() {
     drawBackground();
