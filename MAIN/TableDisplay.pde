@@ -9,7 +9,7 @@ class TableDisplay {
     this.x = x;
     this.y = y;
   }
- //|----|-------------1200------------|----|
+//|----|-------------1200------------|----|
   void display() {
     float rowHeight = 60;
     float colWidth = 220;
