@@ -76,7 +76,7 @@ void searchFlight() {
     fiveFlights.add(results.get(i));
   }
   addFlightsToTable(fiveFlights);
-  flightsFound = " flights found: "+ results.size();
+  flightsFound = " Flights found: "+ results.size();
 }
 /////////////////////////////////////////////
 
