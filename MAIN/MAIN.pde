@@ -1,33 +1,36 @@
 import java.util.Collections;
 import java.util.Comparator;
-///////////// CONSTANT VALUES////////////////
+///////////// CONSTANT VALUES ////////////////
 String[] lines;
+
+/////////// MAIN SCREENS AT START ////////////////
 int home = 1;
 int queries = 2;
-int flights = 3;
-int graphs = 4;
-int exit = 5;
+int graphs = 3;
+int exit = 4;
 
-int flightDate = 7;
-int flightAirline = 8;
+////////// SECOND LAYER SCREENS ////////////////
+int flightsSearch = 5;
+int flightsDate = 6;
+int flightsTraffic = 7;
 
-int currentScreen = home;
+/////////THIRD LAYER - OUTPUT SCREENS ///////////
+int flightsOutput = 8;
+int dateOutput = 9;
+int trafficOutput = 10;
 
-
+//////// STROING CHOICE //////////////////////
+int currentScreen;
 UserSelection selection;
 
+////////DISPLAY TABLE FOOTPRINT ///////////
 Table myData;
 TableDisplay myFlights;
-
-
-int SCREENX = 800;
-int SCREENY = 600;
-
 
 Table table;
 Flight flight;
 
-// Home Screen
+///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
 HomeScreen homeScreen;
 Screen current;
@@ -38,16 +41,22 @@ QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
 
 QueriesDate flightDateScreen;
-QueriesAirline flightAirlineScreen;
+QueriesTraffic flightTrafficScreen;
+
+FlightsOutputScreen flightsOutputScreen;
+DatesOutputScreen datesOutputScreen;
+TrafficOutputScreen trafficOutputScreen;
 
 GraphsScreen graphsScreen;
+
+///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
 ArrayList<UserSelection> searchHistory; // input
 ArrayList<Flight> results; //if flights found they will be stored in result
 String flightsFound ="";
 
-//////////////////////METHODS///////////////////////
+//////////////////////METHODS/////////////////////////////////////////////////////
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
@@ -86,7 +95,13 @@ void searchFlight() {
   addFlightsToTable(fiveFlights);
   flightsFound = " Flights found: "+ results.size();
 }
-/////////////////////////////////////////////
+void searchFlightsDateRange(){
+
+}
+void searchBusiestRoutes(){
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   size(1200,700);
@@ -110,24 +125,32 @@ void setup() {
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
 
-  // Screens setup
+////////////////////Main Screens First Choice Setup/////////////
+  currentScreen = home;
   queriesScreen = new QueriesScreen();
-  flightsSearchScreen = new QueriesFlights();
   graphsScreen = new GraphsScreen();
-  flightDateScreen = new QueriesDate();
-  flightAirlineScreen  = new QueriesAirline();
 
-  // Home Screen
+///////////////////Second Choice Screens Setup/////////////////
+  flightsSearchScreen = new QueriesFlights();
+  flightDateScreen = new QueriesDate();
+  flightTrafficScreen  = new QueriesTraffic();
+  
+//////////////Defining output screens//////////////////////////
+  flightsOutputScreen = new FlightsOutputScreen();
+  datesOutputScreen = new DatesOutputScreen();
+  trafficOutputScreen = new TrafficOutputScreen();
+  
+//////////////// Home Screen//////////////////////////////////
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg = loadImage("BackgroundImg.jpg");
   SearchButton = loadImage("SearchButton.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 
-  // User selection
+///////////////User selection///////////////////////////////
   selection = new UserSelection("", "", "");
 
-  // Table setup
+///////////////Table setup////////////////////////////////
   myData = new Table();
   myData.addColumn("Flight ID");
   myData.addColumn("Date");
@@ -151,21 +174,33 @@ void draw() {
     current = queriesScreen;
     queriesScreen.draw();
 
-  } else if (currentScreen == flights) {
+  } else if (currentScreen == flightsSearch) {
     current = flightsSearchScreen;
     flightsSearchScreen.draw();
 
-  } else if (currentScreen == flightDate) {
+  } else if (currentScreen == flightsDate) {
     current = flightDateScreen;
     flightDateScreen.draw();
 
-  } else if (currentScreen == flightAirline) {
-    current = flightAirlineScreen;
-    flightAirlineScreen.draw();
+  } else if (currentScreen == flightsTraffic) {
+    current = flightTrafficScreen;
+    flightTrafficScreen.draw();
 
   } else if (currentScreen == graphs) {
     current = graphsScreen;
     graphsScreen.draw();
+  }
+  else if(currentScreen ==flightsOutput){
+    current = flightsOutputScreen;
+    flightsOutputScreen.draw();
+  }
+  else if(currentScreen ==dateOutput){
+    current = datesOutputScreen;
+    datesOutputScreen.draw();
+  }
+  else if(currentScreen ==trafficOutput){
+    current = trafficOutputScreen;
+    trafficOutputScreen.draw();
   }
 }
 
@@ -174,16 +209,22 @@ void mousePressed() {
     homeScreen.mousePressed();
   else if (currentScreen == queries)
     queriesScreen.mousePressed();
-  else if (currentScreen == flights)
+  else if (currentScreen == flightsSearch)
     flightsSearchScreen.mousePressed();
   else if (currentScreen == graphs)
     graphsScreen.mousePressed();
   else if (currentScreen == exit)
     exit();
-  else if(currentScreen == flightDate)
+  else if(currentScreen == flightsDate)
     flightDateScreen.mousePressed();
-  else if(currentScreen == flightAirline)
-    flightAirlineScreen.mousePressed();
+  else if(currentScreen == flightsTraffic)
+    flightTrafficScreen.mousePressed();
+  else if(currentScreen == flightsOutput)
+    flightsOutputScreen.mousePressed();
+   else if(currentScreen == dateOutput)
+    datesOutputScreen.mousePressed();
+   else if(currentScreen == trafficOutput)
+    trafficOutputScreen.mousePressed();
 }
 
 void mouseMoved() {

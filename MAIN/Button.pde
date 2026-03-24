@@ -53,28 +53,16 @@ class Button {
     text(label, x + w/2, y + h/2);
   }
   
-  void click() {
-    if (over(mouseX, mouseY)) {
-      println("Clicked "+type);
-      // Decide what to do based on the button type
-      if (type.equals("queries")) currentScreen = queries;
-      if(type.equals("dateQuery")) currentScreen = flightDate;
-      if(type.equals("airlineQuery")) currentScreen = flightAirline;
-      if (type.equals("flightQuery")) {
-        searchFlight();
-        currentScreen = flights;
-      }
-      if (type.equals("graphs"))currentScreen =graphs;
-      if (type.equals("back")) currentScreen =home;
-      if (type.equals("exit")) currentScreen = exit;
-      if (type.equals("backQ")) currentScreen = queries;
-    }
+  // ...existing fields...
 
+  boolean click() {
+    return over(mouseX, mouseY);
   }
   
   boolean over(float mx, float my) {
     return mx > x && mx < x + w && my > y && my < y + h;
   }
+
 }
 class TextEntryButton extends Button{
   int maxlen;
@@ -89,7 +77,7 @@ class TextEntryButton extends Button{
   
   void addChar(char s){
     if(s==BACKSPACE){
-      if(label.equals("Enter origin")||label.equals("Enter destination")||label.equals("Enter date")) label = "";
+      if(label.equals("Enter origin")||label.equals("Enter destination")||label.equals("Enter date")||label.equals("From: ")||label.equals("To: ")) label = "";
       if(!label.equals("")){
         label = label.substring(0,label.length()-1);
       }
