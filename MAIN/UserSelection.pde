@@ -1,12 +1,14 @@
 public class UserSelection{
   String destination;
   String origin;
-  String date;
+  String dateStart;
+  String dateEnd;
   
-  UserSelection(String origin, String destination, String date){
+  UserSelection(String origin, String destination, String dateStart, String dateEnd){
     this.destination = destination;
     this.origin = origin;
-    this.date = date;
+    this.dateStart = dateStart;
+    this.dateEnd = dateEnd;
   }
   
   

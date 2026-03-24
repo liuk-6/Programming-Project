@@ -219,7 +219,6 @@ class QueriesFlights extends Screen {
     int xq2 = xq+queryW;
     int yq = height/4;
     int xs = xq2 + queryW ;
-    int xq3 = xq;
     
 
     textAlign(CENTER);
@@ -228,13 +227,11 @@ class QueriesFlights extends Screen {
     
     buttons.add(new Button(xs, yq, 200, 50, "Search", "flightsOutput", 20, false));
     
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15, 20, false,2);
-    inputButton3 = new TextEntryButton(xq3, yq+buttonH+10, queryW, queryH, "Enter date", "enter", 15, 20, false,3);
+    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "", "enter", 15, 20, false, 1);
+    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "", "enter", 15, 20, false,2);
     
     buttons.add(inputButton);
     buttons.add(inputButton2);
-    buttons.add(inputButton3);
   }
 
   void drawBackground() {
@@ -242,7 +239,7 @@ class QueriesFlights extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--FLIGHT SEARCH--", width/2, 130);
+    text("--FLIGHT SEARCH--", width/2, 50);
     
     //Line at top
      fill(255, 50);
@@ -257,6 +254,10 @@ class QueriesFlights extends Screen {
     for(Button b : buttons){
       b.display();
     }
+    textSize(24);
+    fill(255);
+    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
+    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
     image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
   }
 
@@ -274,10 +275,7 @@ class QueriesFlights extends Screen {
       selection.destination = currentInput.label;
       println(selection.destination);
     }
-    else if (currentInput == inputButton3) {
-      selection.date = currentInput.label;
-      println(selection.date);
-    }
+    
 
   } else {
     currentInput.addChar(k);
@@ -326,7 +324,6 @@ class QueriesFlights extends Screen {
 class QueriesDate extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
-  TextEntryButton inputButton3;
   boolean typingFirst = true;
   TextEntryButton currentInput;
 
@@ -342,6 +339,7 @@ class QueriesDate extends Screen {
     int xq2 = xq+queryW;
     int yq = height/4;
     int xs = xq2 + queryW ;
+    
     
 
     textAlign(CENTER);
@@ -362,7 +360,9 @@ class QueriesDate extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--DATE SEARCH--", width/2, 130);
+    text("--DATE SEARCH--", width/2, 50);
+    
+    
     
     //Line at top
      fill(255, 50);
@@ -377,6 +377,10 @@ class QueriesDate extends Screen {
     for(Button b : buttons){
       b.display();
     }
+    textSize(24);
+    fill(255);
+    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
+    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
     image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
   }
 
@@ -387,17 +391,14 @@ class QueriesDate extends Screen {
   if (keyCode == ENTER) {
 
     if (currentInput == inputButton) {
-      selection.origin = currentInput.label;
-      println(selection.origin);
+      selection.dateStart = currentInput.label;
+      println(selection.dateStart);
     }
     else if (currentInput == inputButton2) {
-      selection.destination = currentInput.label;
-      println(selection.destination);
+      selection.dateEnd = currentInput.label;
+      println(selection.dateEnd);
     }
-    else if (currentInput == inputButton3) {
-      selection.date = currentInput.label;
-      println(selection.date);
-    }
+    
 
   } else {
     currentInput.addChar(k);
@@ -416,11 +417,7 @@ class QueriesDate extends Screen {
       mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
     currentInput = inputButton2;
   }
-  if (inputButton3 != null &&
-      mouseX > inputButton3.x && mouseX < inputButton3.x + inputButton3.w &&
-      mouseY > inputButton3.y && mouseY < inputButton3.y + inputButton3.h) {
-    currentInput = inputButton3;
-  }
+  
 
   // Handle regular buttons
   for (Button b : buttons) {
@@ -458,9 +455,9 @@ class QueriesTraffic extends Screen {
     int y = 22;
     int queryW = width/4+100;
     int queryH = 50;
-    int xq = width/4 -queryW/2;
+    int xq = width/4;
     int xq2 = xq+queryW;
-    int yq = height/4;
+    int yq = height/2;
     int xs = xq2 + queryW ;
     int xq3 = xq;
     
@@ -469,15 +466,11 @@ class QueriesTraffic extends Screen {
     buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
     textAlign(CORNER);
     
-    buttons.add(new Button(xs, yq, 200, 50, "Search", "trafficOutput", 20, false));
+    buttons.add(new Button(xq, yq, 200, 50, "Europe", "trafficOutput", 20, false));
+    buttons.add(new Button(xq2, yq, 200, 50, "Worldwide", "trafficOutput2", 20, false));
+    buttons.add(new Button((xq+xq2)/2, yq, 200, 50, "America", "trafficOutput3", 20, false));
     
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "Enter origin", "enter", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "Enter destination", "enter", 15, 20, false,2);
-    inputButton3 = new TextEntryButton(xq3, yq+buttonH+10, queryW, queryH, "Enter date", "enter", 15, 20, false,3);
     
-    buttons.add(inputButton);
-    buttons.add(inputButton2);
-    buttons.add(inputButton3);
   }
 
   void drawBackground() {
@@ -485,7 +478,7 @@ class QueriesTraffic extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--AIRPORT TRAFFIC--", width/2, 130);
+    text("--AIRPORT TRAFFIC--", width/2, 50);
     
     //Line at top
      fill(255, 50);
@@ -500,67 +493,36 @@ class QueriesTraffic extends Screen {
     for(Button b : buttons){
       b.display();
     }
-    image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
+    textSize(32);
+    textAlign(CENTER,CENTER);
+    fill(0);
+    text("Select which traffic pattern you want to observe", width/2, height/2-100);
   }
 
   void keyPressed(char k) {
 
-  if (currentInput == null) return;
-
-  if (keyCode == ENTER) {
-
-    if (currentInput == inputButton) {
-      selection.origin = currentInput.label;
-      println(selection.origin);
-    }
-    else if (currentInput == inputButton2) {
-      selection.destination = currentInput.label;
-      println(selection.destination);
-    }
-    else if (currentInput == inputButton3) {
-      selection.date = currentInput.label;
-      println(selection.date);
-    }
-
-  } else {
-    currentInput.addChar(k);
-  }
+  
 }
   
   void mousePressed() {
-  currentInput = null;
-
-  // Check TextEntryButtons
-  if (mouseX > inputButton.x && mouseX < inputButton.x + inputButton.w &&
-      mouseY > inputButton.y && mouseY < inputButton.y + inputButton.h) {
-    currentInput = inputButton;
-  }
-  if (mouseX > inputButton2.x && mouseX < inputButton2.x + inputButton2.w &&
-      mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
-    currentInput = inputButton2;
-  }
-  if (inputButton3 != null &&
-      mouseX > inputButton3.x && mouseX < inputButton3.x + inputButton3.w &&
-      mouseY > inputButton3.y && mouseY < inputButton3.y + inputButton3.h) {
-    currentInput = inputButton3;
-  }
 
   // Handle regular buttons
   for (Button b : buttons) {
     if (b.over(mouseX, mouseY)) {
         println("Clicked: " + b.type);
         if (b.type.equals("backQ")) currentScreen = queries;
-        if (b.type.equals("flightsOutput")) {
-            searchFlight(); 
-            currentScreen = flightsOutput;
-        }
-        if (b.type.equals("dateOutput")) {
-            searchFlight(); 
-            currentScreen = dateOutput;
-        }
+
         if (b.type.equals("trafficOutput")) {
-            searchFlight(); 
+            searchEurope(); 
             currentScreen = trafficOutput;
+        }
+        if (b.type.equals("trafficOutput2")) {
+            searchWorldwide(); 
+            currentScreen = trafficOutput2;
+        }
+        if (b.type.equals("trafficOutput3")) {
+            searchAmerica(); 
+            currentScreen = trafficOutput3;
         }
       }
     }
@@ -624,7 +586,7 @@ class DatesOutputScreen extends Screen {
     textAlign(CENTER, CENTER);
     text("--FLIGHTS FOUND WITHIN DATE RANGE--", width/2, 80);
     textSize(24);
-    text(flightsFound, width-250,100);
+    text(flightsFound, width-250,120);
 
   }
   void draw() {
@@ -651,7 +613,7 @@ class TrafficOutputScreen extends Screen {
     int x = 30;
     int y = 22;
     textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backQueries", 20, true));
+    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
     textAlign(CORNER);
   }
 
@@ -660,9 +622,8 @@ class TrafficOutputScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES--", width/2, 80);
+    text("--BUSIEST ROUTES WORLDWIDE--", width/2, 80);
     textSize(24);
-    text(flightsFound, width-250,100);
 
   }
   void draw() {
@@ -676,7 +637,81 @@ class TrafficOutputScreen extends Screen {
   for (Button b : buttons) {
     if (b.over(mouseX, mouseY)) {
       println("Clicked: " + b.type);
-      if (b.type.equals("backQueries")) currentScreen = queries;
+      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
+    }
+  }
+  }
+}
+class TrafficOutputScreenEU extends Screen {
+
+  TrafficOutputScreenEU() {
+    int buttonW = 100;
+    int buttonH = 50;
+    int x = 30;
+    int y = 22;
+    textAlign(CENTER);
+    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
+    textAlign(CORNER);
+  }
+
+  void drawBackground() {
+    background(240, 220, 255);
+    fill(0);
+    textSize(40);
+    textAlign(CENTER, CENTER);
+    text("--BUSIEST ROUTES EUROPE--", width/2, 80);
+    textSize(24);
+
+  }
+  void draw() {
+    drawBackground();
+    for (Button b : buttons) {
+      b.display();
+    }
+    myFlights.display();
+  }
+  void mousePressed() {
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+      println("Clicked: " + b.type);
+      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
+    }
+  }
+  }
+}
+class TrafficOutputScreenAmerica extends Screen {
+
+  TrafficOutputScreenAmerica() {
+    int buttonW = 100;
+    int buttonH = 50;
+    int x = 30;
+    int y = 22;
+    textAlign(CENTER);
+    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
+    textAlign(CORNER);
+  }
+
+  void drawBackground() {
+    background(240, 220, 255);
+    fill(0);
+    textSize(40);
+    textAlign(CENTER, CENTER);
+    text("--BUSIEST ROUTES AMERICA--", width/2, 80);
+    textSize(24);
+
+  }
+  void draw() {
+    drawBackground();
+    for (Button b : buttons) {
+      b.display();
+    }
+    myFlights.display();
+  }
+  void mousePressed() {
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+      println("Clicked: " + b.type);
+      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
     }
   }
   }

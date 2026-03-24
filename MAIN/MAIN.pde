@@ -18,6 +18,8 @@ int flightsTraffic = 7;
 int flightsOutput = 8;
 int dateOutput = 9;
 int trafficOutput = 10;
+int trafficOutput2 = 11;
+int trafficOutput3 = 12;
 
 //////// STROING CHOICE //////////////////////
 int currentScreen;
@@ -29,6 +31,8 @@ TableDisplay myFlights;
 
 Table table;
 Flight flight;
+
+////////////TABLE FOR ROUTES DISPLAY//////////////
 
 ///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
@@ -46,6 +50,9 @@ QueriesTraffic flightTrafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DatesOutputScreen datesOutputScreen;
 TrafficOutputScreen trafficOutputScreen;
+TrafficOutputScreen trafficOutputScreen2;
+TrafficOutputScreen trafficOutputScreen3;
+
 
 GraphsScreen graphsScreen;
 
@@ -101,6 +108,15 @@ void searchFlightsDateRange(){
 void searchBusiestRoutes(){
 
 }
+void searchAmerica(){
+
+}
+void searchWorldwide(){
+
+}
+void searchEurope(){
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
@@ -139,6 +155,9 @@ void setup() {
   flightsOutputScreen = new FlightsOutputScreen();
   datesOutputScreen = new DatesOutputScreen();
   trafficOutputScreen = new TrafficOutputScreen();
+  trafficOutputScreen2 = new TrafficOutputScreen();
+  trafficOutputScreen3 = new TrafficOutputScreen();
+
   
 //////////////// Home Screen//////////////////////////////////
   planeHomeScreen = loadImage("PlaneImg.jpg");
@@ -148,7 +167,7 @@ void setup() {
   current = homeScreen;
 
 ///////////////User selection///////////////////////////////
-  selection = new UserSelection("", "", "");
+  selection = new UserSelection("", "", "", "");
 
 ///////////////Table setup////////////////////////////////
   myData = new Table();
@@ -202,6 +221,14 @@ void draw() {
     current = trafficOutputScreen;
     trafficOutputScreen.draw();
   }
+  else if(currentScreen ==trafficOutput2){
+    current = trafficOutputScreen2;
+    trafficOutputScreen2.draw();
+  }
+  else if(currentScreen ==trafficOutput3){
+    current = trafficOutputScreen3;
+    trafficOutputScreen3.draw();
+  }
 }
 
 void mousePressed() {
@@ -225,6 +252,10 @@ void mousePressed() {
     datesOutputScreen.mousePressed();
    else if(currentScreen == trafficOutput)
     trafficOutputScreen.mousePressed();
+   else if(currentScreen == trafficOutput2)
+    trafficOutputScreen2.mousePressed();
+   else if(currentScreen == trafficOutput3)
+    trafficOutputScreen3.mousePressed();
 }
 
 void mouseMoved() {
