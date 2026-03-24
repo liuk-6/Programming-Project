@@ -7,6 +7,10 @@ int queries = 2;
 int flights = 3;
 int graphs = 4;
 int exit = 5;
+
+int flightDate = 7;
+int flightAirline = 8;
+
 int currentScreen = home;
 
 
@@ -31,7 +35,11 @@ PImage planeHomeScreen;
 PImage SearchButton;
 
 QueriesScreen queriesScreen;
-FlightsScreen flightsScreen;
+QueriesFlights flightsSearchScreen;
+
+QueriesDate flightDateScreen;
+QueriesAirline flightAirlineScreen;
+
 GraphsScreen graphsScreen;
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
@@ -44,6 +52,7 @@ void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
     TableRow row = myData.addRow();
+    row.setString("Date", f.date);
     row.setString("Flight ID", str(f.flightNumber));
     row.setString("Origin", f.origin);
     row.setString("Departure", formatTime(f.scheduledDepartureTime));
@@ -67,8 +76,7 @@ void searchFlight() {
   }
   Collections.sort(results, new Comparator<Flight>(){
     public int compare(Flight a, Flight b){
-      return a.scheduledDepartureTime - b.scheduledDepartureTime;
-    }
+    return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);    }
   });
   ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
   int count = min(8, results.size());
@@ -104,23 +112,25 @@ void setup() {
 
   // Screens setup
   queriesScreen = new QueriesScreen();
-  flightsScreen = new FlightsScreen();
+  flightsSearchScreen = new QueriesFlights();
   graphsScreen = new GraphsScreen();
+  flightDateScreen = new QueriesDate();
+  flightAirlineScreen  = new QueriesAirline();
 
   // Home Screen
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg = loadImage("BackgroundImg.jpg");
-  planeHomeScreen = loadImage("PlaneImg.png");
   SearchButton = loadImage("SearchButton.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 
   // User selection
-  selection = new UserSelection("", "");
+  selection = new UserSelection("", "", "");
 
   // Table setup
   myData = new Table();
   myData.addColumn("Flight ID");
+  myData.addColumn("Date");
   myData.addColumn("Origin");
   myData.addColumn("Departure");
   myData.addColumn("Arrival");
@@ -132,15 +142,27 @@ void setup() {
 }
 
 void draw() {
+
   if (currentScreen == home) {
     current = homeScreen;
     homeScreen.draw();
+
   } else if (currentScreen == queries) {
     current = queriesScreen;
     queriesScreen.draw();
+
   } else if (currentScreen == flights) {
-    current = flightsScreen;
-    flightsScreen.draw();
+    current = flightsSearchScreen;
+    flightsSearchScreen.draw();
+
+  } else if (currentScreen == flightDate) {
+    current = flightDateScreen;
+    flightDateScreen.draw();
+
+  } else if (currentScreen == flightAirline) {
+    current = flightAirlineScreen;
+    flightAirlineScreen.draw();
+
   } else if (currentScreen == graphs) {
     current = graphsScreen;
     graphsScreen.draw();
@@ -153,11 +175,15 @@ void mousePressed() {
   else if (currentScreen == queries)
     queriesScreen.mousePressed();
   else if (currentScreen == flights)
-    flightsScreen.mousePressed();
+    flightsSearchScreen.mousePressed();
   else if (currentScreen == graphs)
     graphsScreen.mousePressed();
   else if (currentScreen == exit)
     exit();
+  else if(currentScreen == flightDate)
+    flightDateScreen.mousePressed();
+  else if(currentScreen == flightAirline)
+    flightAirlineScreen.mousePressed();
 }
 
 void mouseMoved() {

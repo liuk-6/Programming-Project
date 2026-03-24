@@ -58,7 +58,9 @@ class Button {
       println("Clicked "+type);
       // Decide what to do based on the button type
       if (type.equals("queries")) currentScreen = queries;
-      if (type.equals("flights")) {
+      if(type.equals("dateQuery")) currentScreen = flightDate;
+      if(type.equals("airlineQuery")) currentScreen = flightAirline;
+      if (type.equals("flightQuery")) {
         searchFlight();
         currentScreen = flights;
       }
@@ -76,16 +78,18 @@ class Button {
 }
 class TextEntryButton extends Button{
   int maxlen;
+  int inputOrder;
   
-  TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars, int textSize, boolean hasShadow){
+  TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars, int textSize, boolean hasShadow, int inputOrder){
     super(x,y,w,h,label,type,textSize, hasShadow);
+    this.inputOrder = inputOrder;
     this.maxlen = maxChars;
     
   }
   
   void addChar(char s){
     if(s==BACKSPACE){
-      if(label.equals("Enter origin")||label.equals("Enter destination")) label = "";
+      if(label.equals("Enter origin")||label.equals("Enter destination")||label.equals("Enter date")) label = "";
       if(!label.equals("")){
         label = label.substring(0,label.length()-1);
       }
@@ -95,4 +99,5 @@ class TextEntryButton extends Button{
     }
   
   }
+  
 }

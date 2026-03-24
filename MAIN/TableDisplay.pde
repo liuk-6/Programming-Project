@@ -12,7 +12,7 @@ class TableDisplay {
 //|----|-------------1200------------|----|
   void display() {
     float rowHeight = 60;
-    float colWidth = 220;
+    float colWidth = 183;
     
     // Set global text alignment for the table
     textAlign(CENTER, CENTER); // This centers horizontally and vertically
