@@ -2,7 +2,7 @@ class Legend {
 
   void display() {
     float x = width - 220;
-    float y = 20;
+    float y = height -150;
 
     // background box
     fill(0, 180);
