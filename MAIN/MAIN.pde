@@ -18,8 +18,9 @@ int flightsTraffic = 7;
 int flightsOutput = 8;
 int dateOutput = 9;
 int trafficOutput = 10;
-int trafficOutput2 = 11;
-int trafficOutput3 = 12;
+int trafficOutputEastCoast = 11;
+int trafficOutputWestCoast = 12;
+int trafficOutputCentral = 13;
 
 //////// STROING CHOICE //////////////////////
 int currentScreen;
@@ -49,9 +50,9 @@ QueriesTraffic flightTrafficScreen;
 
 FlightsOutputScreen flightsOutputScreen;
 DatesOutputScreen datesOutputScreen;
-TrafficOutputScreen trafficOutputScreen;
-TrafficOutputScreen trafficOutputScreen2;
-TrafficOutputScreen trafficOutputScreen3;
+TrafficOutputScreenEastCoast trafficOutputScreenEastCoast;
+TrafficOutputScreenWestCoast trafficOutputScreenWestCoast;
+TrafficOutputScreenCentral trafficOutputScreenCentral;
 
 
 GraphsScreen graphsScreen;
@@ -154,9 +155,9 @@ void setup() {
 //////////////Defining output screens//////////////////////////
   flightsOutputScreen = new FlightsOutputScreen();
   datesOutputScreen = new DatesOutputScreen();
-  trafficOutputScreen = new TrafficOutputScreen();
-  trafficOutputScreen2 = new TrafficOutputScreen();
-  trafficOutputScreen3 = new TrafficOutputScreen();
+  trafficOutputScreenEastCoast = new TrafficOutputScreenEastCoast();
+  trafficOutputScreenWestCoast = new TrafficOutputScreenWestCoast();
+  trafficOutputScreenCentral = new TrafficOutputScreenCentral();
 
   
 //////////////// Home Screen//////////////////////////////////
@@ -187,47 +188,47 @@ void draw() {
 
   if (currentScreen == home) {
     current = homeScreen;
-    homeScreen.draw();
+    current.draw();
 
   } else if (currentScreen == queries) {
     current = queriesScreen;
-    queriesScreen.draw();
+    current.draw();
 
   } else if (currentScreen == flightsSearch) {
     current = flightsSearchScreen;
-    flightsSearchScreen.draw();
+    current.draw();
 
   } else if (currentScreen == flightsDate) {
     current = flightDateScreen;
-    flightDateScreen.draw();
+    current.draw();
 
   } else if (currentScreen == flightsTraffic) {
     current = flightTrafficScreen;
-    flightTrafficScreen.draw();
+    current.draw();
 
   } else if (currentScreen == graphs) {
     current = graphsScreen;
-    graphsScreen.draw();
+    current.draw();
   }
   else if(currentScreen ==flightsOutput){
     current = flightsOutputScreen;
-    flightsOutputScreen.draw();
+    current.draw();
   }
   else if(currentScreen ==dateOutput){
     current = datesOutputScreen;
-    datesOutputScreen.draw();
+    current.draw();
   }
-  else if(currentScreen ==trafficOutput){
-    current = trafficOutputScreen;
-    trafficOutputScreen.draw();
+  else if(currentScreen ==trafficOutputEastCoast){
+    current = trafficOutputScreenEastCoast;
+    current.draw();
   }
-  else if(currentScreen ==trafficOutput2){
-    current = trafficOutputScreen2;
-    trafficOutputScreen2.draw();
+  else if(currentScreen ==trafficOutputWestCoast){
+    current = trafficOutputScreenWestCoast;
+    current.draw();
   }
-  else if(currentScreen ==trafficOutput3){
-    current = trafficOutputScreen3;
-    trafficOutputScreen3.draw();
+  else if(currentScreen ==trafficOutputCentral){
+    current = trafficOutputScreenCentral;
+    current.draw();
   }
 }
 
@@ -250,12 +251,12 @@ void mousePressed() {
     flightsOutputScreen.mousePressed();
    else if(currentScreen == dateOutput)
     datesOutputScreen.mousePressed();
-   else if(currentScreen == trafficOutput)
-    trafficOutputScreen.mousePressed();
-   else if(currentScreen == trafficOutput2)
-    trafficOutputScreen2.mousePressed();
-   else if(currentScreen == trafficOutput3)
-    trafficOutputScreen3.mousePressed();
+   else if(currentScreen == trafficOutputEastCoast)
+    trafficOutputScreenEastCoast.mousePressed();
+   else if(currentScreen == trafficOutputWestCoast)
+    trafficOutputScreenWestCoast.mousePressed();
+   else if(currentScreen == trafficOutputCentral)
+    trafficOutputScreenCentral.mousePressed();
 }
 
 void mouseMoved() {

@@ -466,9 +466,9 @@ class QueriesTraffic extends Screen {
     buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
     textAlign(CORNER);
     
-    buttons.add(new Button(xq, yq, 200, 50, "Europe", "trafficOutput", 20, false));
-    buttons.add(new Button(xq2, yq, 200, 50, "Worldwide", "trafficOutput2", 20, false));
-    buttons.add(new Button((xq+xq2)/2, yq, 200, 50, "America", "trafficOutput3", 20, false));
+    buttons.add(new Button(xq, yq, 200, 50, "EAST-COAST", "trafficOutputEastCoast", 20, false));
+    buttons.add(new Button(xq2, yq, 200, 50, "WEST-COAST", "trafficOutputWestCoast", 20, false));
+    buttons.add(new Button((xq+xq2)/2, yq, 200, 50, "CENTRAL", "trafficOutputCentral", 20, false));
     
     
   }
@@ -512,17 +512,17 @@ class QueriesTraffic extends Screen {
         println("Clicked: " + b.type);
         if (b.type.equals("backQ")) currentScreen = queries;
 
-        if (b.type.equals("trafficOutput")) {
+        if (b.type.equals("trafficOutputEastCoast")) {
             searchEurope(); 
-            currentScreen = trafficOutput;
+            currentScreen = trafficOutputEastCoast;
         }
-        if (b.type.equals("trafficOutput2")) {
+        if (b.type.equals("trafficOutputWestCoast")) {
             searchWorldwide(); 
-            currentScreen = trafficOutput2;
+            currentScreen = trafficOutputWestCoast;
         }
-        if (b.type.equals("trafficOutput3")) {
+        if (b.type.equals("trafficOutputCentral")) {
             searchAmerica(); 
-            currentScreen = trafficOutput3;
+            currentScreen = trafficOutputCentral;
         }
       }
     }
@@ -605,9 +605,9 @@ class DatesOutputScreen extends Screen {
   }
   }
 }
-class TrafficOutputScreen extends Screen {
+class TrafficOutputScreenWestCoast extends Screen {
 
-  TrafficOutputScreen() {
+  TrafficOutputScreenWestCoast() {
     int buttonW = 100;
     int buttonH = 50;
     int x = 30;
@@ -622,7 +622,7 @@ class TrafficOutputScreen extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES WORLDWIDE--", width/2, 80);
+    text("--BUSIEST ROUTES WESTCOAST--", width/2, 80);
     textSize(24);
 
   }
@@ -642,9 +642,9 @@ class TrafficOutputScreen extends Screen {
   }
   }
 }
-class TrafficOutputScreenEU extends Screen {
+class TrafficOutputScreenEastCoast extends Screen {
 
-  TrafficOutputScreenEU() {
+  TrafficOutputScreenEastCoast() {
     int buttonW = 100;
     int buttonH = 50;
     int x = 30;
@@ -659,7 +659,7 @@ class TrafficOutputScreenEU extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES EUROPE--", width/2, 80);
+    text("--BUSIEST ROUTES EASTCOAST--", width/2, 80);
     textSize(24);
 
   }
@@ -679,9 +679,9 @@ class TrafficOutputScreenEU extends Screen {
   }
   }
 }
-class TrafficOutputScreenAmerica extends Screen {
+class TrafficOutputScreenCentral extends Screen {
 
-  TrafficOutputScreenAmerica() {
+  TrafficOutputScreenCentral() {
     int buttonW = 100;
     int buttonH = 50;
     int x = 30;
@@ -696,7 +696,7 @@ class TrafficOutputScreenAmerica extends Screen {
     fill(0);
     textSize(40);
     textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES AMERICA--", width/2, 80);
+    text("--BUSIEST ROUTES CENTRAL--", width/2, 80);
     textSize(24);
 
   }
