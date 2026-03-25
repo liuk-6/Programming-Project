@@ -1,7 +1,14 @@
 import java.util.Collections;
 import java.util.Comparator;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 ///////////// CONSTANT VALUES ////////////////
 String[] lines;
+color RY_BLUE = #2B4779;
+color RY_GOLD = #F4CA35;
+color RY_WHITE = #FFFFFF;
+color RY_BG = #F2F5F7; // Light grey-blue background found on their site
 
 /////////// MAIN SCREENS AT START ////////////////
 int home = 1;
@@ -57,10 +64,7 @@ QueriesDate flightDateScreen;
 QueriesTraffic flightTrafficScreen;
 
 FlightsOutputScreen flightsOutputScreen;
-DatesOutputScreen datesOutputScreen;
-TrafficOutputScreenEastCoast trafficOutputScreenEastCoast;
-TrafficOutputScreenWestCoast trafficOutputScreenWestCoast;
-TrafficOutputScreenCentral trafficOutputScreenCentral;
+
 
 
 GraphsScreen graphsScreen;
@@ -101,39 +105,59 @@ String formatTime(int time) {
   return t.substring(0, 2) + ":" + t.substring(2, 4);
 }
 
+
 void searchFlight() {
   results.clear();
-  for (Flight f : flightsList) {
-    if (f.origin.equals(selection.origin) && 
-        f.destination.equals(selection.destination)) {
-      results.add(f);
+  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+
+  try {
+    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+    LocalDate end = LocalDate.parse(selection.dateEnd, csvFormat);
+
+    for (Flight f : flightsList) {
+      // Clean date and match city/code
+      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+      String userOrigin = selection.origin.toLowerCase().trim();
+      String userDest = selection.destination.toLowerCase().trim();
+
+      boolean originMatch = f.origin.equalsIgnoreCase(userOrigin) || f.originCityName.toLowerCase().contains(userOrigin);
+      boolean destMatch = f.destination.equalsIgnoreCase(userDest) || f.destinationCityName.toLowerCase().contains(userDest);
+
+      if (originMatch && destMatch && !flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
     }
+  } catch (Exception e) {
+    println("Search Error: Check date format");
   }
-  Collections.sort(results, new Comparator<Flight>(){
-    public int compare(Flight a, Flight b){
-    return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);    }
-  });
-  ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
-  int count = min(8, results.size());
-  for (int i = 0; i < count; i++) {
-    fiveFlights.add(results.get(i));
-  }
-  addFlightsToTable(fiveFlights);
-  flightsFound = " Flights found: "+ results.size();
+
+  // Sort by time for a professional "Timeline" feel
+  Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+  
+  // SWITCH SCREEN
+  currentScreen = flightsOutput; 
 }
+
+
+
+
+
+
+
+
 void searchFlightsDateRange(){
 
 }
 void searchBusiestRoutes(){
 
 }
-void searchAmerica(){
+void searchEastCoast(){
 
 }
-void searchWorldwide(){
+void searchWestCoast(){
 
 }
-void searchEurope(){
+void searchCentral(){
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,10 +196,7 @@ void setup() {
   
 //////////////Defining output screens//////////////////////////
   flightsOutputScreen = new FlightsOutputScreen();
-  datesOutputScreen = new DatesOutputScreen();
-  trafficOutputScreenEastCoast = new TrafficOutputScreenEastCoast();
-  trafficOutputScreenWestCoast = new TrafficOutputScreenWestCoast();
-  trafficOutputScreenCentral = new TrafficOutputScreenCentral();
+  
 
   
 //////////////// Home Screen//////////////////////////////////
@@ -216,86 +237,31 @@ void setup() {
 }
 
 void draw() {
+  // Update which screen 'current' points to based on currentScreen ID
+  if (currentScreen == home)            current = homeScreen;
+  else if (currentScreen == queries)     current = queriesScreen;
+  else if (currentScreen == flightsSearch) current = flightsSearchScreen;
+  else if (currentScreen == flightsDate)   current = flightDateScreen;
+  else if (currentScreen == flightsTraffic)current = flightTrafficScreen;
+  else if (currentScreen == graphs)      current = graphsScreen;
+  else if (currentScreen == flightsOutput) current = flightsOutputScreen;
+  // ... add the rest of your output screens here ...
 
-  if (currentScreen == home) {
-    current = homeScreen;
-    current.draw();
-
-  } else if (currentScreen == queries) {
-    current = queriesScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsSearch) {
-    current = flightsSearchScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsDate) {
-    current = flightDateScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsTraffic) {
-    current = flightTrafficScreen;
-    current.draw();
-
-  } else if (currentScreen == graphs) {
-    current = graphsScreen;
-    current.draw();
-  }
-  else if(currentScreen ==flightsOutput){
-    current = flightsOutputScreen;
-    current.draw();
-  }
-  else if(currentScreen ==dateOutput){
-    current = datesOutputScreen;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputEastCoast){
-    current = trafficOutputScreenEastCoast;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputWestCoast){
-    current = trafficOutputScreenWestCoast;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputCentral){
-    current = trafficOutputScreenCentral;
+  if (current != null) {
     current.draw();
   }
 }
 
 void mousePressed() {
-  if (currentScreen == home)
-    homeScreen.mousePressed();
-  else if (currentScreen == queries)
-    queriesScreen.mousePressed();
-  else if (currentScreen == flightsSearch)
-    flightsSearchScreen.mousePressed();
-  else if (currentScreen == graphs)
-    graphsScreen.mousePressed();
-  else if (currentScreen == exit)
-    exit();
-  else if(currentScreen == flightsDate)
-    flightDateScreen.mousePressed();
-  else if(currentScreen == flightsTraffic)
-    flightTrafficScreen.mousePressed();
-  else if(currentScreen == flightsOutput)
-    flightsOutputScreen.mousePressed();
-   else if(currentScreen == dateOutput)
-    datesOutputScreen.mousePressed();
-   else if(currentScreen == trafficOutputEastCoast)
-    trafficOutputScreenEastCoast.mousePressed();
-   else if(currentScreen == trafficOutputWestCoast)
-    trafficOutputScreenWestCoast.mousePressed();
-   else if(currentScreen == trafficOutputCentral)
-    trafficOutputScreenCentral.mousePressed();
-}
-
-void mouseMoved() {
+  // This single line handles EVERY screen automatically 
+  // because every screen inherits from the Screen class
+  if (current != null) {
+    current.mousePressed();
+  }
 }
 
 void keyPressed() {
   if (current != null) {
-    if (keyCode == SHIFT) return;
     current.keyPressed(key);
   }
 }
