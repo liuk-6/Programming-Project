@@ -1,15 +1,17 @@
-class OriginBarChart{
+class OriginBarChart {
   String[] airports;   // top 10 airport codes
   float[] values;      // top 10 counts
   PGraphics pg;
+  ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
   OriginBarChart(){
   }
     void setup() {
+      buttons.clear();
+      
       pg = createGraphics(530, 400);
-    
       Table table = loadTable("flights100k.csv", "header");
     
-      // Count flights per DEST airport
+      // Count flights per Origin airport
       HashMap<String, Integer> counts = new HashMap<String, Integer>();
     
       for (TableRow row : table.rows()) {
@@ -34,13 +36,26 @@ class OriginBarChart{
         airports[i] = keys.get(i);
         values[i] = counts.get(airports[i]);
       }
+      
+      float barWidth = (pg.width - 50) / (float)values.length;
+    
+      for (int i = 0; i < values.length; i++) {
+        float x = 40 + i * barWidth;
+        float bx = x + (barWidth - 5)/2 - 30;
+        float by = pg.height - 25;
+        float bw = 60;
+        float bh = 20;
+    
+        buttons.add(new AirportButton(bx, by, bw, bh, airports[i]));
+      }
+
     }
     
     void draw() {
       pg.beginDraw();
       pg.background(255);
       pg.stroke(0);
-    
+      
       // --- drawing the y-axis ---
       pg.stroke(0);
       pg.line(40, 10, 40, pg.height - 30);  // x1,y1,x2,y2
@@ -81,6 +96,7 @@ class OriginBarChart{
         pg.fill(0);
         pg.textAlign(CENTER, TOP);
         pg.text(airports[i], x + (barWidth - 5)/2, pg.height - 25);
+        
       }
       pg.text("Bar chart of most popular origin airports", pg.width/2, 10);
       pg.text("Most popular origin airports", pg.width/2, pg.height-15);
@@ -92,8 +108,19 @@ class OriginBarChart{
         pg.fill(0);
         pg.text("Quantity of flights", 0, 0);
         pg.popMatrix();
-    
       pg.endDraw();
+    
       image(pg, 0, 0);
+    }
+   String checkClick(float mx, float my) {
+      float localX = mx - 630;   // X offset of the origin chart
+      float localY = my - 200;   // Y offset of the origin chart
+    
+      for (AirportButton b : buttons) {
+        if (b.isInside(localX, localY)) {
+          return b.code;
+        }
+      }
+      return null;
     }
 }

@@ -86,7 +86,7 @@ class PieChart {
         
         String[] labels = {
           "On Time",
-          "Delayed",
+          "Delayed > 30min",
           "Cancelled"
         };
         
