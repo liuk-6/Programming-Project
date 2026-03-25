@@ -625,7 +625,7 @@ class TrafficOutputScreenWestCoast extends Screen {
     for (Button b : buttons) {
       b.display();
     }
-    myFlights.display();
+    myTrafficRoutes.display();
   }
   void mousePressed() {
   for (Button b : buttons) {
@@ -662,7 +662,7 @@ class TrafficOutputScreenEastCoast extends Screen {
     for (Button b : buttons) {
       b.display();
     }
-    myFlights.display();
+    myTrafficRoutes.display();
   }
   void mousePressed() {
   for (Button b : buttons) {
@@ -699,7 +699,7 @@ class TrafficOutputScreenCentral extends Screen {
     for (Button b : buttons) {
       b.display();
     }
-    myFlights.display();
+    myTrafficRoutes.display();
   }
   void mousePressed() {
   for (Button b : buttons) {
