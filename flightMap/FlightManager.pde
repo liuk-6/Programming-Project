@@ -1,11 +1,23 @@
 class FlightManager {
   ArrayList<FlightLocation> allFlights = new ArrayList<FlightLocation>();
   ArrayList<FlightLocation> filteredFlights = new ArrayList<FlightLocation>();
+  HashSet<String> allowedAirports = new HashSet<String>();
 
   void loadFromTable(Table table, AirportManager airportManager) {
     allFlights.clear();
+    allowedAirports.add("DFW");
+    allowedAirports.add("ATL");
+    allowedAirports.add("CLT");
+    allowedAirports.add("ORD");
+    allowedAirports.add("DEN");
+    allowedAirports.add("LAX");
+    allowedAirports.add("PHX");
+    allowedAirports.add("SEA");
+    allowedAirports.add("LGA");
+    allowedAirports.add("MCO");
 
     for (int row = 0; row < table.getRowCount(); row++) {
+
 
       Flight raw = new Flight(row);
 
