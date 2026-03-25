@@ -7,28 +7,53 @@ class FlightManager {
 
     for (int row = 0; row < table.getRowCount(); row++) {
 
-      // Step 1: get raw flight from your friend's class
       Flight raw = new Flight(row);
 
       String originCode = raw.origin.trim().toUpperCase();
       String destCode = raw.destination.trim().toUpperCase();
 
-      // Step 2: get coordinates
       PVector origin = airportManager.getCoords(originCode);
       PVector dest = airportManager.getCoords(destCode);
 
-      // Step 3: only create flight if both airports exist
+      int schedDep = raw.scheduledDepartureTime;
+      int actualDep = raw.actualDepartureTime;
+      boolean cancelled = raw.cancelled;
+
+      String status;
+
+      if (cancelled) {
+        status = "CANCELLED";
+      } else {
+        int delay = timeToMinutes(actualDep) - timeToMinutes(schedDep);
+        if (delay > 30) {
+          status = "DELAYED";
+        } else {
+          status = "ON_TIME";
+        }
+      }
       if (origin != null && dest != null) {
 
+        float oLat = origin.x;
+        float oLon = origin.y;
+        float dLat = dest.x;
+        float dLon = dest.y;
+
+        // ✅ Skip Alaska, Hawaii, etc.
+        if (oLat < 24 || oLat > 50 || dLat < 24 || dLat > 50) {
+          continue;
+        }
+
+        // ✅ ONLY create flight once
         FlightLocation f = new FlightLocation(
           originCode,
           destCode,
-          origin.x, origin.y,
-          dest.x, dest.y,
+          oLat, oLon,
+          dLat, dLon,
           str(raw.scheduledDepartureTime),
           str(raw.scheduledArrivalTime),
           raw.distance,
-          raw.date
+          raw.date,
+          status
           );
 
         allFlights.add(f);
@@ -37,7 +62,6 @@ class FlightManager {
       }
     }
 
-    // default: show all flights
     filteredFlights = new ArrayList<FlightLocation>(allFlights);
   }
 
@@ -52,5 +76,12 @@ class FlightManager {
 
   ArrayList<FlightLocation> getFlights() {
     return filteredFlights;
+  }
+
+
+  int timeToMinutes(int t) {
+    int hours = t / 100;
+    int mins = t % 100;
+    return hours * 60 + mins;
   }
 }

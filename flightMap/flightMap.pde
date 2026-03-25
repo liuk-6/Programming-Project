@@ -36,13 +36,7 @@ void draw() {
     f.display(world, selected);
   }
 
-  //panel.display();
-  PVector ny = world.geoToScreen(40.7128, -74.0060);
-  fill(255, 0, 0);
-  ellipse(ny.x, ny.y, 10, 10);
-
-  PVector la = world.geoToScreen(34.0522, -118.2437);
-  ellipse(la.x, la.y, 10, 10);
+  panel.display();
 }
 
 void mousePressed() {
