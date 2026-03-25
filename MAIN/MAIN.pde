@@ -37,6 +37,9 @@ Table table;
 Flight flight;
 
 ////////////TABLE FOR ROUTES DISPLAY//////////////
+Table myTrafficData;
+TableDisplay myTrafficRoutes;
+
 
 ///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
@@ -65,6 +68,7 @@ GraphsScreen graphsScreen;
 ///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
+ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory; // input
 ArrayList<Flight> results; //if flights found they will be stored in result
 String flightsFound ="";
@@ -79,6 +83,15 @@ void addFlightsToTable(ArrayList<Flight> list) {
     row.setString("Origin", f.origin);
     row.setString("Departure", formatTime(f.scheduledDepartureTime));
     row.setString("Arrival", formatTime(f.scheduledArrivalTime));
+    row.setString("Destination", f.destination);
+  }
+}
+void addFlightsRoutesToTable(ArrayList<Flight> list) {
+  myTrafficData.clearRows();
+  for (Flight f : list) {
+    TableRow row = myTrafficData.addRow();
+    row.setString("Flight ID", str(f.flightNumber));
+    row.setString("Origin", f.origin);
     row.setString("Destination", f.destination);
   }
 }
@@ -189,6 +202,17 @@ void setup() {
   addFlightsToTable(flightsList);
 
   myFlights = new TableDisplay(myData, 50, 150);
+  
+////////////////// ROUTES TABLE SETUP ////////////////////////
+  myTrafficData = new Table();
+  myTrafficData.addColumn("Origin");
+  myTrafficData.addColumn("Origin City Name");
+  myTrafficData.addColumn("Destination City Name");
+  myTrafficData.addColumn("Destination");
+  flightsRoutes = new ArrayList<Flight>();
+  addFlightsRoutesToTable(flightsRoutes); /////////////Change to correct list
+
+  myTrafficRoutes = new TableDisplay(myTrafficData,250,150);
 }
 
 void draw() {

@@ -42,6 +42,7 @@ class WorldMap {
     float offsetX = (width - drawW) / 2;
     float offsetY = (height - drawH) / 2;
 
+    //if (lat < 24 || lat > 50) return new PVector(-1000, -1000);
     return new PVector(
       offsetX + (x - svgMinX) * scale,
       offsetY + (y - svgMinY) * scale

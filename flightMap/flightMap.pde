@@ -1,3 +1,6 @@
+import java.util.HashSet;
+
+String selectedAirport = null;
 WorldMap world;
 FlightManager manager;
 InteractionManager interaction;
@@ -5,6 +8,7 @@ InfoPanel panel;
 AirportManager airportManager;
 Table table;
 FlightLocation flight;
+Legend legend;
 
 String selectedDate = "2022-01-01"; // change this
 
@@ -23,29 +27,120 @@ void setup() {
 
   interaction = new InteractionManager();
   panel = new InfoPanel();
+
+  legend = new Legend();
 }
 void draw() {
   background(255);
 
   world.display();
 
-  ArrayList<FlightLocation> flights = manager.getFlights();
+  ArrayList<FlightLocation> flights = getVisibleFlights();
 
   for (FlightLocation f : flights) {
     boolean selected = (panel.selected == f);
     f.display(world, selected);
   }
 
-  //panel.display();
-  PVector ny = world.geoToScreen(40.7128, -74.0060);
-  fill(255, 0, 0);
-  ellipse(ny.x, ny.y, 10, 10);
+  legend.display();
 
-  PVector la = world.geoToScreen(34.0522, -118.2437);
-  ellipse(la.x, la.y, 10, 10);
+  for (String code : airportManager.airports.keySet()) {
+
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(screen.x, screen.y, 8, 8);
+
+    if (dist(mouseX, mouseY, screen.x, screen.y) < 10) {
+      fill(255, 255, 0);
+      ellipse(screen.x, screen.y, 12, 12);
+    }
+  }
+
+  for (String code : airportManager.airports.keySet()) {
+
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    // draw airport dot
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(screen.x, screen.y, 8, 8);
+
+    // ✅ hover detection
+    if (dist(mouseX, mouseY, screen.x, screen.y) < 10) {
+      fill(0);
+      rect(mouseX + 10, mouseY - 20, 60, 20, 5);
+
+      fill(255);
+      textSize(12);
+      text(code, mouseX + 15, mouseY - 5);
+    }
+  }
+  
+    panel.display();
+
+}
+String checkAirportClick(float mx, float my) {
+
+  for (String code : airportManager.airports.keySet()) {
+
+    // Only allow clicking your 10 airports
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    if (dist(mx, my, screen.x, screen.y) < 8) {
+      return code;
+    }
+  }
+
+  return null;
 }
 
+
+ArrayList<FlightLocation> getVisibleFlights() {
+
+  ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
+
+  for (FlightLocation f : manager.getFlights()) {
+
+    if (selectedAirport != null) {
+      if (!f.origin.equals(selectedAirport) && !f.destination.equals(selectedAirport)) {
+        continue;
+      }
+    }
+
+    visible.add(f);
+  }
+
+  return visible;
+}
+
+
+
 void mousePressed() {
-  FlightLocation clicked = interaction.checkClick(manager.getFlights(), mouseX, mouseY, world);
+
+  // ✅ Check airport click FIRST
+  String airport = checkAirportClick(mouseX, mouseY);
+
+  if (airport != null) {
+    if (airport.equals(selectedAirport)) {
+      selectedAirport = null; // toggle off
+    } else {
+      selectedAirport = airport;
+    }
+    panel.setFlight(null);
+    return;
+  }
+  // ✅ Otherwise check flight click
+  FlightLocation clicked = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
 }
