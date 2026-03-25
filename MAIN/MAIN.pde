@@ -30,6 +30,9 @@ UserSelection selection;
 Table myData;
 TableDisplay myFlights;
 
+int SCREENX = 800;
+int SCREENY = 600;
+
 Table table;
 Flight flight;
 
@@ -41,6 +44,8 @@ HomeScreen homeScreen;
 Screen current;
 PImage planeHomeScreen;
 PImage SearchButton;
+PImage sunset;
+PImage arrow;
 
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
@@ -164,6 +169,8 @@ void setup() {
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg = loadImage("BackgroundImg.jpg");
   SearchButton = loadImage("SearchButton.png");
+  arrow = loadImage("Arrow.png");
+  sunset = loadImage("Sunset.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 

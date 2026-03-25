@@ -31,20 +31,18 @@ class HomeScreen extends Screen{
   int yPos = height/2 - buttonH; // 20 px padding from bottom
   float x1 = width * 3/8.0 - buttonW/2;  // 1st button
   float x3 = width * 5/8.0 - buttonW/2;  // 2nd button
-  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
-  buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
+  buttons.add(new Button(x1, yPos + 250, buttonW, buttonH, "QUERIES", "queries",20, true));
+  buttons.add(new Button(x3, yPos + 250, buttonW, buttonH, "GRAPHS", "graphs",20, true));
   buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
   
   
   }
   void draw() {
   drawBackground();   // draws the plane
-  fill(255);
+  fill(0);
   textAlign(CENTER);
   textSize(60);
-  text("F  L  I  G  H  T   S  C  A  N  N  E  R", width/2, height/3);
-  textSize(18);
-  text("Select a button to explore flight data", width/2, 150);
+  text("F  L  I  G  H  T   S  C  A  N  N  E  R", width/2, height/5);
   for (Button b : buttons) b.display();  // draws buttons on top
   }
   
@@ -59,28 +57,18 @@ class HomeScreen extends Screen{
       
    }
    void drawBackground(){
-     image(backgroundImg, 0, 0, width, height);
-     
-     fill(69, 87, 107, 200);
+
+     fill(240, 200);
      rect(0, 0, width, height);
      
-     // Rectangular Box
-     noStroke();
-     fill(196, 196, 196, 200);
-     rect(0, height * 0.75, width, height * 0.55);
-     
-     //Plane Shadow
-     noStroke();
-     fill(0, 70);
-     ellipse( width/2, height/1.95 + 200, 800, 80);
-     
      //Line at top
-     fill(255, 50);
+     fill(0, 50);
      noStroke();
      rect(0, 70, width, 2);
      
      imageMode(CENTER);
-     image(planeHomeScreen, width/2, height/1.5, width * 0.85, height*0.8);
+     image(sunset, (width/2), height/2, width/1.7, height/2.5);
+     image(planeHomeScreen, width/2, height/1.9, width * 0.85, height*0.7);
      imageMode(CORNER);
    }
    void mousePressed() {
@@ -121,6 +109,7 @@ class QueriesScreen extends Screen {
     
     
    
+    
   }
 
   void drawBackground() {
@@ -143,10 +132,15 @@ class QueriesScreen extends Screen {
   void draw(){
     drawBackground();
     
+    
+    
+    
     for(Button b : buttons){
       b.display();
     }
+    
   }
+  
 
   void keyPressed(char k) {
 
