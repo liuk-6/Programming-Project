@@ -1,49 +1,80 @@
 import java.util.Collections;
 import java.util.Comparator;
-///////////// CONSTANT VALUES////////////////
+///////////// CONSTANT VALUES ////////////////
 String[] lines;
+
+/////////// MAIN SCREENS AT START ////////////////
 int home = 1;
 int queries = 2;
-int flights = 3;
-int graphs = 4;
-int exit = 5;
-int currentScreen = home;
+int graphs = 3;
+int exit = 4;
 
+////////// SECOND LAYER SCREENS ////////////////
+int flightsSearch = 5;
+int flightsDate = 6;
+int flightsTraffic = 7;
 
+/////////THIRD LAYER - OUTPUT SCREENS ///////////
+int flightsOutput = 8;
+int dateOutput = 9;
+int trafficOutput = 10;
+int trafficOutputEastCoast = 11;
+int trafficOutputWestCoast = 12;
+int trafficOutputCentral = 13;
+
+//////// STROING CHOICE //////////////////////
+int currentScreen;
 UserSelection selection;
 
+////////DISPLAY TABLE FOOTPRINT ///////////
 Table myData;
 TableDisplay myFlights;
-
 
 int SCREENX = 800;
 int SCREENY = 600;
 
-
 Table table;
 Flight flight;
 
-// Home Screen
+////////////TABLE FOR ROUTES DISPLAY//////////////
+
+///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
 HomeScreen homeScreen;
 Screen current;
 PImage planeHomeScreen;
 PImage SearchButton;
+PImage sunset;
+PImage arrow;
 
 QueriesScreen queriesScreen;
-FlightsScreen flightsScreen;
+QueriesFlights flightsSearchScreen;
+
+QueriesDate flightDateScreen;
+QueriesTraffic flightTrafficScreen;
+
+FlightsOutputScreen flightsOutputScreen;
+DatesOutputScreen datesOutputScreen;
+TrafficOutputScreenEastCoast trafficOutputScreenEastCoast;
+TrafficOutputScreenWestCoast trafficOutputScreenWestCoast;
+TrafficOutputScreenCentral trafficOutputScreenCentral;
+
+
 GraphsScreen graphsScreen;
+
+///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
 ArrayList<UserSelection> searchHistory; // input
 ArrayList<Flight> results; //if flights found they will be stored in result
 String flightsFound ="";
 
-//////////////////////METHODS///////////////////////
+//////////////////////METHODS/////////////////////////////////////////////////////
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
     TableRow row = myData.addRow();
+    row.setString("Date", f.date);
     row.setString("Flight ID", str(f.flightNumber));
     row.setString("Origin", f.origin);
     row.setString("Departure", formatTime(f.scheduledDepartureTime));
@@ -67,8 +98,7 @@ void searchFlight() {
   }
   Collections.sort(results, new Comparator<Flight>(){
     public int compare(Flight a, Flight b){
-      return a.scheduledDepartureTime - b.scheduledDepartureTime;
-    }
+    return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);    }
   });
   ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
   int count = min(8, results.size());
@@ -78,7 +108,22 @@ void searchFlight() {
   addFlightsToTable(fiveFlights);
   flightsFound = " Flights found: "+ results.size();
 }
-/////////////////////////////////////////////
+void searchFlightsDateRange(){
+
+}
+void searchBusiestRoutes(){
+
+}
+void searchAmerica(){
+
+}
+void searchWorldwide(){
+
+}
+void searchEurope(){
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   size(1200,700);
@@ -102,25 +147,40 @@ void setup() {
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
 
-  // Screens setup
+////////////////////Main Screens First Choice Setup/////////////
+  currentScreen = home;
   queriesScreen = new QueriesScreen();
-  flightsScreen = new FlightsScreen();
   graphsScreen = new GraphsScreen();
 
-  // Home Screen
+///////////////////Second Choice Screens Setup/////////////////
+  flightsSearchScreen = new QueriesFlights();
+  flightDateScreen = new QueriesDate();
+  flightTrafficScreen  = new QueriesTraffic();
+  
+//////////////Defining output screens//////////////////////////
+  flightsOutputScreen = new FlightsOutputScreen();
+  datesOutputScreen = new DatesOutputScreen();
+  trafficOutputScreenEastCoast = new TrafficOutputScreenEastCoast();
+  trafficOutputScreenWestCoast = new TrafficOutputScreenWestCoast();
+  trafficOutputScreenCentral = new TrafficOutputScreenCentral();
+
+  
+//////////////// Home Screen//////////////////////////////////
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg = loadImage("BackgroundImg.jpg");
-  planeHomeScreen = loadImage("PlaneImg.png");
   SearchButton = loadImage("SearchButton.png");
+  arrow = loadImage("Arrow.png");
+  sunset = loadImage("Sunset.png");
   homeScreen = new HomeScreen();
   current = homeScreen;
 
-  // User selection
-  selection = new UserSelection("", "");
+///////////////User selection///////////////////////////////
+  selection = new UserSelection("", "", "", "");
 
-  // Table setup
+///////////////Table setup////////////////////////////////
   myData = new Table();
   myData.addColumn("Flight ID");
+  myData.addColumn("Date");
   myData.addColumn("Origin");
   myData.addColumn("Departure");
   myData.addColumn("Arrival");
@@ -132,18 +192,50 @@ void setup() {
 }
 
 void draw() {
+
   if (currentScreen == home) {
     current = homeScreen;
-    homeScreen.draw();
+    current.draw();
+
   } else if (currentScreen == queries) {
     current = queriesScreen;
-    queriesScreen.draw();
-  } else if (currentScreen == flights) {
-    current = flightsScreen;
-    flightsScreen.draw();
+    current.draw();
+
+  } else if (currentScreen == flightsSearch) {
+    current = flightsSearchScreen;
+    current.draw();
+
+  } else if (currentScreen == flightsDate) {
+    current = flightDateScreen;
+    current.draw();
+
+  } else if (currentScreen == flightsTraffic) {
+    current = flightTrafficScreen;
+    current.draw();
+
   } else if (currentScreen == graphs) {
     current = graphsScreen;
-    graphsScreen.draw();
+    current.draw();
+  }
+  else if(currentScreen ==flightsOutput){
+    current = flightsOutputScreen;
+    current.draw();
+  }
+  else if(currentScreen ==dateOutput){
+    current = datesOutputScreen;
+    current.draw();
+  }
+  else if(currentScreen ==trafficOutputEastCoast){
+    current = trafficOutputScreenEastCoast;
+    current.draw();
+  }
+  else if(currentScreen ==trafficOutputWestCoast){
+    current = trafficOutputScreenWestCoast;
+    current.draw();
+  }
+  else if(currentScreen ==trafficOutputCentral){
+    current = trafficOutputScreenCentral;
+    current.draw();
   }
 }
 
@@ -152,12 +244,26 @@ void mousePressed() {
     homeScreen.mousePressed();
   else if (currentScreen == queries)
     queriesScreen.mousePressed();
-  else if (currentScreen == flights)
-    flightsScreen.mousePressed();
+  else if (currentScreen == flightsSearch)
+    flightsSearchScreen.mousePressed();
   else if (currentScreen == graphs)
     graphsScreen.mousePressed();
   else if (currentScreen == exit)
     exit();
+  else if(currentScreen == flightsDate)
+    flightDateScreen.mousePressed();
+  else if(currentScreen == flightsTraffic)
+    flightTrafficScreen.mousePressed();
+  else if(currentScreen == flightsOutput)
+    flightsOutputScreen.mousePressed();
+   else if(currentScreen == dateOutput)
+    datesOutputScreen.mousePressed();
+   else if(currentScreen == trafficOutputEastCoast)
+    trafficOutputScreenEastCoast.mousePressed();
+   else if(currentScreen == trafficOutputWestCoast)
+    trafficOutputScreenWestCoast.mousePressed();
+   else if(currentScreen == trafficOutputCentral)
+    trafficOutputScreenCentral.mousePressed();
 }
 
 void mouseMoved() {
