@@ -1,8 +1,8 @@
-class Screen{
+class graphScreen{
   ArrayList<Widget> widgets = new ArrayList<Widget>();
   color bg;
 
-  Screen(color bg) {
+  graphScreen(color bg) {
     this.bg = bg;
   }
 
