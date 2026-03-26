@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 ///////////// CONSTANT VALUES ////////////////
 String[] lines;
 color RY_BLUE = #2B4779;
-color RY_GOLD = #F4CA35;
+color RY_GOLD = #FFE5B4;
 color RY_WHITE = #FFFFFF;
 color RY_BG = #F2F5F7; // Light grey-blue background found on their site
 
@@ -84,66 +84,7 @@ ArrayList<Route> centralRoutes;
 
 PFont font;
 //////////////////////METHODS/////////////////////////////////////////////////////
-void searchFlightsByZone() {
-  // Clear previous results
-  eastCoastRoutes.clear();
-  westCoastRoutes.clear();
-  centralRoutes.clear();
 
-  // Temporary maps to track unique routes and their passenger counts
-  HashMap<String, Route> eastMap = new HashMap<>();
-  HashMap<String, Route> westMap = new HashMap<>();
-  HashMap<String, Route> centralMap = new HashMap<>();
-
-  // Define zone airport codes
-  String[] east = {"NYC","BOS","MIA","ATL","PHL"};
-  String[] west = {"LAX","SFO","SEA","PDX","LAS"};
-  String[] central = {"CHI","DAL","HOU","DEN","MSP"};
-
-  // Loop through all flights
-  for (Flight f : flightsList) {
-    String origin = f.origin.toUpperCase();
-    String dest = f.destination.toUpperCase();
-
-    String key = origin + "-" + dest; // unique route key
-
-    if (arrayContains(east, origin) || arrayContains(east, dest)) {
-      if (!eastMap.containsKey(key)) eastMap.put(key, new Route(origin, dest, 0));
-      eastMap.get(key).passengers++;
-    }
-    else if (arrayContains(west, origin) || arrayContains(west, dest)) {
-      if (!westMap.containsKey(key)) westMap.put(key, new Route(origin, dest, 0));
-      westMap.get(key).passengers++;
-    }
-    else if (arrayContains(central, origin) || arrayContains(central, dest)) {
-      if (!centralMap.containsKey(key)) centralMap.put(key, new Route(origin, dest, 0));
-      centralMap.get(key).passengers++;
-    }
-  }
-
-  // Convert maps to lists
-  ArrayList<Route> eastList = new ArrayList<>(eastMap.values());
-  ArrayList<Route> westList = new ArrayList<>(westMap.values());
-  ArrayList<Route> centralList = new ArrayList<>(centralMap.values());
-
-  // Sort by passengers (or date if your Route has it)
-  Collections.sort(eastList, (a,b) -> Integer.compare(b.passengers, a.passengers));
-  Collections.sort(westList, (a,b) -> Integer.compare(b.passengers, a.passengers));
-  Collections.sort(centralList, (a,b) -> Integer.compare(b.passengers, a.passengers));
-
-  // Keep only top 10
-  for (int i = 0; i < min(15, eastList.size()); i++) eastCoastRoutes.add(eastList.get(i));
-  for (int i = 0; i < min(15, westList.size()); i++) westCoastRoutes.add(westList.get(i));
-  for (int i = 0; i < min(15, centralList.size()); i++) centralRoutes.add(centralList.get(i));
-}
-
-// Helper function to check if a string is in a String array
-boolean arrayContains(String[] arr, String s) {
-  for (String item : arr) {
-    if (item.equalsIgnoreCase(s)) return true;
-  }
-  return false;
-}
 
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
@@ -157,15 +98,7 @@ void addFlightsToTable(ArrayList<Flight> list) {
     row.setString("Destination", f.destination);
   }
 }
-void addFlightsRoutesToTable(ArrayList<Flight> list) {
-  myTrafficData.clearRows();
-  for (Flight f : list) {
-    TableRow row = myTrafficData.addRow();
-    row.setString("Flight ID", str(f.flightNumber));
-    row.setString("Origin", f.origin);
-    row.setString("Destination", f.destination);
-  }
-}
+
 
 String formatTime(int time) {
   String t = nf(time, 4);
@@ -265,39 +198,7 @@ void drawAllZones() {
   drawZoneCard(westCoastRoutes, "WEST COAST", padding*3 + cardW*2, startY, cardW, cardH, color(144, 238, 144, 180));
 }
 
-// Draw a single zone card
-void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float w, float h, color bgColor) {
-  // Card background
-  fill(bgColor);
-  noStroke();
-  rect(x, y, w, h, 20); // Rounded corners
 
-  // Zone title
-  fill(RY_BLUE);
-  textSize(18);
-  textAlign(CENTER, TOP);
-  text(title, x + w/2, y + 10);
-
-  // Draw routes
-  textSize(14);
-  textAlign(LEFT, TOP);
-  fill(50);
-  float routeY = y + 40;
-  int rank = 1;
-
-  for (Route r : routes) {
-    String line = rank + ". " + r.origin + " → " + r.destination + " (" + r.passengers + ")";
-    text(line, x + 10, routeY);
-    routeY += 22;
-
-    // Optional: small divider
-    stroke(200, 50);
-    line(x + 5, routeY - 5, x + w - 5, routeY - 5);
-    noStroke();
-
-    rank++;
-  }
-}
 
 
 
@@ -328,18 +229,7 @@ void searchFlightsDateRange()
     println("Error: Please use the format M/D/YYYY (e.g. 1/1/2022)");
   }
 }
-void searchBusiestRoutes(){
 
-}
-void searchEastCoast(){
-
-}
-void searchWestCoast(){
-
-}
-void searchCentral(){
-
-}
 
 
 void setup() {
