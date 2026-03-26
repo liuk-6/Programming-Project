@@ -1,0 +1,423 @@
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+
+///////////// CONSTANT VALUES ////////////////
+String[] lines;
+
+/////////// MAIN SCREENS AT START ////////////////
+int home = 1;
+int queries = 2;
+int graphs = 3;
+int exit = 4;
+
+////////// SECOND LAYER SCREENS ////////////////
+int flightsSearch = 5;
+int flightsDate = 6;
+int flightsTraffic = 7;
+
+/////////THIRD LAYER - OUTPUT SCREENS ///////////
+int flightsOutput = 8;
+int dateOutput = 9;
+int trafficOutputWestCoast = 10;
+int trafficOutputEastCoast = 11;
+int trafficOutputCentral   = 12;
+
+//////// STORING CHOICE //////////////////////
+int currentScreen;
+UserSelection selection;
+
+////////DISPLAY TABLE FOOTPRINT ///////////
+Table myData;
+TableDisplay myFlights;
+Table table;
+Flight flight;
+
+///////// AIRPORT REGIONS ///////////////////
+String[] westCoastAirports = {
+  "LAX","SFO","SAN","OAK","SJC","BUR","LGB","SNA","SMF","ONT","SBA","MRY","FAT","PSP","SCK","SMX",
+  "PDX","SEA","EUG","MFR","BLI","GEG",
+  "LAS","RNO","PHX","TUS","AZA",
+  "SLC",
+  "BOI","IDA","BZN","GTF","MSO","FCA","BIL","JAC",
+  "DEN","EGE","HDN","DRO","GJT","COS","PSC","RDM",
+  "ANC","FAI","JNU","KTN","SIT","BET","BRW","OME","OTZ","ADK","ADQ","CDV","SCC","PSG","WRG","YAK",
+  "HNL","OGG","KOA","LIH","ITO","GUM","SPN"
+};
+
+String[] eastCoastAirports = {
+  "BOS","BDL","PVD","BTV","MHT",
+  "JFK","LGA","EWR","HPN","ISP","ALB","BUF","ROC","SYR",
+  "PHL","PIT","ABE","LBE","MDT","BWI","DCA","IAD","RIC","ORF",
+  "RDU","CLT","AVL","GSP","MYR","CHA","SAV","ATL","USA",
+  "MIA","FLL","MCO","TPA","JAX","RSW","PBI","EYW","PIE","SRQ","PGD","SFB","PNS","VPS","ECP",
+  "BNA","MEM","SDF",
+  "STT","STX","SJU","BQN","ACY"
+};
+
+String[] centralAirports = {
+  "ORD","MDW","IND","CMH","CLE","CVG","DTW","FNT","GRR","SBN",
+  "MKE","ATW","MSN","MLI","CID","PIA","BMI","RFD","BLV",
+  "MSP","DSM","STL","MCI","OMA","ICT","SGF","GRI",
+  "FAR","FSD","MOT","BIS","RAP",
+  "DFW","DAL","HOU","IAH","AUS","SAT","ELP","TUL","OKC",
+  "LBB","MAF","HRL","MFE","LRD","CRP","SHV",
+  "LIT","XNA","MSY","JAN",
+  "BHM"
+};
+
+///////// DECLARING SCREENS ////////////////
+PImage backgroundImg;
+HomeScreen homeScreen;
+Screen current;
+PImage planeHomeScreen;
+PImage SearchButton;
+
+QueriesScreen queriesScreen;
+QueriesFlights flightsSearchScreen;
+QueriesDate flightDateScreen;
+QueriesTraffic flightTrafficScreen;
+
+FlightsOutputScreen flightsOutputScreen;
+DatesOutputScreen datesOutputScreen;
+TrafficOutputScreenWestCoast trafficOutputScreenWestCoast;
+TrafficOutputScreenEastCoast trafficOutputScreenEastCoast;
+TrafficOutputScreenCentral trafficOutputScreenCentral;
+
+GraphsScreen graphsScreen;
+
+///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
+ArrayList<Flight> flightsList;
+ArrayList<UserSelection> searchHistory;
+ArrayList<Flight> results;
+String flightsFound = "";
+
+//////////////////////METHODS/////////////////////////////////////////////////////
+void addFlightsToTable(ArrayList<Flight> list) {
+  myData.clearRows();
+  for (Flight f : list) {
+    TableRow row = myData.addRow();
+    row.setString("Date", f.date);
+    row.setString("Flight ID", str(f.flightNumber));
+    row.setString("Origin", f.origin);
+    row.setString("Departure", formatTime(f.scheduledDepartureTime));
+    row.setString("Arrival", formatTime(f.scheduledArrivalTime));
+    row.setString("Destination", f.destination);
+  }
+}
+
+String formatTime(int time) {
+  String t = nf(time, 4);
+  return t.substring(0, 2) + ":" + t.substring(2, 4);
+}
+
+void searchFlight() {
+  results.clear();
+  for (Flight f : flightsList) {
+    if (f.origin.equals(selection.origin) &&
+        f.destination.equals(selection.destination)) {
+      results.add(f);
+    }
+  }
+  Collections.sort(results, new Comparator<Flight>() {
+    public int compare(Flight a, Flight b) {
+      return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);
+    }
+  });
+  ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
+  int count = min(8, results.size());
+  for (int i = 0; i < count; i++) {
+    fiveFlights.add(results.get(i));
+  }
+  addFlightsToTable(fiveFlights);
+  flightsFound = " Flights found: " + results.size();
+}
+
+void searchFlightsDateRange() {
+}
+
+String getRegion(String code) {
+  for (String a : westCoastAirports) if (a.equals(code)) return "West";
+  for (String a : eastCoastAirports) if (a.equals(code)) return "East";
+  for (String a : centralAirports)   if (a.equals(code)) return "Central";
+  return "Unknown";
+}
+
+void searchBusiestRoutes() {
+  HashMap<String, Integer> airportCount = new HashMap<String, Integer>();
+  for (Flight f : flightsList) {
+    airportCount.put(f.origin,      airportCount.containsKey(f.origin)      ? airportCount.get(f.origin)      + 1 : 1);
+    airportCount.put(f.destination, airportCount.containsKey(f.destination) ? airportCount.get(f.destination) + 1 : 1);
+  }
+
+  final HashMap<String, Integer> finalWest    = new HashMap<String, Integer>();
+  final HashMap<String, Integer> finalEast    = new HashMap<String, Integer>();
+  final HashMap<String, Integer> finalCentral = new HashMap<String, Integer>();
+
+  for (String code : airportCount.keySet()) {
+    String region = getRegion(code);
+    if      (region.equals("West"))    finalWest.put(code,    airportCount.get(code));
+    else if (region.equals("East"))    finalEast.put(code,    airportCount.get(code));
+    else if (region.equals("Central")) finalCentral.put(code, airportCount.get(code));
+  }
+
+  ArrayList<String> westSorted    = new ArrayList<String>(finalWest.keySet());
+  ArrayList<String> eastSorted    = new ArrayList<String>(finalEast.keySet());
+  ArrayList<String> centralSorted = new ArrayList<String>(finalCentral.keySet());
+
+  Collections.sort(westSorted,    new Comparator<String>() { public int compare(String a, String b) { return finalWest.get(b)    - finalWest.get(a);    }});
+  Collections.sort(eastSorted,    new Comparator<String>() { public int compare(String a, String b) { return finalEast.get(b)    - finalEast.get(a);    }});
+  Collections.sort(centralSorted, new Comparator<String>() { public int compare(String a, String b) { return finalCentral.get(b) - finalCentral.get(a); }});
+
+  myData = new Table();
+  myData.addColumn("Rank");
+  myData.addColumn("West");
+  myData.addColumn("W.Flights");
+  myData.addColumn("Central");
+  myData.addColumn("C.Flights");
+  myData.addColumn("East");
+  myData.addColumn("E.Flights");
+
+  int limit = min(8, max(max(westSorted.size(), eastSorted.size()), centralSorted.size()));
+  for (int i = 0; i < limit; i++) {
+    TableRow row = myData.addRow();
+    row.setString("Rank",      str(i + 1));
+    row.setString("West",      i < westSorted.size()    ? westSorted.get(i)    : "-");
+    row.setString("W.Flights", i < westSorted.size()    ? str(finalWest.get(westSorted.get(i)))       : "-");
+    row.setString("Central",   i < centralSorted.size() ? centralSorted.get(i) : "-");
+    row.setString("C.Flights", i < centralSorted.size() ? str(finalCentral.get(centralSorted.get(i))) : "-");
+    row.setString("East",      i < eastSorted.size()    ? eastSorted.get(i)    : "-");
+    row.setString("E.Flights", i < eastSorted.size()    ? str(finalEast.get(eastSorted.get(i)))       : "-");
+  }
+  myFlights = new TableDisplay(myData, 50, 150);
+} // end searchBusiestRoutes
+
+void searchWestCoast() {
+  HashMap<String, Integer> airportCount = new HashMap<String, Integer>();
+  for (Flight f : flightsList) {
+    airportCount.put(f.origin,      airportCount.containsKey(f.origin)      ? airportCount.get(f.origin)      + 1 : 1);
+    airportCount.put(f.destination, airportCount.containsKey(f.destination) ? airportCount.get(f.destination) + 1 : 1);
+  }
+  final HashMap<String, Integer> westCounts = new HashMap<String, Integer>();
+  for (String code : airportCount.keySet()) {
+    if (getRegion(code).equals("West")) westCounts.put(code, airportCount.get(code));
+  }
+  ArrayList<String> sorted = new ArrayList<String>(westCounts.keySet());
+  Collections.sort(sorted, new Comparator<String>() {
+    public int compare(String a, String b) { return westCounts.get(b) - westCounts.get(a); }
+  });
+  myData = new Table();
+  myData.addColumn("Rank");
+  myData.addColumn("Airport");
+  myData.addColumn("Total Flights");
+  int limit = min(8, sorted.size());
+  for (int i = 0; i < limit; i++) {
+    TableRow row = myData.addRow();
+    row.setString("Rank",          str(i + 1));
+    row.setString("Airport",       sorted.get(i));
+    row.setString("Total Flights", str(westCounts.get(sorted.get(i))));
+  }
+  myFlights = new TableDisplay(myData, 50, 150);
+} // end searchWestCoast
+
+void searchEastCoast() {
+  HashMap<String, Integer> airportCount = new HashMap<String, Integer>();
+  for (Flight f : flightsList) {
+    airportCount.put(f.origin,      airportCount.containsKey(f.origin)      ? airportCount.get(f.origin)      + 1 : 1);
+    airportCount.put(f.destination, airportCount.containsKey(f.destination) ? airportCount.get(f.destination) + 1 : 1);
+  }
+  final HashMap<String, Integer> eastCounts = new HashMap<String, Integer>();
+  for (String code : airportCount.keySet()) {
+    if (getRegion(code).equals("East")) eastCounts.put(code, airportCount.get(code));
+  }
+  ArrayList<String> sorted = new ArrayList<String>(eastCounts.keySet());
+  Collections.sort(sorted, new Comparator<String>() {
+    public int compare(String a, String b) { return eastCounts.get(b) - eastCounts.get(a); }
+  });
+  myData = new Table();
+  myData.addColumn("Rank");
+  myData.addColumn("Airport");
+  myData.addColumn("Total Flights");
+  int limit = min(8, sorted.size());
+  for (int i = 0; i < limit; i++) {
+    TableRow row = myData.addRow();
+    row.setString("Rank",          str(i + 1));
+    row.setString("Airport",       sorted.get(i));
+    row.setString("Total Flights", str(eastCounts.get(sorted.get(i))));
+  }
+  myFlights = new TableDisplay(myData, 50, 150);
+} // end searchEastCoast
+
+void searchCentral() {
+  HashMap<String, Integer> airportCount = new HashMap<String, Integer>();
+  for (Flight f : flightsList) {
+    airportCount.put(f.origin,      airportCount.containsKey(f.origin)      ? airportCount.get(f.origin)      + 1 : 1);
+    airportCount.put(f.destination, airportCount.containsKey(f.destination) ? airportCount.get(f.destination) + 1 : 1);
+  }
+  final HashMap<String, Integer> centralCounts = new HashMap<String, Integer>();
+  for (String code : airportCount.keySet()) {
+    if (getRegion(code).equals("Central")) centralCounts.put(code, airportCount.get(code));
+  }
+  ArrayList<String> sorted = new ArrayList<String>(centralCounts.keySet());
+  Collections.sort(sorted, new Comparator<String>() {
+    public int compare(String a, String b) { return centralCounts.get(b) - centralCounts.get(a); }
+  });
+  myData = new Table();
+  myData.addColumn("Rank");
+  myData.addColumn("Airport");
+  myData.addColumn("Total Flights");
+  int limit = min(8, sorted.size());
+  for (int i = 0; i < limit; i++) {
+    TableRow row = myData.addRow();
+    row.setString("Rank",          str(i + 1));
+    row.setString("Airport",       sorted.get(i));
+    row.setString("Total Flights", str(centralCounts.get(sorted.get(i))));
+  }
+  myFlights = new TableDisplay(myData, 50, 150);
+} // end searchCentral
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+void setup() {
+  size(1200, 700);
+  textSize(18);
+
+  lines = loadStrings("flights2k.csv");
+  if (lines == null) {
+    println("Error reading file");
+    exit();
+  }
+  println("CSV loaded: " + lines.length + " lines");
+
+  table = loadTable("flights2k.csv", "header");
+  flightsList = new ArrayList<Flight>();
+  for (int row = 0; row < table.getRowCount(); row++) {
+    flightsList.add(new Flight(row));
+  }
+
+  searchHistory = new ArrayList<UserSelection>();
+  results = new ArrayList<Flight>();
+
+  ////////////////////Main Screens First Choice Setup/////////////
+  currentScreen = home;
+  queriesScreen = new QueriesScreen();
+  graphsScreen  = new GraphsScreen();
+
+  ///////////////////Second Choice Screens Setup/////////////////
+  flightsSearchScreen = new QueriesFlights();
+  flightDateScreen    = new QueriesDate();
+  flightTrafficScreen = new QueriesTraffic();
+
+  //////////////Defining output screens//////////////////////////
+  flightsOutputScreen          = new FlightsOutputScreen();
+  datesOutputScreen            = new DatesOutputScreen();
+  trafficOutputScreenWestCoast = new TrafficOutputScreenWestCoast();
+  trafficOutputScreenEastCoast = new TrafficOutputScreenEastCoast();
+  trafficOutputScreenCentral   = new TrafficOutputScreenCentral();
+
+  //////////////// Home Screen//////////////////////////////////
+  planeHomeScreen = loadImage("PlaneImg.jpg");
+  backgroundImg   = loadImage("BackgroundImg.jpg");
+  SearchButton    = loadImage("SearchButton.png");
+  homeScreen      = new HomeScreen();
+  current         = homeScreen;
+
+  ///////////////User selection///////////////////////////////
+  selection = new UserSelection("", "", "", "");
+
+  ///////////////Table setup////////////////////////////////
+  myData = new Table();
+  myData.addColumn("Flight ID");
+  myData.addColumn("Date");
+  myData.addColumn("Origin");
+  myData.addColumn("Departure");
+  myData.addColumn("Arrival");
+  myData.addColumn("Destination");
+
+  addFlightsToTable(flightsList);
+  myFlights = new TableDisplay(myData, 50, 150);
+}
+
+void draw() {
+  if (currentScreen == home) {
+    current = homeScreen;
+    homeScreen.draw();
+
+  } else if (currentScreen == queries) {
+    current = queriesScreen;
+    queriesScreen.draw();
+
+  } else if (currentScreen == flightsSearch) {
+    current = flightsSearchScreen;
+    flightsSearchScreen.draw();
+
+  } else if (currentScreen == flightsDate) {
+    current = flightDateScreen;
+    flightDateScreen.draw();
+
+  } else if (currentScreen == flightsTraffic) {
+    current = flightTrafficScreen;
+    flightTrafficScreen.draw();
+
+  } else if (currentScreen == graphs) {
+    current = graphsScreen;
+    graphsScreen.draw();
+
+  } else if (currentScreen == flightsOutput) {
+    current = flightsOutputScreen;
+    flightsOutputScreen.draw();
+
+  } else if (currentScreen == dateOutput) {
+    current = datesOutputScreen;
+    datesOutputScreen.draw();
+
+  } else if (currentScreen == trafficOutputWestCoast) {
+    current = trafficOutputScreenWestCoast;
+    trafficOutputScreenWestCoast.draw();
+
+  } else if (currentScreen == trafficOutputEastCoast) {
+    current = trafficOutputScreenEastCoast;
+    trafficOutputScreenEastCoast.draw();
+
+  } else if (currentScreen == trafficOutputCentral) {
+    current = trafficOutputScreenCentral;
+    trafficOutputScreenCentral.draw();
+  }
+}
+
+void mousePressed() {
+  if (currentScreen == home)
+    homeScreen.mousePressed();
+  else if (currentScreen == queries)
+    queriesScreen.mousePressed();
+  else if (currentScreen == flightsSearch)
+    flightsSearchScreen.mousePressed();
+  else if (currentScreen == graphs)
+    graphsScreen.mousePressed();
+  else if (currentScreen == exit)
+    exit();
+  else if (currentScreen == flightsDate)
+    flightDateScreen.mousePressed();
+  else if (currentScreen == flightsTraffic)
+    flightTrafficScreen.mousePressed();
+  else if (currentScreen == flightsOutput)
+    flightsOutputScreen.mousePressed();
+  else if (currentScreen == dateOutput)
+    datesOutputScreen.mousePressed();
+  else if (currentScreen == trafficOutputWestCoast)
+    trafficOutputScreenWestCoast.mousePressed();
+  else if (currentScreen == trafficOutputEastCoast)
+    trafficOutputScreenEastCoast.mousePressed();
+  else if (currentScreen == trafficOutputCentral)
+    trafficOutputScreenCentral.mousePressed();
+}
+
+void mouseMoved() {
+}
+
+void keyPressed() {
+  if (current != null) {
+    if (keyCode == SHIFT) return;
+    current.keyPressed(key);
+  }
+}

@@ -484,21 +484,28 @@ class QueriesTraffic extends Screen {
   
 }
   
-  void mousePressed() {
+void mousePressed() {
   for (Button b : buttons) {
     if (b.over(mouseX, mouseY)) {
       println("Clicked: " + b.type);
-      
       if (b.type.equals("backQ")) {
-        // Go back to Queries menu
         currentScreen = queries;
-      } else if (b.type.equals("trafficSearch")) {
-        // Open the unified traffic results screen
-        current = trafficResults;
+      }
+      if (b.type.equals("trafficOutputEastCoast")) {
+        searchEastCoast();
+        currentScreen = trafficOutputEastCoast;
+      }
+      if (b.type.equals("trafficOutputWestCoast")) {
+        searchWestCoast();
+        currentScreen = trafficOutputWestCoast;
+      }
+      if (b.type.equals("trafficOutputCentral")) {
+        searchCentral();
+        currentScreen = trafficOutputCentral;
       }
     }
   }
- }
+}
 }
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
 class FlightsOutputScreen extends Screen {

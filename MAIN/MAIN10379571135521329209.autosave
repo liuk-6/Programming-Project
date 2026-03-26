@@ -1,0 +1,280 @@
+import java.util.Collections;
+import java.util.Comparator;
+///////////// CONSTANT VALUES ////////////////
+String[] lines;
+
+/////////// MAIN SCREENS AT START ////////////////
+int home = 1;
+int queries = 2;
+int graphs = 3;
+int exit = 4;
+
+
+////////// SECOND LAYER SCREENS ////////////////
+int flightsSearch = 5;
+int flightsDate = 6;
+int flightsTraffic = 7;
+
+/////////THIRD LAYER - OUTPUT SCREENS ///////////
+int flightsOutput = 8;
+int dateOutput = 9;
+int trafficOutput = 10;
+int trafficOutput2 = 11;
+int trafficOutput3 = 12;
+
+//////// STROING CHOICE //////////////////////
+int currentScreen;
+
+
+UserSelection selection;
+
+////////DISPLAY TABLE FOOTPRINT ///////////
+Table myData;
+TableDisplay myFlights;
+
+
+int SCREENX = 800;
+int SCREENY = 600;
+
+Table table;
+Flight flight;
+
+////////////TABLE FOR ROUTES DISPLAY//////////////
+
+///////// DECLARING SCREENS ////////////////
+PImage backgroundImg;
+HomeScreen homeScreen;
+Screen current;
+PImage planeHomeScreen;
+PImage SearchButton;
+PImage sunset;
+PImage arrow;
+
+QueriesScreen queriesScreen;
+QueriesFlights flightsSearchScreen;
+
+QueriesDate flightDateScreen;
+QueriesTraffic flightTrafficScreen;
+
+FlightsOutputScreen flightsOutputScreen;
+DatesOutputScreen datesOutputScreen;
+TrafficOutputScreen trafficOutputScreen;
+TrafficOutputScreen trafficOutputScreen2;
+TrafficOutputScreen trafficOutputScreen3;
+
+
+GraphsScreen graphsScreen;
+
+///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
+
+ArrayList<Flight> flightsList;  //list where all the flights are stored
+ArrayList<UserSelection> searchHistory; // input
+ArrayList<Flight> results; //if flights found they will be stored in result
+String flightsFound ="";
+
+//////////////////////METHODS/////////////////////////////////////////////////////
+void addFlightsToTable(ArrayList<Flight> list) {
+  myData.clearRows();
+  for (Flight f : list) {
+    TableRow row = myData.addRow();
+    row.setString("Date", f.date);
+    row.setString("Flight ID", str(f.flightNumber));
+    row.setString("Origin", f.origin);
+    row.setString("Departure", formatTime(f.scheduledDepartureTime));
+    row.setString("Arrival", formatTime(f.scheduledArrivalTime));
+    row.setString("Destination", f.destination);
+  }
+}
+
+String formatTime(int time) {
+  String t = nf(time, 4);
+  return t.substring(0, 2) + ":" + t.substring(2, 4);
+}
+
+void searchFlight() {
+  results.clear();
+  for (Flight f : flightsList) {
+    if (f.origin.equals(selection.origin) && 
+        f.destination.equals(selection.destination)) {
+      results.add(f);
+    }
+  }
+  Collections.sort(results, new Comparator<Flight>(){
+    public int compare(Flight a, Flight b){
+    return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);    }
+  });
+  ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
+  int count = min(8, results.size());
+  for (int i = 0; i < count; i++) {
+    fiveFlights.add(results.get(i));
+  }
+  addFlightsToTable(fiveFlights);
+  flightsFound = " Flights found: "+ results.size();
+}
+void searchFlightsDateRange(){
+
+}
+void searchBusiestRoutes(){
+
+}
+void searchAmerica(){
+
+}
+void searchWorldwide(){
+
+}
+void searchEurope(){
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+void setup() {
+  size(1200,700);
+  textSize(18);
+
+  // Load CSV
+  lines = loadStrings("flights2k.csv");
+  if (lines == null) {
+    println("Error reading file");
+    exit();
+  }
+  println("CSV loaded: " + lines.length + " lines");
+
+  // Load flights into list
+  table = loadTable("flights2k.csv", "header");
+  flightsList = new ArrayList<Flight>();
+  for (int row = 0; row < table.getRowCount(); row++) {
+    flightsList.add(new Flight(row));
+  }
+
+  searchHistory = new ArrayList<UserSelection>();
+  results = new ArrayList<Flight>();
+
+////////////////////Main Screens First Choice Setup/////////////
+  currentScreen = home;
+  queriesScreen = new QueriesScreen();
+  graphsScreen = new GraphsScreen();
+
+///////////////////Second Choice Screens Setup/////////////////
+  flightsSearchScreen = new QueriesFlights();
+  flightDateScreen = new QueriesDate();
+  flightTrafficScreen  = new QueriesTraffic();
+  
+//////////////Defining output screens//////////////////////////
+  flightsOutputScreen = new FlightsOutputScreen();
+  datesOutputScreen = new DatesOutputScreen();
+  trafficOutputScreen = new TrafficOutputScreen();
+  trafficOutputScreen2 = new TrafficOutputScreen();
+  trafficOutputScreen3 = new TrafficOutputScreen();
+
+  
+//////////////// Home Screen//////////////////////////////////
+  planeHomeScreen = loadImage("PlaneImg.jpg");
+  backgroundImg = loadImage("BackgroundImg.jpg");
+  SearchButton = loadImage("SearchButton.png");
+  arrow = loadImage("Arrow.png");
+  sunset = loadImage("Sunset.png");
+  homeScreen = new HomeScreen();
+  current = homeScreen;
+
+///////////////User selection///////////////////////////////
+  selection = new UserSelection("", "", "", "");
+
+///////////////Table setup////////////////////////////////
+  myData = new Table();
+  myData.addColumn("Flight ID");
+  myData.addColumn("Date");
+  myData.addColumn("Origin");
+  myData.addColumn("Departure");
+  myData.addColumn("Arrival");
+  myData.addColumn("Destination");
+
+  addFlightsToTable(flightsList);
+
+  myFlights = new TableDisplay(myData, 50, 150);
+}
+
+void draw() {
+
+  if (currentScreen == home) {
+    current = homeScreen;
+    homeScreen.draw();
+
+  } else if (currentScreen == queries) {
+    current = queriesScreen;
+    queriesScreen.draw();
+
+  } else if (currentScreen == flightsSearch) {
+    current = flightsSearchScreen;
+    flightsSearchScreen.draw();
+
+  } else if (currentScreen == flightsDate) {
+    current = flightDateScreen;
+    flightDateScreen.draw();
+
+  } else if (currentScreen == flightsTraffic) {
+    current = flightTrafficScreen;
+    flightTrafficScreen.draw();
+
+  } else if (currentScreen == graphs) {
+    current = graphsScreen;
+    graphsScreen.draw();
+  }
+  else if(currentScreen ==flightsOutput){
+    current = flightsOutputScreen;
+    flightsOutputScreen.draw();
+  }
+  else if(currentScreen ==dateOutput){
+    current = datesOutputScreen;
+    datesOutputScreen.draw();
+  }
+  else if(currentScreen ==trafficOutput){
+    current = trafficOutputScreen;
+    trafficOutputScreen.draw();
+  }
+  else if(currentScreen ==trafficOutput2){
+    current = trafficOutputScreen2;
+    trafficOutputScreen2.draw();
+  }
+  else if(currentScreen ==trafficOutput3){
+    current = trafficOutputScreen3;
+    trafficOutputScreen3.draw();
+  }
+}
+
+void mousePressed() {
+  if (currentScreen == home)
+    homeScreen.mousePressed();
+  else if (currentScreen == queries)
+    queriesScreen.mousePressed();
+  else if (currentScreen == flightsSearch)
+    flightsSearchScreen.mousePressed();
+  else if (currentScreen == graphs)
+    graphsScreen.mousePressed();
+  else if (currentScreen == exit)
+    exit();
+  else if(currentScreen == flightsDate)
+    flightDateScreen.mousePressed();
+  else if(currentScreen == flightsTraffic)
+    flightTrafficScreen.mousePressed();
+  else if(currentScreen == flightsOutput)
+    flightsOutputScreen.mousePressed();
+   else if(currentScreen == dateOutput)
+    datesOutputScreen.mousePressed();
+   else if(currentScreen == trafficOutput)
+    trafficOutputScreen.mousePressed();
+   else if(currentScreen == trafficOutput2)
+    trafficOutputScreen2.mousePressed();
+   else if(currentScreen == trafficOutput3)
+    trafficOutputScreen3.mousePressed();
+}
+
+void mouseMoved() {
+}
+
+void keyPressed() {
+  if (current != null) {
+    if (keyCode == SHIFT) return;
+    current.keyPressed(key);
+  }
+}
