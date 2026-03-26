@@ -3,6 +3,20 @@ class PieChart {
   float[] values;      // top 10 counts
   PGraphics pg;
   color[] colours;
+ 
+  HashMap<String, Integer> onTimeByAirport = new HashMap<String, Integer>();
+  HashMap<String, Integer> delayedByAirport = new HashMap<String, Integer>();
+  HashMap<String, Integer> cancelledByAirport = new HashMap<String, Integer>();
+
+  String topOnTimeAirport = "";
+  String topDelayedAirport = "";
+  String topCancelledAirport = "";
+
+  boolean showTopAirports = false;
+
+  // Button position
+  int btnX = 10, btnY = 260, btnW = 180, btnH = 30;
+
   PieChart(){
     colours = new color[] {
       color(40, 200, 40),   // on-time
@@ -20,10 +34,12 @@ class PieChart {
       int cancelled = 0;
     
       for (TableRow row : table.rows()) {
-    
+        String airport = row.getString("ORIGIN");
+
         int isCancelled = row.getInt("CANCELLED");
         if (isCancelled == 1) {
           cancelled++;
+          increment(cancelledByAirport, airport);
           continue;
         }
     
@@ -32,6 +48,8 @@ class PieChart {
         String crsStr = row.getString("CRS_DEP_TIME");
         if (depStr == null || depStr.equals("") || crsStr == null || crsStr.equals("")) {
           cancelled++;   // treat missing times as unusable
+          increment(cancelledByAirport, airport);
+
           continue;
         }
     
@@ -44,8 +62,14 @@ class PieChart {
     
         int delay = depMin - crsMin;
     
-        if (delay > 30) delayed++;
-        else onTime++;
+        if (delay > 30) {
+          delayed++;
+           increment(delayedByAirport, airport);
+        }
+        else {
+          onTime++;
+          increment(onTimeByAirport, airport);
+        }
       }
     
       values = new float[] { onTime, delayed, cancelled };
@@ -54,8 +78,32 @@ class PieChart {
       percentOnTime = round((float(onTime)/ total)*100);
       percentDelayed = round((float(delayed)/ total)*100);
       percentCancelled = round((float(cancelled)/ total)*100);
+      computeTopAirports();
     }
-    
+    void increment(HashMap<String, Integer> map, String key) {
+      if (!map.containsKey(key)) map.put(key, 1);
+      else map.put(key, map.get(key) + 1);
+    }
+  
+    // Find max airport for each category
+    void computeTopAirports() {
+      topOnTimeAirport = findMax(onTimeByAirport);
+      topDelayedAirport = findMax(delayedByAirport);
+      topCancelledAirport = findMax(cancelledByAirport);
+    }
+  
+    String findMax(HashMap<String, Integer> map) {
+      String best = "";
+      int max = -1;
+      for (String k : map.keySet()) {
+        int v = map.get(k);
+        if (v > max) {
+          max = v;
+          best = k;
+        }
+      }
+      return best + " (" + max + ")";
+    }
     void draw(){
       pg.beginDraw();
       pg.background(255);
@@ -75,7 +123,7 @@ class PieChart {
         pg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
         pg.fill(0);
         pg.text(percentOnTime+"%", cx-diameter/8, cy+diameter/8);
-        pg.text(percentDelayed+"%", cx-diameter/20, cy-diameter/8);
+        pg.text(percentDelayed+"%", cx, cy-diameter/8);
         pg.text(percentCancelled+"%", cx+diameter/4, cy-diameter/25);
         start += angle;
       }
@@ -104,8 +152,37 @@ class PieChart {
       pg.fill(0);
       pg.text("Percentage of On Time flights", pg.width/2 , 10); 
     
+      // --- Button ---
+      pg.fill(200);
+      pg.rect(btnX, btnY, btnW, btnH, 5);
+      pg.fill(0);
+      pg.textAlign(CENTER, CENTER);
+      pg.text("Show Top Airports", btnX + btnW/2, btnY + btnH/2);
+ 
       pg.endDraw();
     
       image(pg, 0, 0);
     }
+    void mousePressed() {
+      // Adjust for translate(200, 300)
+      int mx = mouseX - 200;
+      int my = mouseY - 300;
+    
+      if (mx > btnX && mx < btnX + btnW &&
+          my > btnY && my < btnY + btnH) {
+        showTopAirports = !showTopAirports;
+      }
+    }
+  boolean isShowingTop() {
+      return showTopAirports;
+    }
+    
+    String[] getTopAirportInfo() {
+      return new String[] {
+        "Most On-Time: " + topOnTimeAirport,
+        "Most Delayed: " + topDelayedAirport,
+        "Most Cancelled: " + topCancelledAirport
+      };
+    }
+
 }

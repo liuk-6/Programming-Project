@@ -11,7 +11,6 @@ class graphScreen{
   }
 
   void draw() {
-    background(bg);
     for (Widget w : widgets) {
       w.draw();
     }

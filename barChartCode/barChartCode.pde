@@ -114,7 +114,7 @@ class BarChart {
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - 30, my - 200)) { 
+        if (b.isInside(mx - 300, my - 200)) { 
           // subtract translation offset (50,50)
           return b.code;
         }

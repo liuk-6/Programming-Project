@@ -6,47 +6,36 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 ///////////// CONSTANT VALUES ////////////////
+String[] lines;
 color RY_BLUE = #2B4779;
 color RY_GOLD = #F4CA35;
 color RY_WHITE = #FFFFFF;
 color RY_BG = #F2F5F7;
-color RY_YELLOW = #F4CA35;
-
-color BG = #1A1D23;
-color PANEL     = #1C1F26;
-color CARD      = #232833;
-color ACCENT    = #F4CA35; // gold
-color TEXT_MAIN = #EAEAF0;
-color TEXT_SUB  = #9AA3B2;
 
 /////////////GLOBAL VARIABLES///////////////////////
-String[] lines;
 TrafficResultsScreen trafficResults;
-boolean showCursor = true;
-int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
+
 /////////// MAIN SCREENS AT START ////////////////
-final int home = 1;
-final int queries = 2;
-final int dashboard = 3;
-final int exit = 4;
+int home = 1;
+int queries = 2;
+int graphs = 3;
+int exit = 4;
 
 ////////// SECOND LAYER SCREENS ////////////////
-final int flightsSearch = 5;
-final int flightsDate = 6;
-final int flightsTraffic = 7;
+int flightsSearch = 5;
+int flightsDate = 6;
+int flightsTraffic = 7;
 
 /////////THIRD LAYER - OUTPUT SCREENS ///////////
-final int flightsOutput = 8;
-final int dateOutput = 9;
-final int trafficOutput = 10;
-final int trafficOutputEastCoast = 11;
-final int trafficOutputWestCoast = 12;
-final int trafficOutputCentral = 13;
+int flightsOutput = 8;
+int dateOutput = 9;
+int trafficOutput = 10;
+int trafficOutputEastCoast = 11;
+int trafficOutputWestCoast = 12;
+int trafficOutputCentral = 13;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
-ArrayList<Integer> screenHistory = new ArrayList<Integer>();
 UserSelection selection;
 
 ////////DISPLAY TABLE FOOTPRINT ///////////
@@ -97,21 +86,18 @@ TableDisplay myTrafficRoutes;
 ///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
 HomeScreen homeScreen;
-Screen currentScreenObject;
+Screen current;
 PImage planeHomeScreen;
 PImage SearchButton;
+PImage sunset;
 PImage arrow;
-PImage logo;
 
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
 QueriesDate flightDateScreen;
 QueriesTraffic flightTrafficScreen;
-
-TrafficResultsScreen trafficOutputScreen;
 FlightsOutputScreen flightsOutputScreen;
-
-DashboardScreen dashboardScreen;
+GraphsScreen graphsScreen;
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
 ArrayList<Flight> flightsList;
@@ -119,50 +105,15 @@ ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory;
 ArrayList<Flight> results;
 String flightsFound = "";
-ArrayList<Flight> mySelectedFlights;  // GLOBAL list to store selected flights
 
 ArrayList<Route> eastCoastRoutes;
 ArrayList<Route> westCoastRoutes;
 ArrayList<Route> centralRoutes;
 
-ArrayList<FlightCard> allFlightCards;  // <-- global flight card list
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
-void drawSearchInfoPanel() {
 
-    float w = width * 0.7;
-    float h = 160;
-    float x = width/2 - w/2;
-    float y = height/2 + 60;
-  
-    // panel
-    fill(#1C1F26);
-    stroke(255,20);
-    rect(x, y, w, h, 20);
-  
-    fill(#F4CA35);
-    textSize(20);
-    textAlign(CENTER);
-    text("SMART SEARCH FEATURES", width/2, y + 35);
-  
-    fill(#9AA3B2);
-    textSize(15);
-  
-    text("• Compare airline routes instantly", width/2, y + 70);
-    text("• Analyze traffic across regions", width/2, y + 95);
-    text("• Explore flights by travel date", width/2, y + 120);
-  }
-void goTo(int nextScreen) {
-  screenHistory.add(currentScreen);
-  currentScreen = nextScreen;
-}
-
-void goBack() {
-  if (screenHistory.size() > 0) {
-    currentScreen = screenHistory.remove(screenHistory.size() - 1);
-  }
-}
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
@@ -187,21 +138,8 @@ void addFlightsRoutesToTable(ArrayList<Flight> list) {
 }
 
 String formatTime(int time) {
-  // Converts HHMM integer to "HH:MM" string
-  int h = time / 100;
-  int m = time % 100;
-  return nf(h, 2) + ":" + nf(m, 2);
-}
-String formatDate(String date) {
-  // Converts "YYYY-MM-DD" or "MM/DD/YYYY" to "DD/MM/YYYY"
-  if (date.indexOf("-") > -1) {
-    String[] parts = date.split("-");
-    return parts[2] + "/" + parts[1] + "/" + parts[0];
-  } else if (date.indexOf("/") > -1) {
-    String[] parts = date.split("/");
-    return parts[1] + "/" + parts[0] + "/" + parts[2]; // swap if needed
-  }
-  return date;
+  String t = nf(time, 4);
+  return t.substring(0, 2) + ":" + t.substring(2, 4);
 }
 
 // ---- CORE ROUTE COMPUTATION FROM REAL CSV DATA ----
@@ -269,7 +207,7 @@ void searchFlight() {
     LocalDate end   = LocalDate.parse(selection.dateEnd,   csvFormat);
     for (Flight f : flightsList) {
       LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
-      String userOrigin = selection.origin.split(" - ")[0].toLowerCase().trim();
+      String userOrigin = selection.origin.toLowerCase().trim();
       String userDest   = selection.destination.toLowerCase().trim();
       boolean originMatch = f.origin.equalsIgnoreCase(userOrigin) || f.originCityName.toLowerCase().contains(userOrigin);
       boolean destMatch   = f.destination.equalsIgnoreCase(userDest) || f.destinationCityName.toLowerCase().contains(userDest);
@@ -281,7 +219,7 @@ void searchFlight() {
     println("Search Error: Check date format");
   }
   Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-  goTo(flightsOutput);
+  currentScreen = flightsOutput;
 }
 
 // ---- DRAWING METHODS FOR TRAFFIC PANEL ----
@@ -302,14 +240,58 @@ void drawPanel() {
   textAlign(CENTER, CENTER);
   text("BACK", 70, 37);
 }
+
+void drawAllZones() {
+  float padding = 30;
+  float cardW = (width - padding * 4) / 3;
+  float cardH = 450;
+  float startY = 100;
+
+  drawZoneCard(eastCoastRoutes, "EAST COAST",  padding,             startY, cardW, cardH, color(135, 206, 250, 180));
+  drawZoneCard(centralRoutes,   "CENTRAL",     padding*2 + cardW,   startY, cardW, cardH, color(255, 223, 130, 180));
+  drawZoneCard(westCoastRoutes, "WEST COAST",  padding*3 + cardW*2, startY, cardW, cardH, color(144, 238, 144, 180));
+}
+
+void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float w, float h, color bgColor) {
+  fill(bgColor);
+  noStroke();
+  rect(x, y, w, h, 20);
+
+  fill(RY_BLUE);
+  textSize(18);
+  textAlign(CENTER, TOP);
+  text(title, x + w/2, y + 10);
+
+  textSize(13);
+  textAlign(LEFT, TOP);
+  fill(30);
+  float routeY = y + 42;
+  int rank = 1;
+
+  for (Route r : routes) {
+    String line = rank + ". " + r.origin + " > " + r.destination + "  (" + r.passengers + " flights)";
+    text(line, x + 10, routeY);
+    routeY += 24;
+    stroke(150, 60);
+    line(x + 5, routeY - 4, x + w - 5, routeY - 4);
+    noStroke();
+    rank++;
+  }
+
+  if (routes.size() == 0) {
+    fill(100);
+    textAlign(CENTER, CENTER);
+    textSize(13);
+    text("No intra-region routes found", x + w/2, y + h/2);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   size(1200, 700);
   textSize(18);
-  
-  allFlightCards = new ArrayList<FlightCard>();
-  mySelectedFlights = new ArrayList<Flight>();
+
   // Initialise region lists early so they exist before loadRouteData()
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
@@ -341,7 +323,7 @@ void setup() {
   //////////////////// Screens ////////////////////
   currentScreen       = home;
   queriesScreen       = new QueriesScreen();
-  dashboardScreen     = new DashboardScreen();
+  graphsScreen        = new GraphsScreen();
   flightsSearchScreen = new QueriesFlights();
   flightDateScreen    = new QueriesDate();
   flightTrafficScreen = new QueriesTraffic();
@@ -351,9 +333,9 @@ void setup() {
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
-  logo            = loadImage("logo.png");
+  sunset          = loadImage("Sunset.png");
   homeScreen = new HomeScreen();
-  currentScreenObject    = homeScreen;
+  current    = homeScreen;
 
   selection = new UserSelection("", "", "", "");
 
@@ -380,109 +362,92 @@ void setup() {
 
 void draw() {
   background(30);
-  if (frameCount % cursorBlinkRate == 0) {
-    showCursor = !showCursor;
-  }
-  
-  switch(currentScreen) {
-  case home: currentScreenObject = homeScreen; break;
-  case queries: currentScreenObject = queriesScreen; break;
-  case flightsSearch: currentScreenObject = flightsSearchScreen; break;
-  case flightsDate: currentScreenObject = flightDateScreen; break;
-  case flightsTraffic: currentScreenObject = flightTrafficScreen; break;
-  case flightsOutput: currentScreenObject = flightsOutputScreen; break;
-  case trafficOutput: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputEastCoast: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputWestCoast: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputCentral: currentScreenObject = trafficOutputScreen; break;
-  case dashboard: currentScreenObject = dashboardScreen; break;
-  default: currentScreenObject = homeScreen; break;
-  
 
-}
+  // Update current screen pointer
+  if      (currentScreen == home)               current = homeScreen;
+  else if (currentScreen == queries)            current = queriesScreen;
+  else if (currentScreen == flightsSearch)      current = flightsSearchScreen;
+  else if (currentScreen == flightsDate)        current = flightDateScreen;
+  else if (currentScreen == flightsTraffic)     current = flightTrafficScreen;
+  else if (currentScreen == graphs)             current = graphsScreen;
+  else if (currentScreen == flightsOutput)      current = flightsOutputScreen;
 
-if(currentScreenObject != null) currentScreenObject.draw();
-
+  // Draw the active screen
+  if (current != null) current.draw();
 
   // Traffic panel drawn ON TOP only on traffic output screens
-  if (currentScreen == trafficOutputEastCoast) {
+  if (currentScreen == trafficOutput          ||
+      currentScreen == trafficOutputEastCoast ||
+      currentScreen == trafficOutputWestCoast ||
+      currentScreen == trafficOutputCentral) {
     drawPanel();
-    drawSingleZone(eastCoastRoutes, "EAST COAST", color(135, 206, 250, 180));
-  }
-  else if(currentScreen == trafficOutputWestCoast){
-    drawPanel();
-   drawSingleZone(westCoastRoutes, "WEST COAST", color(144, 238, 144, 180));
-  }
-  else if (currentScreen == trafficOutputCentral) {
-    drawPanel();
-    drawSingleZone(centralRoutes, "CENTRAL", color(255, 223, 130, 180));
+    if (currentScreen == trafficOutput) {
+        drawAllZones();  // shows all three
+    } else if (currentScreen == trafficOutputEastCoast) {
+        drawSingleZone(eastCoastRoutes, "EAST COAST", color(135, 206, 250, 180));
+    } else if (currentScreen == trafficOutputWestCoast) {
+        drawSingleZone(westCoastRoutes, "WEST COAST", color(144, 238, 144, 180));
+    } else if (currentScreen == trafficOutputCentral) {
+        drawSingleZone(centralRoutes, "CENTRAL", color(255, 223, 130, 180));
+    }
   }
 }
+///draw single zone busy airports-insert buttons here
 void drawSingleZone(ArrayList<Route> routes, String title, color bgColor) {
-  float padding = 40;
-  float cardW = width - padding * 2;
-  float cardH = 520;
-  float startY = 100;
-
-  // Background card
-  fill(bgColor);
-  noStroke();
-  rect(padding, startY, cardW, cardH, 20);
-
-  // Title
-  fill(RY_BLUE);
-  textSize(22);
-  textAlign(CENTER, TOP);
-  text(title, width/2, startY + 10);
-
-  // Routes list
-  textSize(15);
-  textAlign(LEFT, TOP);
-  fill(30);
-  float routeY = startY + 50;
-  int rank = 1;
-
-  for (Route r : routes) {
-    String line = rank + ". " + r.origin + " > " + r.destination + 
-                  " (" + r.passengers + " flights)";
-    text(line, padding + 20, routeY);
-
-    routeY += 28;
-
-    stroke(150, 60);
-    line(padding + 10, routeY - 4, padding + cardW - 10, routeY - 4);
+    float padding = 40;
+    float cardW = width - padding * 2;
+    float cardH = 520;
+    float startY = 100;
+    
+    fill(bgColor);
     noStroke();
-
-    rank++;
-  }
-
-  // Empty state
-  if (routes.size() == 0) {
-    fill(100);
-    textAlign(CENTER, CENTER);
-    text("No routes found", width/2, startY + cardH/2);
-  }
+    rect(padding, startY, cardW, cardH, 20);
+    
+    fill(RY_BLUE);
+    textSize(22);
+    textAlign(CENTER, TOP);
+    text(title, width/2, startY + 10);
+    
+    textSize(15);
+    textAlign(LEFT, TOP);
+    fill(30);
+    float routeY = startY + 50;
+    int rank = 1;
+    
+    for (Route r : routes) {
+        String line = rank + ". " + r.origin + " > " + r.destination + 
+                      "  (" + r.passengers + " flights)";
+        text(line, padding + 20, routeY);
+        routeY += 28;
+        stroke(150, 60);
+        line(padding + 10, routeY - 4, padding + cardW - 10, routeY - 4);
+        noStroke();
+        rank++;
+    }
+    
+    if (routes.size() == 0) {
+        fill(100);
+        textAlign(CENTER, CENTER);
+        text("No routes found", width/2, startY + cardH/2);
+    }
 }
 void mousePressed() {
-  // Special back button for traffic panel
-  if ((currentScreen == trafficOutput ||
+  // Handle the BACK button drawn directly on the traffic panel
+  if ((currentScreen == trafficOutput          ||
        currentScreen == trafficOutputEastCoast ||
        currentScreen == trafficOutputWestCoast ||
-       currentScreen == trafficOutputCentral) &&
-      mouseX > 30 && mouseX < 110 &&
-      mouseY > 22 && mouseY < 52) {
-    goBack();   
+       currentScreen == trafficOutputCentral)  &&
+      mouseX > 30 && mouseX < 110 && mouseY > 22 && mouseY < 52) {
+    currentScreen = queries;
     return;
   }
 
-  // delegate click to current screen
-  if (currentScreenObject != null) {
-    currentScreenObject.mousePressed();
-  }
+  // All other clicks are handled inside each screen's own mousePressed()
+  if (current != null) current.mousePressed();
 }
 
 void keyPressed() {
-  if (currentScreenObject != null) currentScreenObject.keyPressed(key);
+  if (current != null) current.keyPressed(key);
 }
 
 void mouseWheel(MouseEvent event) {
