@@ -311,180 +311,108 @@ class QueriesFlights extends Screen {
 
 
 class QueriesDate extends Screen {
+  TextEntryButton inputButton;
+  TextEntryButton inputButton2;
+  TextEntryButton currentInput;
+  
+  // Button bounds for the manual Search button
+  float btnX, btnY, btnW = 120, btnH = 40;
 
   QueriesDate() {
-    // Add back button at bottom center
     int buttonW = 180;
     int buttonH = 50;
     int x = (width/2);
     int y = height - 50;
-    int queryW = width/4+100;
+    
+    int queryW = width/4 + 100;
     int queryH = 50;
-    int xq = width/4 -queryW/2;
-    int xq2 = xq+queryW;
+    int xq = width/4 - queryW/2;
+    int xq2 = xq + queryW;
     int yq = height/4;
-    int xs = xq2 + queryW ;
-    
-    
+    int xs = xq2 + queryW;
 
-  // Button bounds
-  float btnX, btnY, btnW = 120, btnH = 40;
+    // Standard Back Button
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "backQ", 15, false));
+    
+    // The Search Button
+    buttons.add(new Button(xs, yq, 200, 50, "Search", "dateOutput", 20, false));
+    
+    // Initialize Input Boxes
+    inputButton = new TextEntryButton(xq, yq, queryW, queryH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
+    inputButton2 = new TextEntryButton(xq2, yq, queryW, queryH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
+    
+    buttons.add(inputButton);
+    buttons.add(inputButton2);
+  }
 
   void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
+    background(RY_BLUE); 
+    
+    // Header
+    fill(255);
     textSize(40);
-    textAlign(CENTER, 80);
-    text("--DATE SEARCH--", width/2, 50);
+    textAlign(CENTER);
+    text("DATE SEARCH", width/2, 50);
+    
+    // Decorative Line
+    stroke(255, 50);
+    line(0, 80, width, 80);
+    
+    // Instruction text
+    fill(255);
     textSize(20);
     textAlign(LEFT);
-    text("Enter date in format MM/DD/YYYY", 100, 250);
-    
-    
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-    
-  }
-  
-  void draw(){
-    drawBackground();
-    
-    for(Button b : buttons){
-      b.display();
-    }
-    textSize(24);
-    fill(255);
-    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
-    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
-    image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
+    text("Enter date range to find available flights:", 100, 150);
   }
 
   void draw() {
-    background(RY_BLUE);
-
-    // --- Centered panel ---
-    float panelW = 500;
-    float panelH = 300;
-    float panelX = width/2 - panelW/2;
-    float panelY = height/2 - panelH/2;
-
-    fill(RY_WHITE);
-    stroke(200);
-    strokeWeight(1);
-    rect(panelX, panelY, panelW, panelH, 15);
-
-    // --- Header ---
-    fill(RY_BLUE);
-    textSize(24);
-    textAlign(CENTER, TOP);
-    text("Search Flights by Date", panelX + panelW/2, panelY + 20);
-
-    // --- Labels ---
-    fill(50);
-    textSize(16);
-    textAlign(LEFT, TOP);
-    text("Start Date (MM/DD/YYYY):", panelX + 30, panelY + 90);
-    text("End Date (MM/DD/YYYY):", panelX + 30, panelY + 150);
-
-    // --- Input boxes ---
-    // Start Date Box
-    if (activeStart) fill(255);
-    else fill(245);
-    stroke(activeStart ? RY_BLUE : 180);
-    rect(panelX + 30, panelY + 110, 200, 30, 5);
-    fill(0);
-    textAlign(LEFT, CENTER);
-    text(inputStart, panelX + 35, panelY + 125);
-
-    // End Date Box
-    if (activeEnd) fill(255);
-    else fill(245);
-    stroke(activeEnd ? RY_BLUE : 180);
-    rect(panelX + 30, panelY + 170, 200, 30, 5);
-    fill(0);
-    textAlign(LEFT, CENTER);
-    text(inputEnd, panelX + 35, panelY + 185);
-
-    // --- SEARCH Button ---
-    btnX = panelX + panelW/2 - btnW/2;
-    btnY = panelY + 230;
-    if (mouseX > btnX && mouseX < btnX+btnW && mouseY > btnY && mouseY < btnY+btnH) {
-      fill(255, 210, 50); // Hover effect
-    } else {
-      fill(RY_GOLD);
+    drawBackground();
+    
+    for (Button b : buttons) {
+      b.display();
     }
-    noStroke();
-    rect(btnX, btnY, btnW, btnH, 8);
-
-    fill(RY_BLUE);
-    textAlign(CENTER, CENTER);
+    
     textSize(18);
-    text("SEARCH", btnX + btnW/2, btnY + btnH/2);
+    fill(255);
+    textAlign(LEFT);
+    text("From:", inputButton.x, inputButton.y - 10);
+    text("To:", inputButton2.x, inputButton2.y - 10);
+  }
 
-    // --- Back Button ---
-    for (Button b : buttons) b.display();
+  void keyPressed(char k) {
+    if (currentInput != null) {
+      currentInput.addChar(k);
+    }
   }
 
   void mousePressed() {
-    // Back button
+    currentInput = null;
+
+    // 1. Handle Input Focus
+    if (inputButton.over(mouseX, mouseY)) {
+      currentInput = inputButton;
+      if(inputButton.label.equals("MM/DD/YYYY")) inputButton.label = "";
+    }
+    if (inputButton2.over(mouseX, mouseY)) {
+      currentInput = inputButton2;
+      if(inputButton2.label.equals("MM/DD/YYYY")) inputButton2.label = "";
+    }
+
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("backQueries")) {
-        currentScreen = queries; // Go back to previous queries screen
-      }
-    }
-
-    // Activate input boxes
-    float panelX = width/2 - 500/2;
-    float panelY = height/2 - 300/2;
-
-    if (mouseX > panelX + 30 && mouseX < panelX + 230 &&
-        mouseY > panelY + 110 && mouseY < panelY + 140) {
-      activeStart = true;
-      activeEnd = false;
-    } else if (mouseX > panelX + 30 && mouseX < panelX + 230 &&
-               mouseY > panelY + 170 && mouseY < panelY + 200) {
-      activeStart = false;
-      activeEnd = true;
-    } else {
-      activeStart = false;
-      activeEnd = false;
-    }
-
-    // Search button click
-    if (mouseX > btnX && mouseX < btnX+btnW &&
-        mouseY > btnY && mouseY < btnY+btnH) {
-      // Assign to selection and search
-      selection.dateStart = inputStart;
-      selection.dateEnd = inputEnd;
-      searchFlightsByDate();
-      currentScreen = flightsOutput;
-    }
-  }
-
-  // Handle regular buttons
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
+      if (b.over(mouseX, mouseY)) {
         println("Clicked: " + b.type);
-        if (b.type.equals("backQ")) currentScreen = queries;
-        if (b.type.equals("flightsOutput")) {
-            searchFlightsDateRange(); 
-            currentScreen = flightsOutput;
+        
+        if (b.type.equals("backQ")) {
+          currentScreen = queries;
         }
-        if (b.type.equals("dateOutput")) 
-        {
-            selection.dateStart = inputButton.label;
-            selection.dateEnd = inputButton2.label;
-            
-            searchFlightsDateRange(); 
-     
-            currentScreen = flightsOutput; 
-        }
-        if (b.type.equals("trafficOutput")) {
-            searchFlight(); 
-            currentScreen = trafficOutput;
+        
+        if (b.type.equals("dateOutput")) {
+          selection.dateStart = inputButton.label;
+          selection.dateEnd = inputButton2.label;
+          
+          searchFlightsDateRange(); 
+          
+          currentScreen = flightsOutput; 
         }
       }
     }
