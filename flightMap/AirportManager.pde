@@ -8,8 +8,8 @@ class AirportManager {
       String[] parts = split(line, ",");
       
       String code = parts[0].trim();
-      float lat = float(parts[1]);
-      float lon = float(parts[2]);
+      float lat = parseFloat(parts[1]);
+      float lon = parseFloat(parts[2]);
 
       airports.put(code, new PVector(lat, lon));
     }
