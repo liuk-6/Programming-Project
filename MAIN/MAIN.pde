@@ -16,26 +16,27 @@ color RY_BG = #F2F5F7;
 TrafficResultsScreen trafficResults;
 
 /////////// MAIN SCREENS AT START ////////////////
-int home = 1;
-int queries = 2;
-int graphs = 3;
-int exit = 4;
+final int home = 1;
+final int queries = 2;
+final int graphs = 3;
+final int exit = 4;
 
 ////////// SECOND LAYER SCREENS ////////////////
-int flightsSearch = 5;
-int flightsDate = 6;
-int flightsTraffic = 7;
+final int flightsSearch = 5;
+final int flightsDate = 6;
+final int flightsTraffic = 7;
 
 /////////THIRD LAYER - OUTPUT SCREENS ///////////
-int flightsOutput = 8;
-int dateOutput = 9;
-int trafficOutput = 10;
-int trafficOutputEastCoast = 11;
-int trafficOutputWestCoast = 12;
-int trafficOutputCentral = 13;
+final int flightsOutput = 8;
+final int dateOutput = 9;
+final int trafficOutput = 10;
+final int trafficOutputEastCoast = 11;
+final int trafficOutputWestCoast = 12;
+final int trafficOutputCentral = 13;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
+ArrayList<Integer> screenHistory = new ArrayList<Integer>();
 UserSelection selection;
 
 ////////DISPLAY TABLE FOOTPRINT ///////////
@@ -86,7 +87,7 @@ TableDisplay myTrafficRoutes;
 ///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
 HomeScreen homeScreen;
-Screen current;
+Screen currentScreenObject;
 PImage planeHomeScreen;
 PImage SearchButton;
 PImage sunset;
@@ -96,7 +97,10 @@ QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
 QueriesDate flightDateScreen;
 QueriesTraffic flightTrafficScreen;
+
+TrafficResultsScreen trafficOutputScreen;
 FlightsOutputScreen flightsOutputScreen;
+
 GraphsScreen graphsScreen;
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
@@ -113,7 +117,16 @@ ArrayList<Route> centralRoutes;
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
+void goTo(int nextScreen) {
+  screenHistory.add(currentScreen);
+  currentScreen = nextScreen;
+}
 
+void goBack() {
+  if (screenHistory.size() > 0) {
+    currentScreen = screenHistory.remove(screenHistory.size() - 1);
+  }
+}
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
@@ -219,7 +232,7 @@ void searchFlight() {
     println("Search Error: Check date format");
   }
   Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-  currentScreen = flightsOutput;
+  goTo(flightsOutput);
 }
 
 // ---- DRAWING METHODS FOR TRAFFIC PANEL ----
@@ -335,7 +348,7 @@ void setup() {
   arrow           = loadImage("Arrow.png");
   sunset          = loadImage("Sunset.png");
   homeScreen = new HomeScreen();
-  current    = homeScreen;
+  currentScreenObject    = homeScreen;
 
   selection = new UserSelection("", "", "", "");
 
@@ -363,45 +376,51 @@ void setup() {
 void draw() {
   background(30);
 
-  // Update current screen pointer
-  if      (currentScreen == home)               current = homeScreen;
-  else if (currentScreen == queries)            current = queriesScreen;
-  else if (currentScreen == flightsSearch)      current = flightsSearchScreen;
-  else if (currentScreen == flightsDate)        current = flightDateScreen;
-  else if (currentScreen == flightsTraffic)     current = flightTrafficScreen;
-  else if (currentScreen == graphs)             current = graphsScreen;
-  else if (currentScreen == flightsOutput)      current = flightsOutputScreen;
+  switch(currentScreen) {
+  case home: currentScreenObject = homeScreen; break;
+  case queries: currentScreenObject = queriesScreen; break;
+  case flightsSearch: currentScreenObject = flightsSearchScreen; break;
+  case flightsDate: currentScreenObject = flightDateScreen; break;
+  case flightsTraffic: currentScreenObject = flightTrafficScreen; break;
+  case flightsOutput: currentScreenObject = flightsOutputScreen; break;
+  case trafficOutput: currentScreenObject = trafficOutputScreen; break;
+  case trafficOutputEastCoast: currentScreenObject = trafficOutputScreen; break;
+  case trafficOutputWestCoast: currentScreenObject = trafficOutputScreen; break;
+  case trafficOutputCentral: currentScreenObject = trafficOutputScreen; break;
+  case graphs: currentScreenObject = graphsScreen; break;
+  default: currentScreenObject = homeScreen; break;
+}
 
-  // Draw the active screen
-  if (current != null) current.draw();
+if(currentScreenObject != null) currentScreenObject.draw();
+
 
   // Traffic panel drawn ON TOP only on traffic output screens
-  if (currentScreen == trafficOutput          ||
-      currentScreen == trafficOutputEastCoast ||
-      currentScreen == trafficOutputWestCoast ||
-      currentScreen == trafficOutputCentral) {
+  if (currentScreen == trafficOutput) {
     drawPanel();
     drawAllZones();
   }
 }
 
 void mousePressed() {
-  // Handle the BACK button drawn directly on the traffic panel
-  if ((currentScreen == trafficOutput          ||
+  // Special back button for traffic panel
+  if ((currentScreen == trafficOutput ||
        currentScreen == trafficOutputEastCoast ||
        currentScreen == trafficOutputWestCoast ||
-       currentScreen == trafficOutputCentral)  &&
-      mouseX > 30 && mouseX < 110 && mouseY > 22 && mouseY < 52) {
-    currentScreen = queries;
+       currentScreen == trafficOutputCentral) &&
+      mouseX > 30 && mouseX < 110 &&
+      mouseY > 22 && mouseY < 52) {
+    goBack();   
     return;
   }
 
-  // All other clicks are handled inside each screen's own mousePressed()
-  if (current != null) current.mousePressed();
+  // delegate click to current screen
+  if (currentScreenObject != null) {
+    currentScreenObject.mousePressed();
+  }
 }
 
 void keyPressed() {
-  if (current != null) current.keyPressed(key);
+  if (currentScreenObject != null) currentScreenObject.keyPressed(key);
 }
 
 void mouseWheel(MouseEvent event) {

@@ -1,4 +1,4 @@
-class FlightLocation { 
+class FlightLocation {
   String origin, destination;
   float oLat, oLon, dLat, dLon;
   String depTime, arrTime;
@@ -23,15 +23,15 @@ class FlightLocation {
     this.status = status;
   }
 
-  void display(WorldMap map, boolean isSelected) {
+  void display(WorldMap map, boolean isSelected, String selectedAirport) {
     PVector p1 = map.geoToScreen(oLat, oLon);
     PVector p2 = map.geoToScreen(dLat, dLon);
 
     noFill();
 
     // Calculate curve control point
-    float cx = (p1.x + p2.x) / 2;
-    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * 0.2;
+    float cx = ((p1.x + p2.x) / 2);
+    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * (0.17);
 
     if (isSelected) {
       // 🔥 Glow layer
