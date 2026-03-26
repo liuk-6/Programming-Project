@@ -35,6 +35,24 @@ class Button {
       textAlign(CENTER, CENTER);
       textSize(textSize);
       text("← " + label, x + w/2, y + h/2 - 2);
+      } else if (type.equals("home")){
+      noStroke();
+      if(hovers){
+        fill(RY_BLUE);
+      } else {
+         fill(240, 231, 213);
+      }
+      rect(x, y, w, h, 10);
+      
+      if(hovers)  {
+        fill(255);
+      } else {
+        fill(0);
+      }
+      
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2 - 2);
     } else {
       noStroke();
       fill(hovers ? #3D5A80 : RY_BLUE);
