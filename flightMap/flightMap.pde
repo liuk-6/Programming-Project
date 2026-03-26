@@ -9,6 +9,8 @@ AirportManager airportManager;
 Table table;
 FlightLocation flight;
 Legend legend;
+FlightLocation hoveredFlight = null;
+String statusFilter = "ALL"; // ALL, ON_TIME, DELAYED, CANCELLED
 
 String selectedDate = "2022-01-01"; // change this
 
@@ -35,11 +37,34 @@ void draw() {
 
   world.display();
 
+  hoveredFlight = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
+
   ArrayList<FlightLocation> flights = getVisibleFlights();
 
   for (FlightLocation f : flights) {
+
     boolean selected = (panel.selected == f);
-    f.display(world, selected);
+    boolean hovered = (hoveredFlight == f);
+
+    f.display(world, selected || hovered);
+  }
+  legend.display();
+
+  for (String code : airportManager.airports.keySet()) {
+
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(screen.x, screen.y, 8, 8);
+
+    if (dist(mouseX, mouseY, screen.x, screen.y) < 10) {
+      fill(255, 255, 0);
+      ellipse(screen.x, screen.y, 12, 12);
+    }
   }
 
   legend.display();
@@ -123,24 +148,76 @@ ArrayList<FlightLocation> getVisibleFlights() {
 
   return visible;
 }
+String checkAirportClick(float mx, float my) {
+
+  for (String code : airportManager.airports.keySet()) {
+
+    // Only allow clicking your 10 airports
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    if (dist(mx, my, screen.x, screen.y) < 8) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
+
+ArrayList<FlightLocation> getVisibleFlights() {
+
+  ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
+
+  for (FlightLocation f : manager.getFlights()) {
+
+    // ✈️ Airport filter
+    if (selectedAirport != null) {
+      if (!f.origin.equals(selectedAirport) && !f.destination.equals(selectedAirport)) {
+        continue;
+      }
+    }
+
+    // 🎨 Status filter
+    if (!statusFilter.equals("ALL") && !f.status.equals(statusFilter)) {
+      continue;
+    }
+
+    visible.add(f);
+  }
+
+  return visible;
+}
+
+
 
 
 
 void mousePressed() {
 
-  // ✅ Check airport click FIRST
-  String airport = checkAirportClick(mouseX, mouseY);
+  // ✅ Legend click FIRST
+  String legendClick = legend.checkClick(mouseX, mouseY);
+  if (legendClick != null) {
+    statusFilter = legendClick;
+    panel.setFlight(null); // clear selection
+    return;
+  }
 
+  // ✅ Airport click
+  String airport = checkAirportClick(mouseX, mouseY);
   if (airport != null) {
     if (airport.equals(selectedAirport)) {
-      selectedAirport = null; // toggle off
+      selectedAirport = null;
     } else {
       selectedAirport = airport;
     }
     panel.setFlight(null);
     return;
   }
-  // ✅ Otherwise check flight click
+
+  // ✅ Flight click (ONLY visible ones)
   FlightLocation clicked = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
 }
