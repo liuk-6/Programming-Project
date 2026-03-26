@@ -25,17 +25,16 @@ class Screen {
 ///////////////////////MENU SCREEN//////////////////////////////////////
 class HomeScreen extends Screen{
 
-  HomeScreen(){
-  int buttonW = 80*6;
-  int buttonH = 50;
-  int yPos = height/2; // 20 px padding from bottom
-  float x1 = 100 ;  // 1st button
-  float x3 = 1100 - buttonW;  // 2nd button
-  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
-  buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
-  buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
-  
-  
+  HomeScreen()
+  {
+    int buttonW = 80*6;
+    int buttonH = 50;
+    int yPos = height/2; // 20 px padding from bottom
+    float x1 = 100 ;  // 1st button
+    float x3 = 1100 - buttonW;  // 2nd button
+    buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
+    buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
+    buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
   }
   void draw() {
   drawBackground();   // draws the plane
@@ -172,6 +171,7 @@ class QueriesScreen extends Screen {
   }
   }
 }
+
 class GraphsScreen extends Screen {
 
   GraphsScreen() {
@@ -320,8 +320,8 @@ class QueriesDate extends Screen {
     // Add back button at bottom center
     int buttonW = 180;
     int buttonH = 50;
-    int x = 30;
-    int y = 22;
+    int x = (width/2);
+    int y = height - 50;
     int queryW = width/4+100;
     int queryH = 50;
     int xq = width/4 -queryW/2;
@@ -350,6 +350,9 @@ class QueriesDate extends Screen {
     textSize(40);
     textAlign(CENTER, 80);
     text("--DATE SEARCH--", width/2, 50);
+    textSize(20);
+    textAlign(LEFT);
+    text("Enter date in format MM/DD/YYYY", 100, 250);
     
     
     
@@ -414,12 +417,17 @@ class QueriesDate extends Screen {
         println("Clicked: " + b.type);
         if (b.type.equals("backQ")) currentScreen = queries;
         if (b.type.equals("flightsOutput")) {
-            searchFlight(); 
+            searchFlightsDateRange(); 
             currentScreen = flightsOutput;
         }
-        if (b.type.equals("dateOutput")) {
-            searchFlight(); 
-            currentScreen = dateOutput;
+        if (b.type.equals("dateOutput")) 
+        {
+            selection.dateStart = inputButton.label;
+            selection.dateEnd = inputButton2.label;
+            
+            searchFlightsDateRange(); 
+     
+            currentScreen = flightsOutput; 
         }
         if (b.type.equals("trafficOutput")) {
             searchFlight(); 
@@ -429,6 +437,8 @@ class QueriesDate extends Screen {
     }
   }
 }
+
+
 class QueriesTraffic extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
