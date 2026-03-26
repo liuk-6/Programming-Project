@@ -1,12 +1,10 @@
-
 class Button {
   float x, y, w, h;
   String label;
-  
   String type;
   int textSize;
   boolean hasShadow;
-  
+
   Button(float x, float y, float w, float h, String label, String type, int textSize, boolean hasShadow) {
     this.x = x;
     this.y = y;
@@ -17,75 +15,116 @@ class Button {
     this.textSize = textSize;
     this.hasShadow = hasShadow;
   }
-  
+
   void display() {
-    
-    //Shadow
-    if(hasShadow){
-      noStroke();
-      fill(0, 80);
-      rect(x+3, y+7, w, h, 10);
-    }
-    
     boolean hovers = over(mouseX, mouseY);
-      if(type.equals("queries")){
-        if(hovers) fill(119, 139, 150);
-        else fill(61, 63, 74);
-      }
-       else if(type.equals("graphs")){
-         if(hovers) fill(142, 163, 157);
-           else fill(61, 63, 74);
-       }
-       else if(type.equals("exit") || type.equals("back")){
-         if(hovers) fill(180);
-           else fill(70);
-       }
-       else{
-         if(hovers) fill(209, 207, 201);
-            else fill(61, 63, 74);
-    }    
-    
-    stroke(255);
-    rect(x, y, w, h, 8);
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(textSize);
-    text(label, x + w/2, y + h/2);
+
+    // 1. DRAW SHADOW (If applicable)
+    if (hasShadow) {
+      noStroke();
+      fill(0, 40); // Subtle modern shadow
+      rect(x + 2, y + 4, w, h, 8);
+    }
+
+    // 2. DEFINE BUTTON STYLE BY TYPE
+    if (type.equals("flightsOutput")) {
+      // PRIMARY ACTION: Ryanair Yellow/Gold
+      noStroke();
+      fill(hovers ? #FFD700 : #F4CA35); // Brighter gold on hover
+      rect(x, y, w, h, 8);
+      
+      // Professional Navy Blue Text
+      fill(#2B4779); 
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text("Search Flights", x + w/2, y + h/2 - 3);
+
+    } else if (type.equals("back") || type.equals("backQ")) {
+      // HEADER/NAV BUTTON: Transparent with White Outline
+      stroke(255, 180);
+      strokeWeight(1);
+      fill(hovers ? color(255, 30) : color(0, 0)); 
+      rect(x, y, w, h, 5);
+      
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text("← " + label, x + w/2, y + h/2 - 2);
+
+    } else if (type.equals("queries") || type.equals("graphs")) {
+      // MAIN MENU BUTTONS: Dark Navy with White Text
+      noStroke();
+      fill(hovers ? #3D5A80 : #2B4779);
+      rect(x, y, w, h, 10);
+      
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2 - 2);
+
+    } else {
+      // DEFAULT BUTTON STYLE
+      stroke(200);
+      fill(hovers ? 240 : 255);
+      rect(x, y, w, h, 5);
+      
+      fill(50);
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2 - 2);
+    }
   }
-  
-  // ...existing fields...
 
   boolean click() {
     return over(mouseX, mouseY);
   }
-  
+
   boolean over(float mx, float my) {
     return mx > x && mx < x + w && my > y && my < y + h;
   }
-
 }
-class TextEntryButton extends Button{
+
+class TextEntryButton extends Button {
   int maxlen;
   int inputOrder;
   
   TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars, int textSize, boolean hasShadow, int inputOrder){
-    super(x,y,w,h,label,type,textSize, hasShadow);
+    super(x, y, w, h, label, type, textSize, hasShadow);
     this.inputOrder = inputOrder;
     this.maxlen = maxChars;
+  }
+  
+  @Override
+  void display() {
+    stroke(RY_BLUE);
+    strokeWeight(1);
+    fill(245); // Light grey input box
     
+    // Highlight if active
+    if (current instanceof QueriesFlights && ((QueriesFlights)current).currentInput == this) {
+      strokeWeight(2);
+      fill(255); 
+    }
+    
+    rect(x, y, w, h, 5);
+    
+    fill(RY_BLUE); // Dark text so it's visible!
+    textAlign(LEFT, CENTER);
+    textSize(textSize);
+    
+    String visual = label;
+    if (current instanceof QueriesFlights && ((QueriesFlights)current).currentInput == this) {
+       if ((frameCount / 25) % 2 == 0) visual += "|";
+    }
+    
+    text(visual, x + 10, y + h/2 - 3);
   }
   
-  void addChar(char s){
-    if(s==BACKSPACE){
-      if(label.equals("Enter origin")||label.equals("Enter destination")||label.equals("Enter date")||label.equals("From: ")||label.equals("To: ")) label = "";
-      if(!label.equals("")){
-        label = label.substring(0,label.length()-1);
-      }
+  void addChar(char s) {
+    if (s == BACKSPACE) {
+      if (label.length() > 0) label = label.substring(0, label.length() - 1);
+    } else if (s != CODED && s != ENTER && s != TAB && label.length() < maxlen) {
+      label += s;
     }
-    else if (label.length()<maxlen){
-      label = label +str(s);
-    }
-  
   }
-  
 }

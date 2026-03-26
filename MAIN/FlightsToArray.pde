@@ -20,7 +20,8 @@ class Flight
   //assign only needed columns to variables through constructor
   Flight(int rowIndex)
   {
-    date = table.getRow(rowIndex).getString("FL_DATE");
+    // Inside Flight class constructor
+    date = table.getRow(rowIndex).getString("FL_DATE").split(" ")[0]; // Gets "01/02/2022"
     carrier = table.getRow(rowIndex).getString("MKT_CARRIER");
     flightNumber = table.getRow(rowIndex).getInt("MKT_CARRIER_FL_NUM");
     origin = table.getRow(rowIndex).getString("ORIGIN");

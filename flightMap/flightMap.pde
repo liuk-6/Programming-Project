@@ -67,6 +67,25 @@ void draw() {
     }
   }
 
+  legend.display();
+
+  for (String code : airportManager.airports.keySet()) {
+
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(screen.x, screen.y, 8, 8);
+
+    if (dist(mouseX, mouseY, screen.x, screen.y) < 10) {
+      fill(255, 255, 0);
+      ellipse(screen.x, screen.y, 12, 12);
+    }
+  }
+
   for (String code : airportManager.airports.keySet()) {
 
     if (!manager.allowedAirports.contains(code)) continue;
@@ -89,8 +108,45 @@ void draw() {
       text(code, mouseX + 15, mouseY - 5);
     }
   }
+  
+    panel.display();
 
-  panel.display();
+}
+String checkAirportClick(float mx, float my) {
+
+  for (String code : airportManager.airports.keySet()) {
+
+    // Only allow clicking your 10 airports
+    if (!manager.allowedAirports.contains(code)) continue;
+
+    PVector geo = airportManager.getCoords(code);
+    PVector screen = world.geoToScreen(geo.x, geo.y);
+
+    if (dist(mx, my, screen.x, screen.y) < 8) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
+
+ArrayList<FlightLocation> getVisibleFlights() {
+
+  ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
+
+  for (FlightLocation f : manager.getFlights()) {
+
+    if (selectedAirport != null) {
+      if (!f.origin.equals(selectedAirport) && !f.destination.equals(selectedAirport)) {
+        continue;
+      }
+    }
+
+    visible.add(f);
+  }
+
+  return visible;
 }
 String checkAirportClick(float mx, float my) {
 
@@ -134,6 +190,8 @@ ArrayList<FlightLocation> getVisibleFlights() {
 
   return visible;
 }
+
+
 
 
 

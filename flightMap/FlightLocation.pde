@@ -1,4 +1,4 @@
-class FlightLocation {
+class FlightLocation { 
   String origin, destination;
   float oLat, oLon, dLat, dLon;
   String depTime, arrTime;

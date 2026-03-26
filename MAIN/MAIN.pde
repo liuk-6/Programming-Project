@@ -1,7 +1,17 @@
 import java.util.Collections;
 import java.util.Comparator;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 ///////////// CONSTANT VALUES ////////////////
 String[] lines;
+color RY_BLUE = #2B4779;
+color RY_GOLD = #F4CA35;
+color RY_WHITE = #FFFFFF;
+color RY_BG = #F2F5F7; // Light grey-blue background found on their site
+
+/////////////GLOBAL VARIABLES///////////////////////
+TrafficResultsScreen trafficResults;
 
 /////////// MAIN SCREENS AT START ////////////////
 int home = 1;
@@ -37,6 +47,9 @@ Table table;
 Flight flight;
 
 ////////////TABLE FOR ROUTES DISPLAY//////////////
+Table myTrafficData;
+TableDisplay myTrafficRoutes;
+
 
 ///////// DECLARING SCREENS ////////////////
 PImage backgroundImg;
@@ -54,21 +67,22 @@ QueriesDate flightDateScreen;
 QueriesTraffic flightTrafficScreen;
 
 FlightsOutputScreen flightsOutputScreen;
-DatesOutputScreen datesOutputScreen;
-TrafficOutputScreenEastCoast trafficOutputScreenEastCoast;
-TrafficOutputScreenWestCoast trafficOutputScreenWestCoast;
-TrafficOutputScreenCentral trafficOutputScreenCentral;
-
 
 GraphsScreen graphsScreen;
 
 ///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
 
 ArrayList<Flight> flightsList;  //list where all the flights are stored
+ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory; // input
 ArrayList<Flight> results; //if flights found they will be stored in result
 String flightsFound ="";
 
+ArrayList<Route> eastCoastRoutes;
+ArrayList<Route> westCoastRoutes;
+ArrayList<Route> centralRoutes;
+
+PFont font;
 //////////////////////METHODS/////////////////////////////////////////////////////
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
@@ -82,45 +96,197 @@ void addFlightsToTable(ArrayList<Flight> list) {
     row.setString("Destination", f.destination);
   }
 }
+void addFlightsRoutesToTable(ArrayList<Flight> list) {
+  myTrafficData.clearRows();
+  for (Flight f : list) {
+    TableRow row = myTrafficData.addRow();
+    row.setString("Flight ID", str(f.flightNumber));
+    row.setString("Origin", f.origin);
+    row.setString("Destination", f.destination);
+  }
+}
 
 String formatTime(int time) {
   String t = nf(time, 4);
   return t.substring(0, 2) + ":" + t.substring(2, 4);
 }
+void searchFlightsByDate() {
+  results.clear();
+  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+
+  try {
+    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+    LocalDate end   = LocalDate.parse(selection.dateEnd, csvFormat);
+
+    for (Flight f : flightsList) {
+      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+
+      if (!flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
+    }
+
+    // Optional: sort by departure time
+    Collections.sort(results, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+
+  } catch (Exception e) {
+    println("Error: check date format");
+  }
+}
 
 void searchFlight() {
   results.clear();
-  for (Flight f : flightsList) {
-    if (f.origin.equals(selection.origin) && 
-        f.destination.equals(selection.destination)) {
-      results.add(f);
-    }
-  }
-  Collections.sort(results, new Comparator<Flight>(){
-    public int compare(Flight a, Flight b){
-    return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);    }
-  });
-  ArrayList<Flight> fiveFlights = new ArrayList<Flight>();
-  int count = min(8, results.size());
-  for (int i = 0; i < count; i++) {
-    fiveFlights.add(results.get(i));
-  }
-  addFlightsToTable(fiveFlights);
-  flightsFound = " Flights found: "+ results.size();
-}
-void searchFlightsDateRange(){
+  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
 
+  try {
+    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+    LocalDate end = LocalDate.parse(selection.dateEnd, csvFormat);
+
+    for (Flight f : flightsList) {
+      // Clean date and match city/code
+      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+      String userOrigin = selection.origin.toLowerCase().trim();
+      String userDest = selection.destination.toLowerCase().trim();
+
+      boolean originMatch = f.origin.equalsIgnoreCase(userOrigin) || f.originCityName.toLowerCase().contains(userOrigin);
+      boolean destMatch = f.destination.equalsIgnoreCase(userDest) || f.destinationCityName.toLowerCase().contains(userDest);
+
+      if (originMatch && destMatch && !flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
+    }
+  } catch (Exception e) {
+    println("Search Error: Check date format");
+  }
+
+  // Sort by time for a professional "Timeline" feel
+  Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+  
+  // SWITCH SCREEN
+  currentScreen = flightsOutput; 
+}
+
+// Draw the elegant traffic results screen
+void drawPanel() {
+  background(RY_BLUE);   // Main background
+
+  // Header
+  fill(255);
+  textSize(40);
+  textAlign(CENTER, CENTER);
+  text("MOST BUSY TRAFFIC ROUTES", width/2, 50);
+
+  // Draw the back button
+  fill(RY_GOLD);
+  rect(30, 22, 80, 30, 8);
+  fill(RY_BLUE);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("BACK", 30 + 40, 22 + 15);
+
+  // Draw all three zone cards
+  drawAllZones();
+}
+
+void drawAllZones() {
+  float padding = 30;
+  float cardW = (width - padding*4) / 3;
+  float cardH = 400;
+  float startY = 100;
+
+  // East Coast - Light Blue
+  drawZoneCard(eastCoastRoutes, "EAST COAST", padding, startY, cardW, cardH, color(135, 206, 250, 180));
+
+  // Central - Light Yellow
+  drawZoneCard(centralRoutes, "CENTRAL", padding*2 + cardW, startY, cardW, cardH, color(255, 223, 130, 180));
+
+  // West Coast - Light Green
+  drawZoneCard(westCoastRoutes, "WEST COAST", padding*3 + cardW*2, startY, cardW, cardH, color(144, 238, 144, 180));
+}
+
+// Draw a single zone card
+void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float w, float h, color bgColor) {
+  // Card background
+  fill(bgColor);
+  noStroke();
+  rect(x, y, w, h, 20); // Rounded corners
+
+  // Zone title
+  fill(RY_BLUE);
+  textSize(18);
+  textAlign(CENTER, TOP);
+  text(title, x + w/2, y + 10);
+
+  // Draw routes
+  textSize(14);
+  textAlign(LEFT, TOP);
+  fill(50);
+  float routeY = y + 40;
+  int rank = 1;
+
+  for (Route r : routes) {
+    String line = rank + ". " + r.origin + " → " + r.destination + " (" + r.passengers + ")";
+    text(line, x + 10, routeY);
+    routeY += 22;
+
+    // Optional: small divider
+    stroke(200, 50);
+    line(x + 5, routeY - 5, x + w - 5, routeY - 5);
+    noStroke();
+
+    rank++;
+  }
+}
+void loadRouteData() {
+
+ eastCoastRoutes.add(new Route("NYC", "BOS", 1200));
+  eastCoastRoutes.add(new Route("MIA", "ATL", 980));
+
+  westCoastRoutes.add(new Route("LAX", "SFO", 1100));
+  westCoastRoutes.add(new Route("SEA", "LAX", 870));
+
+  centralRoutes.add(new Route("CHI", "DAL", 1500));
+  centralRoutes.add(new Route("HOU", "DEN", 1400));
+}
+
+
+void searchFlightsDateRange()
+{
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    try {
+    LocalDate start = LocalDate.parse(selection.dateStart, df);
+    LocalDate end = LocalDate.parse(selection.dateEnd, df);
+
+    for (Flight f : flightsList) {
+      LocalDate flightDate = LocalDate.parse(f.date, df);
+
+      if (!flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
+    }
+    
+      Collections.sort(results, (a, b) -> {
+      LocalDate d1 = LocalDate.parse(a.date, df);
+      LocalDate d2 = LocalDate.parse(b.date, df);
+      return d1.compareTo(d2);
+    });
+
+    println("Date Search Complete: Found " + results.size() + " flights.");
+
+  } catch (Exception e) {
+    println("Error: Please use the format M/D/YYYY (e.g. 1/1/2022)");
+  }
 }
 void searchBusiestRoutes(){
 
 }
-void searchAmerica(){
+void searchEastCoast(){
 
 }
-void searchWorldwide(){
+void searchWestCoast(){
 
 }
-void searchEurope(){
+void searchCentral(){
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +294,18 @@ void searchEurope(){
 void setup() {
   size(1200,700);
   textSize(18);
+  
+  // create lists for traffic
+  eastCoastRoutes = new ArrayList<Route>();
+  westCoastRoutes = new ArrayList<Route>();
+  centralRoutes = new ArrayList<Route>();
+  loadRouteData(); 
+  
+  trafficResults = new TrafficResultsScreen(
+  eastCoastRoutes,
+  centralRoutes,
+  westCoastRoutes
+  );
 
   // Load CSV
   lines = loadStrings("flights2k.csv");
@@ -159,10 +337,7 @@ void setup() {
   
 //////////////Defining output screens//////////////////////////
   flightsOutputScreen = new FlightsOutputScreen();
-  datesOutputScreen = new DatesOutputScreen();
-  trafficOutputScreenEastCoast = new TrafficOutputScreenEastCoast();
-  trafficOutputScreenWestCoast = new TrafficOutputScreenWestCoast();
-  trafficOutputScreenCentral = new TrafficOutputScreenCentral();
+  
 
   
 //////////////// Home Screen//////////////////////////////////
@@ -189,89 +364,65 @@ void setup() {
   addFlightsToTable(flightsList);
 
   myFlights = new TableDisplay(myData, 50, 150);
+  
+////////////////// ROUTES TABLE SETUP ////////////////////////
+  myTrafficData = new Table();
+  myTrafficData.addColumn("Origin");
+  myTrafficData.addColumn("Origin City Name");
+  myTrafficData.addColumn("Destination City Name");
+  myTrafficData.addColumn("Destination");
+  flightsRoutes = new ArrayList<Flight>();
+  addFlightsRoutesToTable(flightsRoutes); /////////////Change to correct list
+
+  myTrafficRoutes = new TableDisplay(myTrafficData,250,150);
 }
 
 void draw() {
+  
+  background(30);
+  
+  drawPanel();
+  drawAllZones();
 
-  if (currentScreen == home) {
-    current = homeScreen;
-    current.draw();
+  
+  // Update which screen 'current' points to based on currentScreen ID
+  if (currentScreen == home)            current = homeScreen;
+  else if (currentScreen == queries)     current = queriesScreen;
+  else if (currentScreen == flightsSearch) current = flightsSearchScreen;
+  else if (currentScreen == flightsDate)   current = flightDateScreen;
+  else if (currentScreen == flightsTraffic)current = flightTrafficScreen;
+  else if (currentScreen == graphs)      current = graphsScreen;
+  else if (currentScreen == flightsOutput) current = flightsOutputScreen;
+  // ... add the rest of your output screens here ...
 
-  } else if (currentScreen == queries) {
-    current = queriesScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsSearch) {
-    current = flightsSearchScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsDate) {
-    current = flightDateScreen;
-    current.draw();
-
-  } else if (currentScreen == flightsTraffic) {
-    current = flightTrafficScreen;
-    current.draw();
-
-  } else if (currentScreen == graphs) {
-    current = graphsScreen;
+  if (current != null) {
     current.draw();
   }
-  else if(currentScreen ==flightsOutput){
-    current = flightsOutputScreen;
-    current.draw();
+  if (currentScreen == flightsTraffic) {
+    
+    drawPanel();
+    drawAllZones();
   }
-  else if(currentScreen ==dateOutput){
-    current = datesOutputScreen;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputEastCoast){
-    current = trafficOutputScreenEastCoast;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputWestCoast){
-    current = trafficOutputScreenWestCoast;
-    current.draw();
-  }
-  else if(currentScreen ==trafficOutputCentral){
-    current = trafficOutputScreenCentral;
-    current.draw();
-  }
+
 }
 
 void mousePressed() {
-  if (currentScreen == home)
-    homeScreen.mousePressed();
-  else if (currentScreen == queries)
-    queriesScreen.mousePressed();
-  else if (currentScreen == flightsSearch)
-    flightsSearchScreen.mousePressed();
-  else if (currentScreen == graphs)
-    graphsScreen.mousePressed();
-  else if (currentScreen == exit)
-    exit();
-  else if(currentScreen == flightsDate)
-    flightDateScreen.mousePressed();
-  else if(currentScreen == flightsTraffic)
-    flightTrafficScreen.mousePressed();
-  else if(currentScreen == flightsOutput)
-    flightsOutputScreen.mousePressed();
-   else if(currentScreen == dateOutput)
-    datesOutputScreen.mousePressed();
-   else if(currentScreen == trafficOutputEastCoast)
-    trafficOutputScreenEastCoast.mousePressed();
-   else if(currentScreen == trafficOutputWestCoast)
-    trafficOutputScreenWestCoast.mousePressed();
-   else if(currentScreen == trafficOutputCentral)
-    trafficOutputScreenCentral.mousePressed();
-}
-
-void mouseMoved() {
+  // This single line handles EVERY screen automatically 
+  // because every screen inherits from the Screen class
+  if (current != null) {
+    current.mousePressed();
+  }
 }
 
 void keyPressed() {
   if (current != null) {
-    if (keyCode == SHIFT) return;
     current.keyPressed(key);
+  }
+}
+void mouseWheel(MouseEvent event) {
+  float e = event.getCount();
+  
+  if (currentScreen == flightsOutput) {
+    flightsOutputScreen.scrollFlights(e); // ✅ correct object
   }
 }
