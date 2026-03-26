@@ -10,6 +10,9 @@ color RY_GOLD = #F4CA35;
 color RY_WHITE = #FFFFFF;
 color RY_BG = #F2F5F7; // Light grey-blue background found on their site
 
+/////////////GLOBAL VARIABLES///////////////////////
+TrafficResultsScreen trafficResults;
+
 /////////// MAIN SCREENS AT START ////////////////
 int home = 1;
 int queries = 2;
@@ -65,8 +68,6 @@ QueriesTraffic flightTrafficScreen;
 
 FlightsOutputScreen flightsOutputScreen;
 
-
-
 GraphsScreen graphsScreen;
 
 ///////// CREATING ARRAY LISTS ///////////////////////////////////////////////
@@ -77,6 +78,11 @@ ArrayList<UserSelection> searchHistory; // input
 ArrayList<Flight> results; //if flights found they will be stored in result
 String flightsFound ="";
 
+ArrayList<Route> eastCoastRoutes;
+ArrayList<Route> westCoastRoutes;
+ArrayList<Route> centralRoutes;
+
+PFont font;
 //////////////////////METHODS/////////////////////////////////////////////////////
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
@@ -104,7 +110,29 @@ String formatTime(int time) {
   String t = nf(time, 4);
   return t.substring(0, 2) + ":" + t.substring(2, 4);
 }
+void searchFlightsByDate() {
+  results.clear();
+  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
 
+  try {
+    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+    LocalDate end   = LocalDate.parse(selection.dateEnd, csvFormat);
+
+    for (Flight f : flightsList) {
+      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+
+      if (!flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
+    }
+
+    // Optional: sort by departure time
+    Collections.sort(results, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+
+  } catch (Exception e) {
+    println("Error: check date format");
+  }
+}
 
 void searchFlight() {
   results.clear();
@@ -138,11 +166,88 @@ void searchFlight() {
   currentScreen = flightsOutput; 
 }
 
+// Draw the elegant traffic results screen
+void drawPanel() {
+  background(RY_BLUE);   // Main background
 
+  // Header
+  fill(255);
+  textSize(40);
+  textAlign(CENTER, CENTER);
+  text("MOST BUSY TRAFFIC ROUTES", width/2, 50);
 
+  // Draw the back button
+  fill(RY_GOLD);
+  rect(30, 22, 80, 30, 8);
+  fill(RY_BLUE);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("BACK", 30 + 40, 22 + 15);
 
+  // Draw all three zone cards
+  drawAllZones();
+}
 
+void drawAllZones() {
+  float padding = 30;
+  float cardW = (width - padding*4) / 3;
+  float cardH = 400;
+  float startY = 100;
 
+  // East Coast - Light Blue
+  drawZoneCard(eastCoastRoutes, "EAST COAST", padding, startY, cardW, cardH, color(135, 206, 250, 180));
+
+  // Central - Light Yellow
+  drawZoneCard(centralRoutes, "CENTRAL", padding*2 + cardW, startY, cardW, cardH, color(255, 223, 130, 180));
+
+  // West Coast - Light Green
+  drawZoneCard(westCoastRoutes, "WEST COAST", padding*3 + cardW*2, startY, cardW, cardH, color(144, 238, 144, 180));
+}
+
+// Draw a single zone card
+void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float w, float h, color bgColor) {
+  // Card background
+  fill(bgColor);
+  noStroke();
+  rect(x, y, w, h, 20); // Rounded corners
+
+  // Zone title
+  fill(RY_BLUE);
+  textSize(18);
+  textAlign(CENTER, TOP);
+  text(title, x + w/2, y + 10);
+
+  // Draw routes
+  textSize(14);
+  textAlign(LEFT, TOP);
+  fill(50);
+  float routeY = y + 40;
+  int rank = 1;
+
+  for (Route r : routes) {
+    String line = rank + ". " + r.origin + " → " + r.destination + " (" + r.passengers + ")";
+    text(line, x + 10, routeY);
+    routeY += 22;
+
+    // Optional: small divider
+    stroke(200, 50);
+    line(x + 5, routeY - 5, x + w - 5, routeY - 5);
+    noStroke();
+
+    rank++;
+  }
+}
+void loadRouteData() {
+
+ eastCoastRoutes.add(new Route("NYC", "BOS", 1200));
+  eastCoastRoutes.add(new Route("MIA", "ATL", 980));
+
+  westCoastRoutes.add(new Route("LAX", "SFO", 1100));
+  westCoastRoutes.add(new Route("SEA", "LAX", 870));
+
+  centralRoutes.add(new Route("CHI", "DAL", 1500));
+  centralRoutes.add(new Route("HOU", "DEN", 1400));
+}
 
 
 void searchFlightsDateRange(){
@@ -165,6 +270,18 @@ void searchCentral(){
 void setup() {
   size(1200,700);
   textSize(18);
+  
+  // create lists for traffic
+  eastCoastRoutes = new ArrayList<Route>();
+  westCoastRoutes = new ArrayList<Route>();
+  centralRoutes = new ArrayList<Route>();
+  loadRouteData(); 
+  
+  trafficResults = new TrafficResultsScreen(
+  eastCoastRoutes,
+  centralRoutes,
+  westCoastRoutes
+  );
 
   // Load CSV
   lines = loadStrings("flights2k.csv");
@@ -237,6 +354,13 @@ void setup() {
 }
 
 void draw() {
+  
+  background(30);
+  
+  drawPanel();
+  drawAllZones();
+
+  
   // Update which screen 'current' points to based on currentScreen ID
   if (currentScreen == home)            current = homeScreen;
   else if (currentScreen == queries)     current = queriesScreen;
@@ -250,6 +374,12 @@ void draw() {
   if (current != null) {
     current.draw();
   }
+  if (currentScreen == flightsTraffic) {
+    
+    drawPanel();
+    drawAllZones();
+  }
+
 }
 
 void mousePressed() {
@@ -263,5 +393,12 @@ void mousePressed() {
 void keyPressed() {
   if (current != null) {
     current.keyPressed(key);
+  }
+}
+void mouseWheel(MouseEvent event) {
+  float e = event.getCount();
+  
+  if (currentScreen == flightsOutput) {
+    flightsOutputScreen.scrollFlights(e); // ✅ correct object
   }
 }
