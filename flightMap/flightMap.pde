@@ -9,6 +9,8 @@ AirportManager airportManager;
 Table table;
 FlightLocation flight;
 Legend legend;
+FlightLocation hoveredFlight = null;
+String statusFilter = "ALL"; // ALL, ON_TIME, DELAYED, CANCELLED
 
 String selectedDate = "2022-01-01"; // change this
 
@@ -35,13 +37,17 @@ void draw() {
 
   world.display();
 
+  hoveredFlight = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
+
   ArrayList<FlightLocation> flights = getVisibleFlights();
 
   for (FlightLocation f : flights) {
-    boolean selected = (panel.selected == f);
-    f.display(world, selected);
-  }
 
+    boolean selected = (panel.selected == f);
+    boolean hovered = (hoveredFlight == f);
+
+    f.display(world, selected || hovered);
+  }
   legend.display();
 
   for (String code : airportManager.airports.keySet()) {
@@ -83,9 +89,8 @@ void draw() {
       text(code, mouseX + 15, mouseY - 5);
     }
   }
-  
-    panel.display();
 
+  panel.display();
 }
 String checkAirportClick(float mx, float my) {
 
@@ -112,10 +117,16 @@ ArrayList<FlightLocation> getVisibleFlights() {
 
   for (FlightLocation f : manager.getFlights()) {
 
+    // ✈️ Airport filter
     if (selectedAirport != null) {
       if (!f.origin.equals(selectedAirport) && !f.destination.equals(selectedAirport)) {
         continue;
       }
+    }
+
+    // 🎨 Status filter
+    if (!statusFilter.equals("ALL") && !f.status.equals(statusFilter)) {
+      continue;
     }
 
     visible.add(f);
@@ -128,19 +139,27 @@ ArrayList<FlightLocation> getVisibleFlights() {
 
 void mousePressed() {
 
-  // ✅ Check airport click FIRST
-  String airport = checkAirportClick(mouseX, mouseY);
+  // ✅ Legend click FIRST
+  String legendClick = legend.checkClick(mouseX, mouseY);
+  if (legendClick != null) {
+    statusFilter = legendClick;
+    panel.setFlight(null); // clear selection
+    return;
+  }
 
+  // ✅ Airport click
+  String airport = checkAirportClick(mouseX, mouseY);
   if (airport != null) {
     if (airport.equals(selectedAirport)) {
-      selectedAirport = null; // toggle off
+      selectedAirport = null;
     } else {
       selectedAirport = airport;
     }
     panel.setFlight(null);
     return;
   }
-  // ✅ Otherwise check flight click
+
+  // ✅ Flight click (ONLY visible ones)
   FlightLocation clicked = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
 }

@@ -1,4 +1,4 @@
-class FlightLocation { 
+class FlightLocation {
   String origin, destination;
   float oLat, oLon, dLat, dLon;
   String depTime, arrTime;
@@ -43,21 +43,18 @@ class FlightLocation {
       stroke(0, 100, 255, 255);
       strokeWeight(4);
       drawCurve(p1, p2, cx, cy);
-
     } else {
 
       // 🎨 Status colours with transparency
       if (status.equals("CANCELLED")) {
         stroke(255, 0, 0, 180); // red
-      } 
-      else if (status.equals("DELAYED")) {
+      } else if (status.equals("DELAYED")) {
         stroke(255, 165, 0, 140); // orange
-      } 
-      else {
+      } else {
         stroke(0, 200, 0, 120); // green
       }
 
-      strokeWeight(2);
+      strokeWeight(selectedAirport != null ? 3 : 2);
       drawCurve(p1, p2, cx, cy);
     }
   }
