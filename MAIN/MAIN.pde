@@ -21,7 +21,6 @@ color TEXT_SUB  = #9AA3B2;
 
 /////////////GLOBAL VARIABLES///////////////////////
 String[] lines;
-TrafficResultsScreen trafficResults;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
 ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
@@ -106,12 +105,9 @@ PImage logo;
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
 QueriesDate flightDateScreen;
-QueriesTraffic flightTrafficScreen;
-
-TrafficResultsScreen trafficOutputScreen;
+TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 
-DashboardScreen dashboardScreen;
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
 ArrayList<Flight> flightsList;
@@ -310,7 +306,6 @@ void setup() {
   
   allFlightCards = new ArrayList<FlightCard>();
   mySelectedFlights = new ArrayList<Flight>();
-  // Initialise region lists early so they exist before loadRouteData()
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
   centralRoutes   = new ArrayList<Route>();
@@ -330,10 +325,8 @@ void setup() {
   }
   println("Flights loaded: " + flightsList.size());
 
-  // NOW populate routes from real data
+  // Populate routes from real data
   loadRouteData();
-
-  trafficResults = new TrafficResultsScreen(eastCoastRoutes, centralRoutes, westCoastRoutes);
 
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
@@ -341,10 +334,9 @@ void setup() {
   //////////////////// Screens ////////////////////
   currentScreen       = home;
   queriesScreen       = new QueriesScreen();
-  dashboardScreen     = new DashboardScreen();
   flightsSearchScreen = new QueriesFlights();
   flightDateScreen    = new QueriesDate();
-  flightTrafficScreen = new QueriesTraffic();
+  trafficScreen       = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
   flightsOutputScreen = new FlightsOutputScreen();
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
@@ -353,7 +345,7 @@ void setup() {
   arrow           = loadImage("Arrow.png");
   logo            = loadImage("logo.png");
   homeScreen = new HomeScreen();
-  currentScreenObject    = homeScreen;
+  currentScreenObject = homeScreen;
 
   selection = new UserSelection("", "", "", "");
 
@@ -385,21 +377,14 @@ void draw() {
   }
   
   switch(currentScreen) {
-  case home: currentScreenObject = homeScreen; break;
-  case queries: currentScreenObject = queriesScreen; break;
-  case flightsSearch: currentScreenObject = flightsSearchScreen; break;
-  case flightsDate: currentScreenObject = flightDateScreen; break;
-  case flightsTraffic: currentScreenObject = flightTrafficScreen; break;
-  case flightsOutput: currentScreenObject = flightsOutputScreen; break;
-  case trafficOutput: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputEastCoast: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputWestCoast: currentScreenObject = trafficOutputScreen; break;
-  case trafficOutputCentral: currentScreenObject = trafficOutputScreen; break;
-  case dashboard: currentScreenObject = dashboardScreen; break;
-  default: currentScreenObject = homeScreen; break;
-  
-
-}
+    case home: currentScreenObject = homeScreen; break;
+    case queries: currentScreenObject = queriesScreen; break;
+    case flightsSearch: currentScreenObject = flightsSearchScreen; break;
+    case flightsDate: currentScreenObject = flightDateScreen; break;
+    case flightsTraffic: currentScreenObject = trafficScreen; break; // <--- updated
+    case flightsOutput: currentScreenObject = flightsOutputScreen; break;
+    default: currentScreenObject = homeScreen; break;
+  }
 
 if(currentScreenObject != null) currentScreenObject.draw();
 
@@ -464,11 +449,8 @@ void drawSingleZone(ArrayList<Route> routes, String title, color bgColor) {
   }
 }
 void mousePressed() {
-  // Special back button for traffic panel
-  if ((currentScreen == trafficOutput ||
-       currentScreen == trafficOutputEastCoast ||
-       currentScreen == trafficOutputWestCoast ||
-       currentScreen == trafficOutputCentral) &&
+  // Back button handled globally
+  if (currentScreen == flightsTraffic && 
       mouseX > 30 && mouseX < 110 &&
       mouseY > 22 && mouseY < 52) {
     goBack();   

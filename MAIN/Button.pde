@@ -61,27 +61,37 @@ class TextEntryButton extends Button {
   
   TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars, int textSize, boolean hasShadow, int inputOrder){
     super(x, y, w, h, label, type, textSize, hasShadow);
-    this.inputOrder = inputOrder; this.maxlen = maxChars;
+    this.inputOrder = inputOrder;
+    this.maxlen = maxChars;
   }
 
   @Override
   void display() {
+    QueriesFlights qf = null;
+    if (currentScreenObject instanceof QueriesFlights) {
+        qf = (QueriesFlights) currentScreenObject;
+    }
+    boolean isCurrent = (qf != null && qf.currentInput == this);
+
     stroke(RY_BLUE);
-    strokeWeight(currentScreenObject != null && ((QueriesFlights)currentScreenObject).currentInput == this ? 2 : 1);
-    fill(currentScreenObject != null && ((QueriesFlights)currentScreenObject).currentInput == this ? 255 : 245);
+    strokeWeight(isCurrent ? 2 : 1);
+
+    // Background
+    if (isCurrent) fill(255);       // White when active
+    else fill(255);                 // White when inactive (instead of RY_BLUE)
     rect(x, y, w, h, 5);
 
+    // Text
     fill(RY_BLUE);
     textAlign(LEFT, CENTER);
     textSize(textSize);
 
     String displayText = label;
-    if (currentScreenObject != null && ((QueriesFlights)currentScreenObject).currentInput == this && (frameCount/25)%2==0) {
-      displayText += "|";
-    }
+    if (isCurrent && (frameCount / 25) % 2 == 0) displayText += "|";
     text(displayText, x + 10, y + h/2);
   }
 
+  // Add a character to the text entry
   void addChar(char s) {
     if (s == BACKSPACE) {
       if (label.length() > 0) label = label.substring(0, label.length() - 1);

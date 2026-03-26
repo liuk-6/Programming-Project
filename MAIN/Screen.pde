@@ -66,7 +66,6 @@ class HomeScreen extends Screen{
      rect(0, 70, width, 2);
      
      imageMode(CENTER);
-     image(sunset, (width/2), height/2, width/1.7, height/2.5);
      image(planeHomeScreen, width/2, height/1.9, width * 0.85, height*0.7);
      imageMode(CORNER);
    }
@@ -75,7 +74,6 @@ class HomeScreen extends Screen{
     if (b.over(mouseX, mouseY)) {
       println("Clicked: " + b.type);
       if (b.type.equals("queries")) goTo(queries);
-      if (b.type.equals("graphs")) goTo(graphs);
       if (b.type.equals("exit")) exit();
     }
   }
@@ -114,13 +112,13 @@ class QueriesScreen extends Screen {
   }
 
   void drawBackground() {
-    background(RY_BLUE); // dark modern background
+    background(RY_BLUE); 
     
     // Top header
     fill(#2B4779);
     noStroke();
     rect(0, 0, width, 80, 0, 0, 20, 20);
-
+    
     fill(TEXT_MAIN);
     textSize(36);
     textAlign(CENTER, CENTER);
@@ -163,7 +161,7 @@ class QueriesScreen extends Screen {
     float y = height/2 + 60;
   
     // panel
-    fill(PANEL);
+    fill(RY_BG);
     stroke(255,20);
     rect(x, y, w, h, 20);
   
@@ -408,7 +406,7 @@ class QueriesFlights extends Screen {
     for (Button b : buttons) {
       if (b == inputEnd && !roundTrip) continue;
       if (b.over(mouseX, mouseY)) {
-          if(b.equals("back")) goBack();
+          if(b.type.equals("back")) goBack();
           // Trip type buttons
           if (b.type.equals("roundTrip")) roundTrip = true;
           if (b.type.equals("oneWay")) roundTrip = false;
@@ -510,7 +508,7 @@ class QueriesDate extends Screen {
     int queryH = 50;
     
     int centerX = width/2;
-    int yq = height/2;
+    int yq = height/4 +100;
     
     int spacing = 40;
     
@@ -531,7 +529,7 @@ class QueriesDate extends Screen {
   }
 
   void drawBackground() {
-    background(#1A1D23);    
+    background(RY_BLUE);    
     fill(255);
     textSize(36);
     textAlign(CENTER, CENTER);
@@ -541,15 +539,15 @@ class QueriesDate extends Screen {
     float cardW = 700;
     float cardH = 260;
     float cardX = width/2 - cardW/2;
-    float cardY = height/2 - cardH/2 + 40;
+    float cardY = height/4;
     
     // shadow
-    fill(0, 120);
+    fill(0, RY_BG);
     noStroke();
     rect(cardX + 6, cardY + 6, cardW, cardH, 20);
     
     // card body
-    fill(#232833);
+    fill(RY_BG);
     rect(cardX, cardY, cardW, cardH, 20);
     stroke(255, 20);
     line(cardX + 40, cardY + 70, cardX + cardW - 40, cardY + 70);
@@ -559,7 +557,7 @@ class QueriesDate extends Screen {
     stroke(255, 50);
     line(0, 80, width, 80);
     
-    fill(#AEB6C2);
+    fill(0);
     textAlign(CENTER);
     textSize(18);
     text("Select a departure date range", width/2, cardY + 40);
@@ -573,7 +571,7 @@ class QueriesDate extends Screen {
     }
     
     textSize(18);
-    fill(255);
+    fill(0);
     textAlign(LEFT);
     text("From:", inputButton.x, inputButton.y - 10);
     text("To:", inputButton2.x, inputButton2.y - 10);
@@ -619,88 +617,140 @@ class QueriesDate extends Screen {
 }
 
 
-class QueriesTraffic extends Screen {
-  TextEntryButton inputButton;
-  TextEntryButton inputButton2;
-  TextEntryButton inputButton3;
-  boolean typingFirst = true;
-  TextEntryButton currentInput;
+class TrafficScreen extends Screen {
 
-  QueriesTraffic() {
-    // Add back button at bottom center
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = 35;
-    int y = 22;
-    int queryW = 392;
-    int queryH = 30;
-    int xq = 10;
-    int xq2 = xq+queryW;
-    int xq3 = xq2 + queryW;
-    int yq = height/8;
-    int xs = xq2 + queryW ;
-    
+  ArrayList<Route> east;
+  ArrayList<Route> central;
+  ArrayList<Route> west;
 
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
-    textAlign(CORNER,CORNER);
-    
-    buttons.add(new Button(xq, yq, queryW, queryH, "EAST-COAST", "trafficOutputEastCoast", 20, false));
-    buttons.add(new Button(xq2, yq, queryW, queryH, "WEST-COAST", "trafficOutputWestCoast", 20, false));
-    buttons.add(new Button(xq3, yq, queryW, queryH, "CENTRAL", "trafficOutputCentral", 20, false));
-    
-    
+  String currentZone = "East";  // "East", "Central", "West"
+
+  Button backBtn;
+  Button eastBtn, centralBtn, westBtn;
+
+  TrafficScreen(ArrayList<Route> east,
+                ArrayList<Route> central,
+                ArrayList<Route> west) {
+    this.east = east;
+    this.central = central;
+    this.west = west;
+
+    // Back button
+    backBtn = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
+    buttons.add(backBtn);
+
+    // Zone selection buttons
+    int buttonW = width/3-30; 
+    int buttonH = 30;
+    int spacing = 10;
+    int y = 75;
+    int xStart = width/2 - buttonW*3/2 - spacing;
+    eastBtn    = new Button(xStart, y, buttonW, buttonH, "EAST-COAST", "east", 16, false);
+    centralBtn = new Button(xStart + buttonW + spacing, y, buttonW, buttonH, "CENTRAL", "central", 16, false);
+    westBtn    = new Button(xStart + (buttonW + spacing)*2, y, buttonW, buttonH, "WEST-COAST", "west", 16, false);
+
+    buttons.add(eastBtn);
+    buttons.add(centralBtn);
+    buttons.add(westBtn);
   }
 
   void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
+    background(RY_BLUE);
+    fill(255);
     textSize(40);
     textAlign(CENTER, 80);
-    text("--ROUTES TRAFFIC--", width/2, 50);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-    
+    text("FLIGHTS ROUTES TRAFFIC", width/2, 50);
+
+    // Line at top
+    fill(255, 50);
+    noStroke();
+    rect(0, 70, width, 2);
   }
-  
-  void draw(){
+
+  void draw() {
     drawBackground();
-    
-    for(Button b : buttons){
-      b.display();
+
+    // Draw zone buttons with highlight for selected zone
+    for (Button b : buttons) {
+      if (b == eastBtn && currentZone.equals("East")) highlightButton(b);
+      else if (b == centralBtn && currentZone.equals("Central")) highlightButton(b);
+      else if (b == westBtn && currentZone.equals("West")) highlightButton(b);
+      else b.display();  // normal button display
     }
-  
+
+    // Draw the routes panel for current zone
+    ArrayList<Route> currentList;
+    String zoneTitle;
+    if (currentZone.equals("East")) {
+      currentList = east;
+      zoneTitle = "EAST COAST";
+    } else if (currentZone.equals("Central")) {
+      currentList = central;
+      zoneTitle = "CENTRAL";
+    } else {
+      currentList = west;
+      zoneTitle = "WEST COAST";
+    }
+
+    drawRoutesPanel(zoneTitle, currentList);
   }
 
-  void keyPressed(char k) {
+  void highlightButton(Button b) {
+    // Draw a highlight background
+    fill(255, 215, 0);  // golden highlight
+    rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
 
-  
-}
-  
-void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("back")) goBack();
-      
-      if (b.type.equals("trafficOutputEastCoast")) {
-        searchEastCoast();
-        goTo(trafficOutputEastCoast);
-      }
-      if (b.type.equals("trafficOutputWestCoast")) {
-        searchWestCoast();
-        goTo(trafficOutputWestCoast);
-      }
-      if (b.type.equals("trafficOutputCentral")) {
-        searchCentral();
-        goTo(trafficOutputCentral);
+    // Draw the button text on top
+    b.display();
+  }
+
+  void drawRoutesPanel(String title, ArrayList<Route> routes) {
+    float panelWidth = width -50;
+    float panelHeight = 560;
+    float x = width/2;
+    float yStart = 120;
+
+    // Panel background
+    fill(RY_BG);
+    rectMode(CENTER);
+    rect(x, yStart + panelHeight/2, panelWidth, panelHeight, 20);
+    rectMode(CORNER);
+
+    // Panel title
+    fill(0);
+    textAlign(CENTER);
+    textSize(40);
+    text(title, x, yStart+60 - 20);
+
+    // List routes
+    fill(0);
+    textAlign(LEFT);
+    textSize(24);
+    float padding = 30;
+    float y = yStart+100;
+    int rank = 1;
+
+    for (Route r : routes) {
+      text(rank + ". " + r.origin + " -> " + r.destination + " (" + r.passengers + ")", x - panelWidth/2 + padding, y);
+      y += 22;
+      rank++;
+      if (y > yStart + panelHeight - 20) break;
+    }
+  }
+
+  void mousePressed() {
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        // Back button
+        if (b.type.equals("back")) goBack();
+
+        // Zone selection buttons
+        if (b.type.equals("east")) currentZone = "East";
+        if (b.type.equals("central")) currentZone = "Central";
+        if (b.type.equals("west")) currentZone = "West";
       }
     }
   }
-}
 }
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
 class FlightsOutputScreen extends Screen {
@@ -831,90 +881,5 @@ class FlightsOutputScreen extends Screen {
   // Limit scrolling so content doesn't go too far
   float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
   scrollY = constrain(scrollY, minScroll, 0);
-  }
-}
-class TrafficResultsScreen extends Screen {
-
-  ArrayList<Route> east;
-  ArrayList<Route> central;
-  ArrayList<Route> west;
-
-  TrafficResultsScreen(ArrayList<Route> east,
-                       ArrayList<Route> central,
-                       ArrayList<Route> west) {
-    this.east = east;
-    this.central = central;
-    this.west = west;
-
-    // Back button
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-  }
-
-  void draw() {
-    background(RY_BLUE);
-
-    // Header
-    fill(255);
-    textAlign(CENTER);
-    textSize(32);
-    text("Most Busy Traffic Routes", width/2, 45);
-
-    // Compute spacing for three columns dynamically
-    float panelWidth = 300;
-    float panelHeight = 420;
-    float spacing = (width - panelWidth * 3) / 4; // space between panels
-
-    float xEast = spacing + panelWidth / 2;
-    float xCentral = xEast + panelWidth + spacing;
-    float xWest = xCentral + panelWidth + spacing;
-
-    // Draw the three columns
-    drawZone("East Coast", east, xEast, panelWidth, panelHeight);
-    drawZone("Central", central, xCentral, panelWidth, panelHeight);
-    drawZone("West Coast", west, xWest, panelWidth, panelHeight);
-
-    // Draw buttons
-    for (Button b : buttons) b.display();
-  }
-
-  // Draw each zone column
-  void drawZone(String title, ArrayList<Route> routes, float x, float panelW, float panelH) {
-
-    // Panel background
-    fill(150);
-    rectMode(CENTER);
-    rect(x, 120 + panelH/2, panelW, panelH, 20); // rounded corners
-    rectMode(CORNER);
-
-    // Column title
-    fill(255);
-    textAlign(CENTER);
-    textSize(22);
-    text(title, x, 100);
-
-    // List of routes
-    fill(255);
-    textAlign(LEFT);
-    textSize(16);
-    float yStart = 150;
-    float padding = 20; // distance from panel edge
-    float y = yStart;
-    int rank = 1;
-
-    for (Route r : routes) {
-      // Ensure text doesn’t overflow panel width
-      text(rank + ". " + r.origin + " -> " + r.destination +
-           " (" + r.passengers + ")", x - panelW/2 + padding, y);
-      y += 22;
-      rank++;
-      if (y > 120 + panelH - 20) break; // stop if text exceeds panel
-    }
-  }
-
-  void mousePressed() {
-    for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) goBack();
-      
-    }
   }
 }
