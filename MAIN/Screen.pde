@@ -25,17 +25,16 @@ class Screen {
 ///////////////////////MENU SCREEN//////////////////////////////////////
 class HomeScreen extends Screen{
 
-  HomeScreen(){
-  int buttonW = 80*6;
-  int buttonH = 50;
-  int yPos = height/2; // 20 px padding from bottom
-  float x1 = 100 ;  // 1st button
-  float x3 = 1100 - buttonW;  // 2nd button
-  buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
-  buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
-  buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
-  
-  
+  HomeScreen()
+  {
+    int buttonW = 80*6;
+    int buttonH = 50;
+    int yPos = height/2; // 20 px padding from bottom
+    float x1 = 100 ;  // 1st button
+    float x3 = 1100 - buttonW;  // 2nd button
+    buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
+    buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
+    buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
   }
   void draw() {
   drawBackground();   // draws the plane
@@ -172,6 +171,7 @@ class QueriesScreen extends Screen {
   }
   }
 }
+
 class GraphsScreen extends Screen {
 
   GraphsScreen() {
@@ -312,18 +312,54 @@ class QueriesFlights extends Screen {
 
 class QueriesDate extends Screen {
 
-  // Input variables
-  String inputStart = "";
-  String inputEnd = "";
-  boolean activeStart = false;
-  boolean activeEnd = false;
+  QueriesDate() {
+    // Add back button at bottom center
+    int buttonW = 180;
+    int buttonH = 50;
+    int x = (width/2);
+    int y = height - 50;
+    int queryW = width/4+100;
+    int queryH = 50;
+    int xq = width/4 -queryW/2;
+    int xq2 = xq+queryW;
+    int yq = height/4;
+    int xs = xq2 + queryW ;
+    
+    
 
   // Button bounds
   float btnX, btnY, btnW = 120, btnH = 40;
 
-  QueriesDate() {
-    // Back button
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "backQueries", 15, false));
+  void drawBackground() {
+    background(206, 216, 222);
+    fill(0);
+    textSize(40);
+    textAlign(CENTER, 80);
+    text("--DATE SEARCH--", width/2, 50);
+    textSize(20);
+    textAlign(LEFT);
+    text("Enter date in format MM/DD/YYYY", 100, 250);
+    
+    
+    
+    //Line at top
+     fill(255, 50);
+     noStroke();
+     rect(0, 70, width, 2);
+    
+  }
+  
+  void draw(){
+    drawBackground();
+    
+    for(Button b : buttons){
+      b.display();
+    }
+    textSize(24);
+    fill(255);
+    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
+    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
+    image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
   }
 
   void draw() {
@@ -428,23 +464,34 @@ class QueriesDate extends Screen {
     }
   }
 
-  void keyPressed(char key) {
-    // Add typed character to active input
-    if (activeStart) {
-      if (key == BACKSPACE && inputStart.length() > 0) {
-        inputStart = inputStart.substring(0, inputStart.length()-1);
-      } else if (key != CODED) {
-        inputStart += key;
-      }
-    } else if (activeEnd) {
-      if (key == BACKSPACE && inputEnd.length() > 0) {
-        inputEnd = inputEnd.substring(0, inputEnd.length()-1);
-      } else if (key != CODED) {
-        inputEnd += key;
+  // Handle regular buttons
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+        println("Clicked: " + b.type);
+        if (b.type.equals("backQ")) currentScreen = queries;
+        if (b.type.equals("flightsOutput")) {
+            searchFlightsDateRange(); 
+            currentScreen = flightsOutput;
+        }
+        if (b.type.equals("dateOutput")) 
+        {
+            selection.dateStart = inputButton.label;
+            selection.dateEnd = inputButton2.label;
+            
+            searchFlightsDateRange(); 
+     
+            currentScreen = flightsOutput; 
+        }
+        if (b.type.equals("trafficOutput")) {
+            searchFlight(); 
+            currentScreen = trafficOutput;
+        }
       }
     }
   }
 }
+
+
 class QueriesTraffic extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;

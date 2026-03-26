@@ -250,8 +250,32 @@ void loadRouteData() {
 }
 
 
-void searchFlightsDateRange(){
+void searchFlightsDateRange()
+{
+  DateTimeFormatter df = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    try {
+    LocalDate start = LocalDate.parse(selection.dateStart, df);
+    LocalDate end = LocalDate.parse(selection.dateEnd, df);
 
+    for (Flight f : flightsList) {
+      LocalDate flightDate = LocalDate.parse(f.date, df);
+
+      if (!flightDate.isBefore(start) && !flightDate.isAfter(end)) {
+        results.add(f);
+      }
+    }
+    
+      Collections.sort(results, (a, b) -> {
+      LocalDate d1 = LocalDate.parse(a.date, df);
+      LocalDate d2 = LocalDate.parse(b.date, df);
+      return d1.compareTo(d2);
+    });
+
+    println("Date Search Complete: Found " + results.size() + " flights.");
+
+  } catch (Exception e) {
+    println("Error: Please use the format M/D/YYYY (e.g. 1/1/2022)");
+  }
 }
 void searchBusiestRoutes(){
 
