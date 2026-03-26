@@ -113,7 +113,7 @@ class OriginBarChart {
       image(pg, 0, 0);
     }
    String checkClick(float mx, float my) {
-      float localX = mx - 630;   // X offset of the origin chart
+      float localX = mx - 300;   // X offset of the origin chart
       float localY = my - 200;   // Y offset of the origin chart
     
       for (AirportButton b : buttons) {

@@ -1,13 +1,14 @@
 BarChart destChart;
 OriginBarChart originChart;
 PieChart pieChart;
-Screen screen1, screen2;
-Screen currentScreen;
+graphScreen screen1, screen2;
+graphScreen currentScreen;
 
 float percentOnTime;
 float percentDelayed;
 float percentCancelled;
 String activeFact = "";
+boolean showDestinationChart = true; // default view
 
 void setup() {
   size(1200, 700);   // enough room for 3 charts
@@ -22,12 +23,14 @@ void setup() {
   originChart.setup();
   pieChart.setup();
 
-  screen1 = new Screen(color(150, 200, 255));
-  screen2 = new Screen(color(255, 200, 150));
+  screen1 = new graphScreen(color(150, 200, 255));
+  screen2 = new graphScreen(color(255, 200, 150));
 
   // Screen 1 widgets
-  screen1.addWidget(new Widget(20, 20, 120, 40, "Next"));
-
+  screen1.addWidget(new Widget(20, 20, 140, 40, "Destination"));
+  screen1.addWidget(new Widget(170, 20, 140, 40, "Origin"));
+  screen1.addWidget(new Widget(320, 20, 120, 40, "Next"));
+  
   // Screen 2 widgets
   screen2.addWidget(new Widget(20, 20, 120, 40, "Back"));
 
@@ -35,39 +38,48 @@ void setup() {
 }
 
 void draw() {
-  background(255, 255, 255);
+  background(255);
+
+  // Draw screen background + widgets
   currentScreen.draw();
 
+  // Draw charts
   if (currentScreen == screen1) {
-    // --- Draw Destination Bar Chart ---
     pushMatrix();
-    translate(30, 200);     // top-left
-    destChart.draw();
-    popMatrix();
-
-    // --- Draw Origin Bar Chart ---
-    pushMatrix();
-    translate(630, 200);    // bottom-left
-    originChart.draw();
+    translate(300, 200);
+  
+    if (showDestinationChart) {
+      destChart.draw();
+    } else {
+      originChart.draw();
+    }
+  
     popMatrix();
   }
-
   if (currentScreen == screen2) {
-    // --- Draw Pie Chart ---
     pushMatrix();
-    translate(width/2, height/2);   // right side
+    translate(200, 300);
     pieChart.draw();
     popMatrix();
   }
-  // --- Titles for clarity ---
+
+  // Draw title
   fill(0);
   textSize(20);
   text("Flight Data Visualisation Dashboard", width/2, 30);
+
+  // Draw airport fact box
   if (activeFact != "") {
     drawInfoBox(activeFact);
   }
+
+  // ⭐ DRAW THE TOP-AIRPORT BOX LAST ⭐
+  if (currentScreen == screen2 && pieChart.isShowingTop()) {
+    drawTopAirportBox();
+  }
 }
 void mousePressed() {
+    
   if (currentScreen == screen1) {
   
     // Destination chart buttons
@@ -84,14 +96,26 @@ void mousePressed() {
       return;
     }
   }
+  if (currentScreen == screen2) {
+    pieChart.mousePressed();
+  }
+
+
   Widget w = currentScreen.getEvent(mouseX, mouseY);
 
   if (w == null) return;
 
-  if (w.label.equals("Next")) {
+  if (w.label.equals("Destination")) {
+    showDestinationChart = true;
+  }
+  else if (w.label.equals("Origin")) {
+    showDestinationChart = false;
+  }
+  else if (w.label.equals("Next")) {
     currentScreen = screen2;
     activeFact = "";
-  } else if (w.label.equals("Back")) {
+  }
+  else if (w.label.equals("Back")) {
     currentScreen = screen1;
     activeFact = "";
   }
@@ -116,7 +140,7 @@ void showAirportFacts(String code) {
   }else if (code.equals("DFW")) {
     activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n it serves 269 destinations (196 domestic and 73 international).";
   }else if (code.equals("CLT")) {
-    activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolina’s GDP.";
+    activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolinas GDP.";
   }else if (code.equals("DEN")) {
     activeFact = "DEN — \n Denver International Airport . \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
   } else if (code.equals("ORD")) {
@@ -132,7 +156,7 @@ void mouseMoved() {
 void drawInfoBox(String msg) {
   int boxW = 300;
   int boxH = 120;
-  int x = 350;
+  int x = 50;
   int y = height - boxH -150;
 
   // background rectangle
@@ -146,4 +170,31 @@ void drawInfoBox(String msg) {
   textSize(14);
   textAlign(LEFT, TOP);
   text(msg, x + 15, y + 15, boxW - 30, boxH - 30);
+}
+void drawTopAirportBox() {
+  pushStyle(); 
+  pushMatrix();
+  String[] lines = pieChart.getTopAirportInfo();
+
+  int boxW = 260;
+  int boxH = 120;
+  int x = width - boxW - 40;   // right side of screen
+  int y = 120;                 // adjust as needed
+
+  // Background
+  fill(255);
+  stroke(0);
+  strokeWeight(2);
+  rect(x, y, boxW, boxH, 12);
+
+  // Text
+  fill(0);
+  textAlign(LEFT, TOP);
+  textSize(14);
+
+  for (int i = 0; i < lines.length; i++) {
+    text(lines[i], x + 15, y + 15 + i * 25);
+  }
+   popMatrix();
+   popStyle();
 }
