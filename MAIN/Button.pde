@@ -101,7 +101,7 @@ class TextEntryButton extends Button {
     fill(245); // Light grey input box
     
     // Highlight if active
-    if (current instanceof QueriesFlights && ((QueriesFlights)current).currentInput == this) {
+    if (currentScreenObject instanceof QueriesFlights && ((QueriesFlights)currentScreenObject).currentInput == this) {
       strokeWeight(2);
       fill(255); 
     }
@@ -113,7 +113,7 @@ class TextEntryButton extends Button {
     textSize(textSize);
     
     String visual = label;
-    if (current instanceof QueriesFlights && ((QueriesFlights)current).currentInput == this) {
+    if (currentScreenObject instanceof QueriesFlights && ((QueriesFlights)currentScreenObject).currentInput == this) {
        if ((frameCount / 25) % 2 == 0) visual += "|";
     }
     
