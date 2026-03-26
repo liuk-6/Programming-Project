@@ -18,7 +18,7 @@ TrafficResultsScreen trafficResults;
 /////////// MAIN SCREENS AT START ////////////////
 final int home = 1;
 final int queries = 2;
-final int graphs = 3;
+final int dashboard = 3;
 final int exit = 4;
 
 ////////// SECOND LAYER SCREENS ////////////////
@@ -90,8 +90,8 @@ HomeScreen homeScreen;
 Screen currentScreenObject;
 PImage planeHomeScreen;
 PImage SearchButton;
-PImage sunset;
 PImage arrow;
+PImage logo;
 
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
@@ -101,7 +101,7 @@ QueriesTraffic flightTrafficScreen;
 TrafficResultsScreen trafficOutputScreen;
 FlightsOutputScreen flightsOutputScreen;
 
-GraphsScreen graphsScreen;
+DashboardScreen dashboardScreen;
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
 ArrayList<Flight> flightsList;
@@ -290,7 +290,7 @@ void setup() {
   //////////////////// Screens ////////////////////
   currentScreen       = home;
   queriesScreen       = new QueriesScreen();
-  graphsScreen        = new GraphsScreen();
+  dashboardScreen     = new DashboardScreen();
   flightsSearchScreen = new QueriesFlights();
   flightDateScreen    = new QueriesDate();
   flightTrafficScreen = new QueriesTraffic();
@@ -300,7 +300,7 @@ void setup() {
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
-  sunset          = loadImage("Sunset.png");
+  logo            = loadImage("logo.png");
   homeScreen = new HomeScreen();
   currentScreenObject    = homeScreen;
 
@@ -341,7 +341,7 @@ void draw() {
   case trafficOutputEastCoast: currentScreenObject = trafficOutputScreen; break;
   case trafficOutputWestCoast: currentScreenObject = trafficOutputScreen; break;
   case trafficOutputCentral: currentScreenObject = trafficOutputScreen; break;
-  case graphs: currentScreenObject = graphsScreen; break;
+  case dashboard: currentScreenObject = dashboardScreen; break;
   default: currentScreenObject = homeScreen; break;
 }
 
