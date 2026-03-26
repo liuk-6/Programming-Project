@@ -208,7 +208,7 @@ class GraphsScreen extends Screen {
 class QueriesFlights extends Screen {
   TextEntryButton inputFrom, inputTo, inputStart, inputEnd;
   TextEntryButton currentInput;
-
+  ArrayList<String> suggestions = new ArrayList<String>();
   QueriesFlights() {
     int buttonH = 45;
     int yq = height/3; 
@@ -234,7 +234,28 @@ class QueriesFlights extends Screen {
     // Back button in the top left header
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
+  void updateSuggestions(String input) {
+  suggestions.clear();
 
+  if (input.length() < 2) return;
+
+  input = input.toLowerCase();
+
+  for (Flight f : flightsList) {
+    String origin = f.origin.toLowerCase();
+    String originCity = f.originCityName.toLowerCase();
+
+    if (origin.contains(input) || originCity.contains(input)) {
+      String suggestion = f.origin + " - " + f.originCityName;
+
+      if (!suggestions.contains(suggestion)) {
+        suggestions.add(suggestion);
+      }
+    }
+
+    if (suggestions.size() >= 5) break; // limit results
+  }
+}
   void drawBackground() {
     background(RY_BLUE); 
     fill(255);
@@ -247,7 +268,6 @@ class QueriesFlights extends Screen {
   
   void draw() {
     drawBackground();
-    
     // 1. Draw the "Search Card" (Professional White Container)
     fill(255);
     noStroke();
@@ -266,13 +286,53 @@ class QueriesFlights extends Screen {
     text("FLY TO", inputTo.x, inputTo.y - 10);
     text("DEPARTURE", inputStart.x, inputStart.y - 10);
     text("RETURN", inputEnd.x, inputEnd.y - 10);
+    drawSuggestions();
     
     for (Button b : buttons) {
       b.display(); 
     }
   }
+ void drawSuggestions() {
+  if (suggestions.size() == 0 || currentInput == null) return;
+
+  float x = currentInput.x;
+  float y = currentInput.y + currentInput.h;
+  float w = currentInput.w;
+  float h = 35;
+
+  for (int i = 0; i < suggestions.size(); i++) {
+    // background
+    fill(255);
+    stroke(200);
+    rect(x, y + i*h, w, h);
+
+    // text
+    fill(0);
+    textAlign(LEFT, CENTER);
+    text(suggestions.get(i), x + 10, y + i*h + h/2);
+  }
+}
 
   void mousePressed() {
+    // Check suggestions first
+if (currentInput != null && suggestions.size() > 0) {
+  float x = currentInput.x;
+  float y = currentInput.y + currentInput.h;
+  float h = 35;
+
+  for (int i = 0; i < suggestions.size(); i++) {
+    if (mouseX > x && mouseX < x + currentInput.w &&
+        mouseY > y + i*h && mouseY < y + (i+1)*h) {
+      
+      String selected = suggestions.get(i);
+
+      currentInput.label = selected;
+
+      suggestions.clear(); // hide dropdown
+      return;
+    }
+  }
+}
     currentInput = null;
     TextEntryButton[] allInputs = {inputFrom, inputTo, inputStart, inputEnd};
     
@@ -301,6 +361,9 @@ class QueriesFlights extends Screen {
 
   void keyPressed(char k) {
     if (currentInput != null) currentInput.addChar(k);
+    if (currentInput == inputFrom || currentInput == inputTo) {
+      updateSuggestions(currentInput.label);
+    }
   }
 }
 
@@ -473,8 +536,6 @@ class QueriesTraffic extends Screen {
   }
 
   void keyPressed(char k) {
-
-  
 }
   
 void mousePressed() {
