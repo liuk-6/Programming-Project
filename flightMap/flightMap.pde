@@ -46,7 +46,7 @@ void draw() {
     boolean selected = (panel.selected == f);
     boolean hovered = (hoveredFlight == f);
 
-    f.display(world, selected || hovered);
+    f.display(world, selected || hovered, selectedAirport);
   }
   legend.display();
 
@@ -130,43 +130,6 @@ String checkAirportClick(float mx, float my) {
   return null;
 }
 
-
-ArrayList<FlightLocation> getVisibleFlights() {
-
-  ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
-
-  for (FlightLocation f : manager.getFlights()) {
-
-    if (selectedAirport != null) {
-      if (!f.origin.equals(selectedAirport) && !f.destination.equals(selectedAirport)) {
-        continue;
-      }
-    }
-
-    visible.add(f);
-  }
-
-  return visible;
-}
-String checkAirportClick(float mx, float my) {
-
-  for (String code : airportManager.airports.keySet()) {
-
-    // Only allow clicking your 10 airports
-    if (!manager.allowedAirports.contains(code)) continue;
-
-    PVector geo = airportManager.getCoords(code);
-    PVector screen = world.geoToScreen(geo.x, geo.y);
-
-    if (dist(mx, my, screen.x, screen.y) < 8) {
-      return code;
-    }
-  }
-
-  return null;
-}
-
-
 ArrayList<FlightLocation> getVisibleFlights() {
 
   ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
@@ -193,11 +156,9 @@ ArrayList<FlightLocation> getVisibleFlights() {
 
 
 
-
-
 void mousePressed() {
 
-  // ✅ Legend click FIRST
+  // Legend click FIRST
   String legendClick = legend.checkClick(mouseX, mouseY);
   if (legendClick != null) {
     statusFilter = legendClick;
@@ -205,7 +166,7 @@ void mousePressed() {
     return;
   }
 
-  // ✅ Airport click
+  // Airport click
   String airport = checkAirportClick(mouseX, mouseY);
   if (airport != null) {
     if (airport.equals(selectedAirport)) {
@@ -217,7 +178,7 @@ void mousePressed() {
     return;
   }
 
-  // ✅ Flight click (ONLY visible ones)
+  // Flight click (ONLY visible ones)
   FlightLocation clicked = interaction.checkClick(getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
 }
