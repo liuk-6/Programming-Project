@@ -6,15 +6,25 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 ///////////// CONSTANT VALUES ////////////////
-String[] lines;
 color RY_BLUE = #2B4779;
 color RY_GOLD = #F4CA35;
 color RY_WHITE = #FFFFFF;
 color RY_BG = #F2F5F7;
+color RY_YELLOW = #F4CA35;
+
+color BG = #1A1D23;
+color PANEL     = #1C1F26;
+color CARD      = #232833;
+color ACCENT    = #F4CA35; // gold
+color TEXT_MAIN = #EAEAF0;
+color TEXT_SUB  = #9AA3B2;
 
 /////////////GLOBAL VARIABLES///////////////////////
+String[] lines;
 TrafficResultsScreen trafficResults;
-
+boolean showCursor = true;
+int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
+ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
 /////////// MAIN SCREENS AT START ////////////////
 final int home = 1;
 final int queries = 2;
@@ -109,14 +119,40 @@ ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory;
 ArrayList<Flight> results;
 String flightsFound = "";
+ArrayList<Flight> mySelectedFlights;  // GLOBAL list to store selected flights
 
 ArrayList<Route> eastCoastRoutes;
 ArrayList<Route> westCoastRoutes;
 ArrayList<Route> centralRoutes;
 
+ArrayList<FlightCard> allFlightCards;  // <-- global flight card list
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
+void drawSearchInfoPanel() {
+
+    float w = width * 0.7;
+    float h = 160;
+    float x = width/2 - w/2;
+    float y = height/2 + 60;
+  
+    // panel
+    fill(#1C1F26);
+    stroke(255,20);
+    rect(x, y, w, h, 20);
+  
+    fill(#F4CA35);
+    textSize(20);
+    textAlign(CENTER);
+    text("SMART SEARCH FEATURES", width/2, y + 35);
+  
+    fill(#9AA3B2);
+    textSize(15);
+  
+    text("• Compare airline routes instantly", width/2, y + 70);
+    text("• Analyze traffic across regions", width/2, y + 95);
+    text("• Explore flights by travel date", width/2, y + 120);
+  }
 void goTo(int nextScreen) {
   screenHistory.add(currentScreen);
   currentScreen = nextScreen;
@@ -151,8 +187,21 @@ void addFlightsRoutesToTable(ArrayList<Flight> list) {
 }
 
 String formatTime(int time) {
-  String t = nf(time, 4);
-  return t.substring(0, 2) + ":" + t.substring(2, 4);
+  // Converts HHMM integer to "HH:MM" string
+  int h = time / 100;
+  int m = time % 100;
+  return nf(h, 2) + ":" + nf(m, 2);
+}
+String formatDate(String date) {
+  // Converts "YYYY-MM-DD" or "MM/DD/YYYY" to "DD/MM/YYYY"
+  if (date.indexOf("-") > -1) {
+    String[] parts = date.split("-");
+    return parts[2] + "/" + parts[1] + "/" + parts[0];
+  } else if (date.indexOf("/") > -1) {
+    String[] parts = date.split("/");
+    return parts[1] + "/" + parts[0] + "/" + parts[2]; // swap if needed
+  }
+  return date;
 }
 
 // ---- CORE ROUTE COMPUTATION FROM REAL CSV DATA ----
@@ -304,7 +353,9 @@ void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float
 void setup() {
   size(1200, 700);
   textSize(18);
-
+  
+  allFlightCards = new ArrayList<FlightCard>();
+  mySelectedFlights = new ArrayList<Flight>();
   // Initialise region lists early so they exist before loadRouteData()
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
@@ -375,7 +426,10 @@ void setup() {
 
 void draw() {
   background(30);
-
+  if (frameCount % cursorBlinkRate == 0) {
+    showCursor = !showCursor;
+  }
+  
   switch(currentScreen) {
   case home: currentScreenObject = homeScreen; break;
   case queries: currentScreenObject = queriesScreen; break;
@@ -389,6 +443,8 @@ void draw() {
   case trafficOutputCentral: currentScreenObject = trafficOutputScreen; break;
   case graphs: currentScreenObject = graphsScreen; break;
   default: currentScreenObject = homeScreen; break;
+  
+
 }
 
 if(currentScreenObject != null) currentScreenObject.draw();

@@ -83,92 +83,169 @@ class HomeScreen extends Screen{
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
 class QueriesScreen extends Screen {
- 
-  boolean typingFirst = true;
-  TextEntryButton currentInput;
-
+  ArrayList<Flight> flights;   // All flights
+  float scrollY = 0;           // For scrolling flights if needed
+  float maxScroll;
+  
   QueriesScreen() {
-    // Add back button at bottom center
+    this.flights = flightsList; // Use your global flightsList
+
+    setupButtons();
+  }
+
+  void setupButtons() {
     int buttonW = 250;
     int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    
-    int queryX = 150;
-    int queryY = height/4;
-    
 
+    int queryY = height/4;
+    int spacing = 50;
+    
     textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
-    textAlign(CORNER);
-    
-    buttons.add(new Button(queryX, queryY, buttonW, buttonH, "FLIGHT SEARCH", "flightQuery", 20, false));
-    buttons.add(new Button(queryX+buttonW+50, queryY, buttonW, buttonH, "TRAFFIC SEARCH", "airlineQuery", 20, false));
-    buttons.add(new Button(queryX+buttonW*2+100, queryY, buttonW, buttonH, "DATE SEARCH", "dateQuery", 20, false));
-    
-    
+    // Back button bottom left (original position)
+    buttons.add(new Button(30, 22, 140, 40, "BACK", "back", 20, true));
+
+    // Centered main query buttons
+    int totalWidth = 3*buttonW + 2*spacing;
+    int startX = width/2 - totalWidth/2;
+
+    buttons.add(new Button(startX, queryY, buttonW, buttonH, "FLIGHT SEARCH", "flightQuery", 20, false));
+    buttons.add(new Button(startX + buttonW + spacing, queryY, buttonW, buttonH, "TRAFFIC SEARCH", "airlineQuery", 20, false));
+    buttons.add(new Button(startX + 2*(buttonW + spacing), queryY, buttonW, buttonH, "DATE SEARCH", "dateQuery", 20, false));
   }
 
   void drawBackground() {
-    background(RY_BLUE); // Clean light background
-    // 1. Primary Blue Header
-    fill(RY_BLUE);
+    background(RY_BLUE); // dark modern background
+    
+    // Top header
+    fill(#2B4779);
     noStroke();
-    rect(0, 0, width, 80); 
+    rect(0, 0, width, 80, 0, 0, 20, 20);
+
+    fill(TEXT_MAIN);
+    textSize(36);
+    textAlign(CENTER, CENTER);
+    text("FLIGHT SEARCH", width/2, 50);
+
+    // Subtle divider line
+    stroke(255, 50);
+    strokeWeight(2);
+    line(0, 80, width, 80);
+    noStroke();
     
-    fill(255);
-    textSize(40);
-    textAlign(CENTER,CENTER);
-    text("F L I G H T   S E A R C H", width/2, 50);
-    
-    fill(150);
-    rect(20, height-330, 1160, 210,20);
-    
-    fill(RY_BG);
-    textSize(24);
-    textAlign(CORNER, CORNER);
-    text("Select the search you are interested in:", 50, height-300);
-    text("1. FLIGHT SEARCH: if you want to search for a specific flight from one place to another", 50, height-250);
-    text("2. TRAFFIC SEARCH: if you want to search about which are the most busy routes", 50,height-200);
-    text("3. DATE SEARCH: if you want to search for flights available within a date range", 50, height-150);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-    
+    fill(TEXT_SUB);
+    textSize(16);
+    text("Choose how you want to explore flight data",
+     width/2, 90);
+     
   }
-  
-  void draw(){
+  void drawSectionLabel() {
+    fill(TEXT_SUB);
+    textSize(22);
+    textAlign(CENTER);
+    text("Search Options", width/2, height/4 - 30);
+  }
+
+  void draw() {
     drawBackground();
-    
-    
-    
-    
-    for(Button b : buttons){
+    drawSearchInfoPanel();
+    drawSectionLabel();
+    // Buttons
+    for (Button b : buttons) {
       b.display();
     }
-    
-  }
-  
 
-  void keyPressed(char k) {
-
-  
   }
+  void drawSearchInfoPanel() {
+
+    float w = width * 0.7;
+    float h = 160;
+    float x = width/2 - w/2;
+    float y = height/2 + 60;
   
+    // panel
+    fill(PANEL);
+    stroke(255,20);
+    rect(x, y, w, h, 20);
+  
+    fill(TEXT_SUB);
+    textSize(20);
+    textAlign(CENTER);
+    text("SMART SEARCH FEATURES", width/2, y + 35);
+  
+    fill(TEXT_SUB);
+    textSize(15);
+  
+    text("• Compare airline routes instantly", width/2, y + 70);
+    text("• Analyze traffic across regions", width/2, y + 95);
+    text("• Explore flights by travel date", width/2, y + 120);
+  }
+
+
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("back")) goBack();
-      if (b.type.equals("flightQuery")) goTo(flightsSearch);
-      if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
-      if (b.type.equals("dateQuery")) goTo(flightsDate);
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back")) goBack();
+        if (b.type.equals("flightQuery")) goTo(flightsSearch);
+        if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
+        if (b.type.equals("dateQuery")) goTo(flightsDate);
+      }
     }
   }
+
+  void keyPressed(char k) {}
+}
+
+// Card button class with hover animation
+class CardButton extends Button {
+  float hoverScale = 1.0;
+  float targetScale = 1.0;
+
+  CardButton(float x, float y, float w, float h, String label, String type) {
+    super(x, y, w, h, label, type, 18, true);
+  }
+
+  void update() {
+    if (over(mouseX, mouseY)) {
+      targetScale = 1.05;
+    } else {
+      targetScale = 1.0;
+    }
+    hoverScale = lerp(hoverScale, targetScale, 0.1);
+  }
+
+  @Override
+  void display() {
+    pushMatrix();
+    translate(x + w/2, y + h/2);
+    scale(hoverScale);
+    translate(-(x + w/2), -(y + h/2));
+
+    // Shadow
+    noStroke();
+    fill(0, 50);
+    rect(x+5, y+5, w, h, 20);
+
+    // Card background
+    fill(255);
+    stroke(200);
+    strokeWeight(1);
+    rect(x, y, w, h, 20);
+
+    // Icon
+    fill(RY_BLUE);
+    ellipse(x + 50, y + h/2, 60, 60);
+
+    // Text
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(18);
+    text(label, x + 100, y + h/2);
+
+    popMatrix();
   }
 }
+
+
 
 class GraphsScreen extends Screen {
 
@@ -208,30 +285,57 @@ class GraphsScreen extends Screen {
 class QueriesFlights extends Screen {
   TextEntryButton inputFrom, inputTo, inputStart, inputEnd;
   TextEntryButton currentInput;
-
+  boolean roundTrip = true;   // default like airline apps
+  Button roundTripBtn;
+  Button oneWayBtn;
+  PImage swapImg;
+  float swapX, swapY, swapW, swapH;
+  
   QueriesFlights() {
-    int buttonH = 45;
-    int yq = height/3; 
     int margin = 100;
     int spacing = 15;
-    // Calculate widths to fit 4 boxes across the white card
+    int buttonH = 45;
     int queryW = (width - (margin * 2) - (spacing * 3)) / 4; 
 
-    // Initialize 4 fields with US Date hints
-    inputFrom  = new TextEntryButton(margin, yq, queryW, buttonH, "Origin", "enter", 25, 16, false, 1);
-    inputTo    = new TextEntryButton(margin + (queryW + spacing), yq, queryW, buttonH, "Destination", "enter", 25, 16, false, 2);
-    inputStart = new TextEntryButton(margin + (queryW + spacing) * 2, yq, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 3);
-    inputEnd   = new TextEntryButton(margin + (queryW + spacing) * 3, yq, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 4);
+    // White card layout
+    int cardX = 90;
+    int cardY = height/3 - 90;
+    int cardW = width - 140;
+    int cardH = 280;
+
+    int titleY   = cardY + 25;       // Card title
+    int tripBtnY = cardY + 80;       // Trip buttons below title
+    int inputY   = tripBtnY + 45;    // Inputs below trip buttons
+    int labelOffset = 12;            // Labels above inputs
+
+    // Trip type buttons
+    roundTripBtn = new Button(cardX + 10, tripBtnY-20, 140, 30, "Round Trip", "roundTrip", 14, false);
+    oneWayBtn    = new Button(cardX + 160, tripBtnY-20, 120, 30, "One Way", "oneWay", 14, false);
+    
+    buttons.add(roundTripBtn);
+    buttons.add(oneWayBtn);
+
+    // Inputs
+    inputFrom  = new TextEntryButton(cardX, inputY, queryW, buttonH, "Origin", "enter", 25, 16, false, 1);
+    inputTo    = new TextEntryButton(cardX + (queryW + spacing)+15, inputY, queryW, buttonH, "Destination", "enter", 25, 16, false, 2);
+    inputStart = new TextEntryButton(cardX + (queryW + spacing) * 2+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 3);
+    inputEnd   = new TextEntryButton(cardX + (queryW + spacing) * 3+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 4);
     
     buttons.add(inputFrom);
     buttons.add(inputTo);
     buttons.add(inputStart);
-    buttons.add(inputEnd);
-    
-    // Position the Search Button at the bottom right of the white card for a "Form" look
-    buttons.add(new Button(width - margin - 200, yq + 75, 200, 50, "Search flights", "flightsOutput", 20, false));
-    
-    // Back button in the top left header
+
+    // Swap arrow image
+    swapImg = loadImage("SwapArrow.png");
+    swapW = 40;
+    swapH = 35;
+    swapX = inputFrom.x + inputFrom.w + ((inputTo.x - (inputFrom.x + inputFrom.w))/2) - swapW/2;
+    swapY = inputFrom.y + inputFrom.h/2 - swapH/2;
+
+    // Search button
+    buttons.add(new Button(cardX + cardW - 200 - 40, inputY + 75, 200, 50, "Search flights", "flightsOutput", 20, false));
+
+    // Back button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
@@ -244,38 +348,54 @@ class QueriesFlights extends Screen {
     stroke(255, 60);
     line(0, 80, width, 80);
   }
-  
+
   void draw() {
     drawBackground();
+    drawTripSelector();
     
-    // 1. Draw the "Search Card" (Professional White Container)
+    // White card container
     fill(255);
     noStroke();
-    rect(70, height/3 - 60, width - 140, 210, 12); 
-    
-    // 2. Card Title
+    rect(70, height/3 - 90, width - 140, 280, 12);  // Taller card
+
+    // Card title
     fill(RY_BLUE);
     textAlign(LEFT);
     textSize(22);
-    text("Book your next trip", 100, height/3 - 25);
-    
-    // 3. Labels (Small, Grey, and Professional)
+    text("Book your next trip", 100, height/3 - 65);
+
+    // Labels
     fill(120);
     textSize(12);
-    text("FLY FROM", inputFrom.x, inputFrom.y - 10);
-    text("FLY TO", inputTo.x, inputTo.y - 10);
-    text("DEPARTURE", inputStart.x, inputStart.y - 10);
-    text("RETURN", inputEnd.x, inputEnd.y - 10);
-    
+    int labelOffset = 12;
+    text("FLY FROM", inputFrom.x, inputFrom.y - labelOffset);
+    text("FLY TO", inputTo.x, inputTo.y - labelOffset);
+    text("DEPARTURE", inputStart.x, inputStart.y - labelOffset);
+    if (roundTrip) text("RETURN", inputEnd.x, inputEnd.y - labelOffset);
+
+    // Draw inputs
+    inputFrom.display();
+    inputTo.display();
+    inputStart.display();
+    if (roundTrip) inputEnd.display();
+
+    // Swap arrow
+    image(swapImg, swapX, swapY, swapW, swapH);
+
+   // Draw buttons
     for (Button b : buttons) {
-      b.display(); 
+      if (b == inputEnd && !roundTrip) continue;  // Skip return date if one-way
+      b.display();
     }
+
   }
 
   void mousePressed() {
-    currentInput = null;
-    TextEntryButton[] allInputs = {inputFrom, inputTo, inputStart, inputEnd};
+    TextEntryButton[] allInputs = roundTrip 
+      ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
+      : new TextEntryButton[]{inputFrom, inputTo, inputStart};
     
+    currentInput = null;
     for (TextEntryButton b : allInputs) {
       if (b.over(mouseX, mouseY)) {
         currentInput = b;
@@ -286,24 +406,94 @@ class QueriesFlights extends Screen {
     }
 
     for (Button b : buttons) {
+      if (b == inputEnd && !roundTrip) continue;
       if (b.over(mouseX, mouseY)) {
-        if (b.type.equals("flightsOutput")) {
-          selection.origin = inputFrom.label;
-          selection.destination = inputTo.label;
-          selection.dateStart = inputStart.label;
-          selection.dateEnd = inputEnd.label;
-          searchFlight(); 
-          goTo(flightsOutput);        }
-        if (b.type.equals("back")) goBack();
+          if(b.equals("back")) goBack();
+          // Trip type buttons
+          if (b.type.equals("roundTrip")) roundTrip = true;
+          if (b.type.equals("oneWay")) roundTrip = false;
+  
+          // Search button
+          if (b.type.equals("flightsOutput")) {
+              selection.origin      = inputFrom.label;
+              selection.destination = inputTo.label;
+              selection.dateStart   = inputStart.label;
+              selection.dateEnd     = roundTrip ? inputEnd.label : "";
+  
+              searchFlights(); // <- now actually searches!
+          }
       }
+}
+
+    // Swap arrow click
+    if (mouseX > swapX && mouseX < swapX + swapW &&
+        mouseY > swapY && mouseY < swapY + swapH) {
+      String temp = inputFrom.label;
+      inputFrom.label = inputTo.label;
+      inputTo.label = temp;
+    }
+  }
+
+  void drawTripSelector() {
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    if (roundTrip) {
+      fill(#A8D05F); 
+      rect(roundTripBtn.x-5, roundTripBtn.y-5, roundTripBtn.w+10, roundTripBtn.h+10, 8);
+    } else {
+      fill(#A8D05F);
+      rect(oneWayBtn.x-5, oneWayBtn.y-5, oneWayBtn.w+10, oneWayBtn.h+10, 8);
     }
   }
 
   void keyPressed(char k) {
     if (currentInput != null) currentInput.addChar(k);
   }
+  // Inside your QueriesFlights class
+  void searchFlights() {
+    // Clear previous results
+    results.clear();
+  
+    // Get user input from the text fields
+    String originInput = inputFrom.label.trim().toLowerCase();
+    String destInput   = inputTo.label.trim().toLowerCase();
+    String dateInput   = inputStart.label.trim(); // exact format "MM/DD/YYYY"
+  
+    // Loop through all flights
+    for (Flight f : flightsList) {
+      boolean originMatch = f.origin.toLowerCase().equals(originInput) 
+                         || f.originCityName.toLowerCase().contains(originInput);
+  
+      boolean destMatch   = f.destination.toLowerCase().equals(destInput)
+                         || f.destinationCityName.toLowerCase().contains(destInput);
+  
+      boolean dateMatch   = f.date.equals(dateInput);
+  
+      if (originMatch && destMatch && dateMatch) {
+        results.add(f);
+      }
+    }
+  
+    println("Flights found: " + results.size());
+  
+    // Switch to FlightsOutputScreen if flights were found
+    if (results.size() > 0) {
+      goTo(flightsOutput);
+    } else {
+      println("No flights found for this search!");
+    }
+  }
+  
+  // Helper function to map city name to IATA code
+  String getIATACodeFromInput(String input) {
+    input = input.trim().toLowerCase();
+    for (Flight f : flightsList) {
+      if (f.originCityName.toLowerCase().contains(input)) return f.origin;
+      if (f.destinationCityName.toLowerCase().contains(input)) return f.destination;
+    }
+    return input; // fallback if already an IATA code
+  }
 }
-
 
 
 
@@ -316,24 +506,22 @@ class QueriesDate extends Screen {
   float btnX, btnY, btnW = 120, btnH = 40;
 
   QueriesDate() {
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = (width/2);
-    int y = height - 50;
-    
-    int queryW = width/4 + 100;
+    int queryW = 240;
     int queryH = 50;
-    int xq = width/4 - queryW/2;
-    int xq2 = xq + queryW;
-    int yq = height/4;
-    int xs = xq2 + queryW;
+    
+    int centerX = width/2;
+    int yq = height/2;
+    
+    int spacing = 40;
+    
+    int xq  = centerX - queryW - spacing/2;
+    int xq2 = centerX + spacing/2;
 
     // Standard Back Button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
     
     // The Search Button
-    buttons.add(new Button(xs, yq, 200, 50, "Search", "dateOutput", 20, false));
-    
+    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "SEARCH FLIGHTS", "dateOutput", 20, false));    
     // Initialize Input Boxes
     inputButton = new TextEntryButton(xq, yq, queryW, queryH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
     inputButton2 = new TextEntryButton(xq2, yq, queryW, queryH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
@@ -343,23 +531,38 @@ class QueriesDate extends Screen {
   }
 
   void drawBackground() {
-    background(RY_BLUE); 
-    
-    // Header
+    background(#1A1D23);    
     fill(255);
-    textSize(40);
-    textAlign(CENTER);
-    text("DATE SEARCH", width/2, 50);
+    textSize(36);
+    textAlign(CENTER, CENTER);
+    text("DATE SEARCH", width/2, 45);
     
+    // Search Card
+    float cardW = 700;
+    float cardH = 260;
+    float cardX = width/2 - cardW/2;
+    float cardY = height/2 - cardH/2 + 40;
+    
+    // shadow
+    fill(0, 120);
+    noStroke();
+    rect(cardX + 6, cardY + 6, cardW, cardH, 20);
+    
+    // card body
+    fill(#232833);
+    rect(cardX, cardY, cardW, cardH, 20);
+    stroke(255, 20);
+    line(cardX + 40, cardY + 70, cardX + cardW - 40, cardY + 70);
+    noStroke();
+
     // Decorative Line
     stroke(255, 50);
     line(0, 80, width, 80);
     
-    // Instruction text
-    fill(255);
-    textSize(20);
-    textAlign(LEFT);
-    text("Enter date range to find available flights:", 100, 150);
+    fill(#AEB6C2);
+    textAlign(CENTER);
+    textSize(18);
+    text("Select a departure date range", width/2, cardY + 40);
   }
 
   void draw() {
@@ -585,20 +788,43 @@ class FlightsOutputScreen extends Screen {
   }
 
   void mousePressed() {
+    // 1️Check BACK button
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) goBack();      
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+        goBack();
+        return; // stop further processing
+      }
+    }
+  
+    // 2️Check SELECT buttons for each flight
+    for (int i = 0; i < results.size(); i++) {
+      float cardX = width/2 - 450;
+      float cardY = topMargin + i * cardHeight + scrollY; // include scroll offset
+      float cardW = 900;
+      float cardH = 100;
+  
+      float selectX = cardX + cardW - 120;
+      float selectY = cardY + 25;
+      float selectW = 100;
+      float selectH = 50;
+  
+      // Check if mouse is over the SELECT button
+      if (mouseX > selectX && mouseX < selectX + selectW &&
+          mouseY > selectY && mouseY < selectY + selectH) {
+        
+        Flight selectedFlight = results.get(i);
+  
+        // Avoid duplicates
+        if (!mySelectedFlights.contains(selectedFlight)) {
+          mySelectedFlights.add(selectedFlight);
+          println("Flight added: " + selectedFlight.carrier + " " + selectedFlight.flightNumber);
+        }
+      }
     }
   }
 
   // SCROLLING with mouse wheel
-  void mouseWheel(MouseEvent event) {
-    float e = event.getCount();
-    scrollY += -e * scrollSpeed;
-
-    // Limit scrolling so content doesn't go too far
-    float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
-    scrollY = constrain(scrollY, minScroll, 0);
-  }
+  
   void scrollFlights(float e) {
   scrollY += -e * scrollSpeed;
 
