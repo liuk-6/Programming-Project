@@ -33,7 +33,7 @@ class HomeScreen extends Screen{
     float x1 = 100 ;  // 1st button
     float x3 = 1100 - buttonW;  // 2nd button
     buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
-    buttons.add(new Button(x3, yPos, buttonW, buttonH, "GRAPHS", "graphs",20, true));
+    buttons.add(new Button(x3, yPos, buttonW, buttonH, "DASHBOARD", "dashboard",20, true));
     buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
   }
   void draw() {
@@ -66,7 +66,6 @@ class HomeScreen extends Screen{
      rect(0, 70, width, 2);
      
      imageMode(CENTER);
-     image(sunset, (width/2), height/2, width/1.7, height/2.5);
      image(planeHomeScreen, width/2, height/1.9, width * 0.85, height*0.7);
      imageMode(CORNER);
    }
@@ -75,7 +74,7 @@ class HomeScreen extends Screen{
     if (b.over(mouseX, mouseY)) {
       println("Clicked: " + b.type);
       if (b.type.equals("queries")) goTo(queries);
-      if (b.type.equals("graphs")) goTo(graphs);
+      if (b.type.equals("dashboard")) goTo(dashboard);
       if (b.type.equals("exit")) exit();
     }
   }
@@ -170,36 +169,65 @@ class QueriesScreen extends Screen {
   }
 }
 
-class GraphsScreen extends Screen {
+class DashboardScreen extends Screen {
 
-  GraphsScreen() {
+  DashboardScreen() {
     
     int buttonW = 180;
     int buttonH = 50;
     int x = 30;
     int y = 22;
     textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
+    buttons.add(new Button(x + 30, y + 230, buttonW, buttonH, "Home", "home", 30, false));
     textAlign(CORNER);
   }
 
   void drawBackground() {
-    background(209, 222, 218);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--Graphs--", width/2, 130);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
+    background(RY_BLUE);
   }
+  
+  void draw(){
+    drawBackground();
+    drawSidebar();
+    dashboardCards();
+    for(Button b : buttons){
+      b.display();
+    }  
+  }
+  
+  void drawSidebar(){
+    fill(240, 231, 213);
+    noStroke();
+    rect(40, 40, 220, 640, 20);
+    
+    fill(255);
+    ellipse(150, 120, 80, 80);
+    image(logo, 110, 80, 90, 90);
+    
+    fill(0);
+    textAlign(CENTER);
+    textSize(18);
+    text("FLIGHT SCANNER", 150, 180); 
+  }
+  
+  void dashboardCards(){
+  fill(255);
+  rect(300, 400, 270, 270, 20);
+  
+  fill(255);
+  rect(580, 400, 600, 270, 20);
+  
+  fill(255);
+  rect(300, 60, 880, 300, 20);
+}
+
   void mousePressed() {
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY)) {
         println("Clicked: " + b.type);
-        if (b.type.equals("back")) goBack();
+        if (b.type.equals("home")){
+          goTo(home);
+        }
       }
     }
   }
