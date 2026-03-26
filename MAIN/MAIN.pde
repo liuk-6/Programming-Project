@@ -107,6 +107,7 @@ QueriesFlights flightsSearchScreen;
 QueriesDate flightDateScreen;
 TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
+DashboardScreen dashboardScreen;
 
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
@@ -338,6 +339,7 @@ void setup() {
   flightDateScreen    = new QueriesDate();
   trafficScreen       = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
   flightsOutputScreen = new FlightsOutputScreen();
+  dashboardScreen     = new DashboardScreen();
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
@@ -383,6 +385,7 @@ void draw() {
     case flightsDate: currentScreenObject = flightDateScreen; break;
     case flightsTraffic: currentScreenObject = trafficScreen; break; // <--- updated
     case flightsOutput: currentScreenObject = flightsOutputScreen; break;
+    case dashboard: currentScreenObject = dashboardScreen; break;
     default: currentScreenObject = homeScreen; break;
   }
 
