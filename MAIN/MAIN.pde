@@ -298,17 +298,7 @@ void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float
     rank++;
   }
 }
-void loadRouteData() {
 
- eastCoastRoutes.add(new Route("NYC", "BOS", 1200));
-  eastCoastRoutes.add(new Route("MIA", "ATL", 980));
-
-  westCoastRoutes.add(new Route("LAX", "SFO", 1100));
-  westCoastRoutes.add(new Route("SEA", "LAX", 870));
-
-  centralRoutes.add(new Route("CHI", "DAL", 1500));
-  centralRoutes.add(new Route("HOU", "DEN", 1400));
-}
 
 
 void searchFlightsDateRange()
@@ -340,7 +330,17 @@ void searchFlightsDateRange()
 }
 void searchBusiestRoutes(){
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+}
+void searchEastCoast(){
+
+}
+void searchWestCoast(){
+
+}
+void searchCentral(){
+
+}
+
 
 void setup() {
   size(1200,700);
