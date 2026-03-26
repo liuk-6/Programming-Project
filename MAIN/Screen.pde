@@ -311,10 +311,6 @@ class QueriesFlights extends Screen {
 
 
 class QueriesDate extends Screen {
-  TextEntryButton inputButton;
-  TextEntryButton inputButton2;
-  boolean typingFirst = true;
-  TextEntryButton currentInput;
 
   QueriesDate() {
     // Add back button at bottom center
@@ -331,18 +327,8 @@ class QueriesDate extends Screen {
     
     
 
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
-    textAlign(CORNER);
-    
-    buttons.add(new Button(xs, yq, 200, 50, "Search", "dateOutput", 20, false));
-    
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "", "date1", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "", "date2", 15, 20, false,2);
-    
-    buttons.add(inputButton);
-    buttons.add(inputButton2);
-  }
+  // Button bounds
+  float btnX, btnY, btnW = 120, btnH = 40;
 
   void drawBackground() {
     background(206, 216, 222);
@@ -376,40 +362,107 @@ class QueriesDate extends Screen {
     image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
   }
 
-  void keyPressed(char k) {
+  void draw() {
+    background(RY_BLUE);
 
-  if (currentInput == null) return;
+    // --- Centered panel ---
+    float panelW = 500;
+    float panelH = 300;
+    float panelX = width/2 - panelW/2;
+    float panelY = height/2 - panelH/2;
 
-  if (keyCode == ENTER) {
+    fill(RY_WHITE);
+    stroke(200);
+    strokeWeight(1);
+    rect(panelX, panelY, panelW, panelH, 15);
 
-    if (currentInput == inputButton) {
-      selection.dateStart = currentInput.label;
-      println(selection.dateStart);
+    // --- Header ---
+    fill(RY_BLUE);
+    textSize(24);
+    textAlign(CENTER, TOP);
+    text("Search Flights by Date", panelX + panelW/2, panelY + 20);
+
+    // --- Labels ---
+    fill(50);
+    textSize(16);
+    textAlign(LEFT, TOP);
+    text("Start Date (MM/DD/YYYY):", panelX + 30, panelY + 90);
+    text("End Date (MM/DD/YYYY):", panelX + 30, panelY + 150);
+
+    // --- Input boxes ---
+    // Start Date Box
+    if (activeStart) fill(255);
+    else fill(245);
+    stroke(activeStart ? RY_BLUE : 180);
+    rect(panelX + 30, panelY + 110, 200, 30, 5);
+    fill(0);
+    textAlign(LEFT, CENTER);
+    text(inputStart, panelX + 35, panelY + 125);
+
+    // End Date Box
+    if (activeEnd) fill(255);
+    else fill(245);
+    stroke(activeEnd ? RY_BLUE : 180);
+    rect(panelX + 30, panelY + 170, 200, 30, 5);
+    fill(0);
+    textAlign(LEFT, CENTER);
+    text(inputEnd, panelX + 35, panelY + 185);
+
+    // --- SEARCH Button ---
+    btnX = panelX + panelW/2 - btnW/2;
+    btnY = panelY + 230;
+    if (mouseX > btnX && mouseX < btnX+btnW && mouseY > btnY && mouseY < btnY+btnH) {
+      fill(255, 210, 50); // Hover effect
+    } else {
+      fill(RY_GOLD);
     }
-    else if (currentInput == inputButton2) {
-      selection.dateEnd = currentInput.label;
-      println(selection.dateEnd);
-    }
-    
+    noStroke();
+    rect(btnX, btnY, btnW, btnH, 8);
 
-  } else {
-    currentInput.addChar(k);
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(18);
+    text("SEARCH", btnX + btnW/2, btnY + btnH/2);
+
+    // --- Back Button ---
+    for (Button b : buttons) b.display();
   }
-}
-  
+
   void mousePressed() {
-  currentInput = null;
+    // Back button
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY) && b.type.equals("backQueries")) {
+        currentScreen = queries; // Go back to previous queries screen
+      }
+    }
 
-  // Check TextEntryButtons
-  if (mouseX > inputButton.x && mouseX < inputButton.x + inputButton.w &&
-      mouseY > inputButton.y && mouseY < inputButton.y + inputButton.h) {
-    currentInput = inputButton;
+    // Activate input boxes
+    float panelX = width/2 - 500/2;
+    float panelY = height/2 - 300/2;
+
+    if (mouseX > panelX + 30 && mouseX < panelX + 230 &&
+        mouseY > panelY + 110 && mouseY < panelY + 140) {
+      activeStart = true;
+      activeEnd = false;
+    } else if (mouseX > panelX + 30 && mouseX < panelX + 230 &&
+               mouseY > panelY + 170 && mouseY < panelY + 200) {
+      activeStart = false;
+      activeEnd = true;
+    } else {
+      activeStart = false;
+      activeEnd = false;
+    }
+
+    // Search button click
+    if (mouseX > btnX && mouseX < btnX+btnW &&
+        mouseY > btnY && mouseY < btnY+btnH) {
+      // Assign to selection and search
+      selection.dateStart = inputStart;
+      selection.dateEnd = inputEnd;
+      searchFlightsByDate();
+      currentScreen = flightsOutput;
+    }
   }
-  if (mouseX > inputButton2.x && mouseX < inputButton2.x + inputButton2.w &&
-      mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
-    currentInput = inputButton2;
-  }
-  
 
   // Handle regular buttons
   for (Button b : buttons) {
@@ -504,125 +557,207 @@ class QueriesTraffic extends Screen {
 }
   
   void mousePressed() {
-
-  // Handle regular buttons
   for (Button b : buttons) {
     if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-        if (b.type.equals("backQ")) currentScreen = queries;
-
-        if (b.type.equals("trafficOutputEastCoast")) {
-            searchEastCoast(); 
-            currentScreen = trafficOutputEastCoast;
-        }
-        if (b.type.equals("trafficOutputWestCoast")) {
-            searchWestCoast(); 
-            currentScreen = trafficOutputWestCoast;
-        }
-        if (b.type.equals("trafficOutputCentral")) {
-            searchCentral(); 
-            currentScreen = trafficOutputCentral;
-        }
+      println("Clicked: " + b.type);
+      
+      if (b.type.equals("backQ")) {
+        // Go back to Queries menu
+        currentScreen = queries;
+      } else if (b.type.equals("trafficSearch")) {
+        // Open the unified traffic results screen
+        current = trafficResults;
       }
     }
   }
+ }
 }
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
 class FlightsOutputScreen extends Screen {
 
+  float scrollY = 0;        // current scroll offset
+  float scrollSpeed = 40;   // how much the list scrolls per mouse wheel tick
+  float cardHeight = 110;   // height of each flight card
+  float topMargin = 110;    // space from top before first card
+
   FlightsOutputScreen() {
-    // Back button in the navy header area
     buttons.add(new Button(30, 22, 80, 30, "BACK", "backQueries", 15, false));
   }
 
   void draw() {
-    // 1. Background and Header
-    background(#F2F5F7); // RY_BG (Clean light grey)
+    background(RY_BG); 
     fill(RY_BLUE);
     noStroke();
-    rect(0, 0, width, 80);
-    
-    // 2. Header Content
+    rect(0, 0, width, 80); // header
+
+    // Header Content
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(24);
-    String route = selection.origin.toUpperCase() + "  →  " + selection.destination.toUpperCase();
+    String route = selection.origin.toUpperCase() + " → " + selection.destination.toUpperCase();
     text(route, width/2, 35);
-    
+
     textSize(14);
     fill(255, 200);
     text(results.size() + " flights found • " + selection.dateStart + " - " + selection.dateEnd, width/2, 60);
 
-    // 3. Draw Results as Cards
+    // --- Draw the flights with scrolling ---
+    pushMatrix();
+    translate(0, scrollY); // move the origin by scroll offset
     if (results.size() > 0) {
-      // Display top 5 results (scroll logic can be added later)
-      for (int i = 0; i < min(5, results.size()); i++) {
-        drawFlightCard(width/2 - 450, 110 + (i * 110), results.get(i));
+      for (int i = 0; i < results.size(); i++) {
+        drawFlightCard(width/2 - 450, topMargin + i * cardHeight, results.get(i));
       }
     } else {
       drawEmptyState();
     }
+    popMatrix();
 
     for (Button b : buttons) b.display();
   }
 
   void drawFlightCard(float x, float y, Flight f) {
     float w = 900;
-    float h = 100; // Increased slightly for spacing
-    
-    // Card Body
+    float h = 100;
+
     fill(255);
     stroke(220);
     strokeWeight(1);
     rect(x, y, w, h, 8);
-    
-    // --- ADD THIS SECTION FOR THE DATE ---
+
     fill(RY_BLUE);
     textAlign(LEFT, TOP);
     textSize(12);
-    // This displays the specific date and flight number for this card
-    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 40, y + 12);
-    // -------------------------------------
+    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
 
-    // Times and Route (Adjusted Y to not overlap with date)
     fill(RY_BLUE);
     textAlign(LEFT, CENTER);
-    textSize(22);
-    text(formatTime(f.scheduledDepartureTime), x + 40, y + 45);
-    
-    textAlign(RIGHT, CENTER);
-    text(formatTime(f.scheduledArrivalTime), x + w - 240, y + 45);
-    
-    // Airport Codes
+    textSize(18);
+    text(f.origin + " → " + f.destination, x + 20, y + 50);
+
     textSize(14);
     fill(120);
-    textAlign(LEFT);
-    text(f.origin, x + 40, y + 75);
-    textAlign(RIGHT);
-    text(f.destination, x + w - 240, y + 75);
-    
-    // The "Journey Line" in the middle
-    stroke(200);
-    line(x + 130, y + 55, x + w - 330, y + 55);
-    fill(200);
-    triangle(x + w - 340, y + 50, x + w - 330, y + 55, x + w - 340, y + 60);
-    
-    // Price/Select Action (Ryanair Yellow)
+    text("Departure: " + formatTime(f.scheduledDepartureTime), x + 20, y + 75);
+    text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
+
+    // SELECT button
     fill(RY_GOLD);
     noStroke();
-    rect(x + w - 180, y + 15, 150, 70, 6);
+    rect(x + w - 120, y + 25, 100, 50, 6);
     fill(RY_BLUE);
     textAlign(CENTER, CENTER);
-    textSize(18);
-    text("SELECT", x + w - 105, y + 50);
+    textSize(16);
+    text("SELECT", x + w - 70, y + 50);
   }
-
 
   void drawEmptyState() {
     fill(150);
     textAlign(CENTER);
     textSize(20);
     text("No flights found for this route or date.", width/2, height/2);
+  }
+
+  void mousePressed() {
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY) && b.type.equals("backQueries")) {
+        currentScreen = queries;
+      }
+    }
+  }
+
+  // SCROLLING with mouse wheel
+  void mouseWheel(MouseEvent event) {
+    float e = event.getCount();
+    scrollY += -e * scrollSpeed;
+
+    // Limit scrolling so content doesn't go too far
+    float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
+    scrollY = constrain(scrollY, minScroll, 0);
+  }
+  void scrollFlights(float e) {
+  scrollY += -e * scrollSpeed;
+
+  // Limit scrolling so content doesn't go too far
+  float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
+  scrollY = constrain(scrollY, minScroll, 0);
+  }
+}
+class TrafficResultsScreen extends Screen {
+
+  ArrayList<Route> east;
+  ArrayList<Route> central;
+  ArrayList<Route> west;
+
+  TrafficResultsScreen(ArrayList<Route> east,
+                       ArrayList<Route> central,
+                       ArrayList<Route> west) {
+    this.east = east;
+    this.central = central;
+    this.west = west;
+
+    // Back button
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "backQueries", 15, false));
+  }
+
+  void draw() {
+    background(RY_BLUE);
+
+    // Header
+    fill(255);
+    textAlign(CENTER);
+    textSize(32);
+    text("Most Busy Traffic Routes", width/2, 45);
+
+    // Compute spacing for three columns dynamically
+    float panelWidth = 300;
+    float panelHeight = 420;
+    float spacing = (width - panelWidth * 3) / 4; // space between panels
+
+    float xEast = spacing + panelWidth / 2;
+    float xCentral = xEast + panelWidth + spacing;
+    float xWest = xCentral + panelWidth + spacing;
+
+    // Draw the three columns
+    drawZone("East Coast", east, xEast, panelWidth, panelHeight);
+    drawZone("Central", central, xCentral, panelWidth, panelHeight);
+    drawZone("West Coast", west, xWest, panelWidth, panelHeight);
+
+    // Draw buttons
+    for (Button b : buttons) b.display();
+  }
+
+  // Draw each zone column
+  void drawZone(String title, ArrayList<Route> routes, float x, float panelW, float panelH) {
+
+    // Panel background
+    fill(150);
+    rectMode(CENTER);
+    rect(x, 120 + panelH/2, panelW, panelH, 20); // rounded corners
+    rectMode(CORNER);
+
+    // Column title
+    fill(255);
+    textAlign(CENTER);
+    textSize(22);
+    text(title, x, 100);
+
+    // List of routes
+    fill(255);
+    textAlign(LEFT);
+    textSize(16);
+    float yStart = 150;
+    float padding = 20; // distance from panel edge
+    float y = yStart;
+    int rank = 1;
+
+    for (Route r : routes) {
+      // Ensure text doesn’t overflow panel width
+      text(rank + ". " + r.origin + " -> " + r.destination +
+           " (" + r.passengers + ")", x - panelW/2 + padding, y);
+      y += 22;
+      rank++;
+      if (y > 120 + panelH - 20) break; // stop if text exceeds panel
+    }
   }
 
   void mousePressed() {
