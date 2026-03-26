@@ -84,6 +84,67 @@ ArrayList<Route> centralRoutes;
 
 PFont font;
 //////////////////////METHODS/////////////////////////////////////////////////////
+void searchFlightsByZone() {
+  // Clear previous results
+  eastCoastRoutes.clear();
+  westCoastRoutes.clear();
+  centralRoutes.clear();
+
+  // Temporary maps to track unique routes and their passenger counts
+  HashMap<String, Route> eastMap = new HashMap<>();
+  HashMap<String, Route> westMap = new HashMap<>();
+  HashMap<String, Route> centralMap = new HashMap<>();
+
+  // Define zone airport codes
+  String[] east = {"NYC","BOS","MIA","ATL","PHL"};
+  String[] west = {"LAX","SFO","SEA","PDX","LAS"};
+  String[] central = {"CHI","DAL","HOU","DEN","MSP"};
+
+  // Loop through all flights
+  for (Flight f : flightsList) {
+    String origin = f.origin.toUpperCase();
+    String dest = f.destination.toUpperCase();
+
+    String key = origin + "-" + dest; // unique route key
+
+    if (arrayContains(east, origin) || arrayContains(east, dest)) {
+      if (!eastMap.containsKey(key)) eastMap.put(key, new Route(origin, dest, 0));
+      eastMap.get(key).passengers++;
+    }
+    else if (arrayContains(west, origin) || arrayContains(west, dest)) {
+      if (!westMap.containsKey(key)) westMap.put(key, new Route(origin, dest, 0));
+      westMap.get(key).passengers++;
+    }
+    else if (arrayContains(central, origin) || arrayContains(central, dest)) {
+      if (!centralMap.containsKey(key)) centralMap.put(key, new Route(origin, dest, 0));
+      centralMap.get(key).passengers++;
+    }
+  }
+
+  // Convert maps to lists
+  ArrayList<Route> eastList = new ArrayList<>(eastMap.values());
+  ArrayList<Route> westList = new ArrayList<>(westMap.values());
+  ArrayList<Route> centralList = new ArrayList<>(centralMap.values());
+
+  // Sort by passengers (or date if your Route has it)
+  Collections.sort(eastList, (a,b) -> Integer.compare(b.passengers, a.passengers));
+  Collections.sort(westList, (a,b) -> Integer.compare(b.passengers, a.passengers));
+  Collections.sort(centralList, (a,b) -> Integer.compare(b.passengers, a.passengers));
+
+  // Keep only top 10
+  for (int i = 0; i < min(15, eastList.size()); i++) eastCoastRoutes.add(eastList.get(i));
+  for (int i = 0; i < min(15, westList.size()); i++) westCoastRoutes.add(westList.get(i));
+  for (int i = 0; i < min(15, centralList.size()); i++) centralRoutes.add(centralList.get(i));
+}
+
+// Helper function to check if a string is in a String array
+boolean arrayContains(String[] arr, String s) {
+  for (String item : arr) {
+    if (item.equalsIgnoreCase(s)) return true;
+  }
+  return false;
+}
+
 void addFlightsToTable(ArrayList<Flight> list) {
   myData.clearRows();
   for (Flight f : list) {
@@ -237,17 +298,7 @@ void drawZoneCard(ArrayList<Route> routes, String title, float x, float y, float
     rank++;
   }
 }
-void loadRouteData() {
 
- eastCoastRoutes.add(new Route("NYC", "BOS", 1200));
-  eastCoastRoutes.add(new Route("MIA", "ATL", 980));
-
-  westCoastRoutes.add(new Route("LAX", "SFO", 1100));
-  westCoastRoutes.add(new Route("SEA", "LAX", 870));
-
-  centralRoutes.add(new Route("CHI", "DAL", 1500));
-  centralRoutes.add(new Route("HOU", "DEN", 1400));
-}
 
 
 void searchFlightsDateRange()
@@ -289,18 +340,16 @@ void searchWestCoast(){
 void searchCentral(){
 
 }
+=======
+>>>>>>> 27c656c34ce8ee332e3ca2211eff13abdbb4d6cf
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   size(1200,700);
   textSize(18);
   
-  // create lists for traffic
-  eastCoastRoutes = new ArrayList<Route>();
-  westCoastRoutes = new ArrayList<Route>();
-  centralRoutes = new ArrayList<Route>();
-  loadRouteData(); 
   
+
   trafficResults = new TrafficResultsScreen(
   eastCoastRoutes,
   centralRoutes,
@@ -321,7 +370,12 @@ void setup() {
   for (int row = 0; row < table.getRowCount(); row++) {
     flightsList.add(new Flight(row));
   }
-
+  // create lists for traffic
+  eastCoastRoutes = new ArrayList<Route>();
+  westCoastRoutes = new ArrayList<Route>();
+  centralRoutes = new ArrayList<Route>();
+  searchFlightsByZone();
+  
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
 
@@ -381,8 +435,7 @@ void draw() {
   
   background(30);
   
-  drawPanel();
-  drawAllZones();
+  
 
   
   // Update which screen 'current' points to based on currentScreen ID
