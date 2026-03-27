@@ -710,6 +710,9 @@ class TrafficScreen extends Screen {
   ArrayList<Route> east;
   ArrayList<Route> central;
   ArrayList<Route> west;
+  RegionPieChart eastPie;
+  RegionPieChart westPie;
+  RegionPieChart centralPie;
 
   String currentZone = "East";  // "East", "Central", "West"
 
@@ -722,6 +725,9 @@ class TrafficScreen extends Screen {
     this.east = east;
     this.central = central;
     this.west = west;
+    eastPie = new RegionPieChart(eastCoastAirports);
+    centralPie = new RegionPieChart(centralAirports);
+    westPie = new RegionPieChart(westCoastAirports);
 
     // Back button
     backBtn = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
@@ -781,6 +787,15 @@ class TrafficScreen extends Screen {
     }
 
     drawRoutesPanel(zoneTitle, currentList);
+    if (currentZone.equals("East")) {
+      eastPie.draw(width - 420, 150);
+    }
+    else if (currentZone.equals("Central")) {
+      centralPie.draw(width - 420, 150);
+    }
+    else if (currentZone.equals("West")) {
+      westPie.draw(width - 420, 150);
+    }
   }
 
   void highlightButton(Button b) {
