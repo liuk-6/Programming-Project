@@ -3,6 +3,8 @@ class Button {
   String label, type;
   int textSize;
   boolean hasShadow;
+  float hoverScale;
+  float targetScale;
 
   Button(float x, float y, float w, float h, String label, String type, int textSize, boolean hasShadow) {
     this.x = x; this.y = y; this.w = w; this.h = h;
@@ -11,7 +13,30 @@ class Button {
 
   void display() {
     boolean hovers = over(mouseX, mouseY);
-
+    
+    if (hovers)  {
+      targetScale = 1.02;
+    } else {
+      targetScale = 1.0;
+    }
+    
+    hoverScale = lerp(hoverScale, targetScale, 0.1); // Lerp gives a smooth transition
+  
+    pushMatrix();
+    translate(x + w/2, y + h/2);
+    scale(hoverScale);
+    translate(-(x + w/2), -(y + h/2));
+    if (type.equals("graphsPage") || type.equals("pieChartPage")) {
+      fill(hovers ? color(240, 231, 213) : 255);
+      rect(x, y, w, h, 20);
+      
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2);
+    }
+    popMatrix();
+    
     if (hasShadow) {
       noStroke();
       fill(0, 40);
@@ -26,6 +51,7 @@ class Button {
       textAlign(CENTER, CENTER);
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 3);
+      
     } else if (type.equals("back") || type.equals("backQ")) {
       stroke(255, 180);
       strokeWeight(1);
@@ -35,7 +61,8 @@ class Button {
       textAlign(CENTER, CENTER);
       textSize(textSize);
       text("← " + label, x + w/2, y + h/2 - 2);
-      } else if (type.equals("home")){
+      
+      } else if (type.equals("home") || type.equals("graphs")){
       noStroke();
       if(hovers){
         fill(RY_BLUE);
@@ -43,16 +70,28 @@ class Button {
          fill(240, 231, 213);
       }
       rect(x, y, w, h, 10);
-      
       if(hovers)  {
         fill(255);
       } else {
         fill(0);
       }
-      
       textAlign(CENTER, CENTER);
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 2);
+      
+      } else if (type.equals("graphsPage")){
+      noStroke();
+      if(hovers){
+        fill(240, 231, 213);
+      } else {
+         fill(255);
+      }
+      rect(x, y, w, h, 10);
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2 - 2);
+      
     } else {
       noStroke();
       fill(hovers ? #3D5A80 : RY_BLUE);

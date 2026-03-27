@@ -42,6 +42,7 @@ final int trafficOutput = 10;
 final int trafficOutputEastCoast = 11;
 final int trafficOutputWestCoast = 12;
 final int trafficOutputCentral = 13;
+final int graphDashboard = 14;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
@@ -108,6 +109,7 @@ QueriesDate flightDateScreen;
 TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
+GraphDashboardScreen graphDashboardScreen;
 
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
@@ -333,13 +335,14 @@ void setup() {
   results = new ArrayList<Flight>();
 
   //////////////////// Screens ////////////////////
-  currentScreen       = home;
-  queriesScreen       = new QueriesScreen();
-  flightsSearchScreen = new QueriesFlights();
-  flightDateScreen    = new QueriesDate();
-  trafficScreen       = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
-  flightsOutputScreen = new FlightsOutputScreen();
-  dashboardScreen     = new DashboardScreen();
+  currentScreen         = home;
+  queriesScreen         = new QueriesScreen();
+  flightsSearchScreen   = new QueriesFlights();
+  flightDateScreen      = new QueriesDate();
+  trafficScreen         = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
+  flightsOutputScreen   = new FlightsOutputScreen();
+  dashboardScreen       = new DashboardScreen();
+  graphDashboardScreen  = new GraphDashboardScreen();
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
@@ -386,6 +389,7 @@ void draw() {
     case flightsTraffic: currentScreenObject = trafficScreen; break; // <--- updated
     case flightsOutput: currentScreenObject = flightsOutputScreen; break;
     case dashboard: currentScreenObject = dashboardScreen; break;
+    case graphDashboard: currentScreenObject = graphDashboardScreen; break;
     default: currentScreenObject = homeScreen; break;
   }
 
