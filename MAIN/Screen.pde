@@ -256,6 +256,8 @@ class DashboardScreen extends Screen {
     int y = 252;
     textAlign(CENTER);
     buttons.add(new Button(x, y, buttonW, buttonH, "HOME", "home", 30, false));
+    buttons.add(new Button(x, y + 80, buttonW, buttonH, "GRAPHS", "graphs", 30, false));
+    buttons.add(new Button(x + 525, y + 150, buttonW + 410, buttonH + 220, "", "graphsPage", 30, false));
     textAlign(CORNER);
   }
 
@@ -267,7 +269,9 @@ class DashboardScreen extends Screen {
   void draw(){
     drawBackground();
     drawSidebar();
+    
     dashboardCards();
+    
     for(Button b : buttons){
       b.display();
     }  
@@ -286,13 +290,11 @@ class DashboardScreen extends Screen {
     textSize(18);
     text("FLIGHT SCANNER", 150, 180); 
   }
-  void dashboardCards(){
+  void dashboardCards(){  
+    
   fill(255);
   rect(300, 400, 270, 270, 20);
-  
-  fill(255);
-  rect(580, 400, 600, 270, 20);
-  
+
   fill(255);
   rect(300, 60, 880, 300, 20);
 }
@@ -303,10 +305,13 @@ class DashboardScreen extends Screen {
         println("Clicked: " + b.type);
         if (b.type.equals("home")) {
           goTo(home);
+        }
+        if (b.type.equals("graphs") || b.type.equals("graphsPage")){
+          goTo(graphDashboard);
+       }
       }
     }
   }
-}
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
 class QueriesFlights extends Screen {
