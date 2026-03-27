@@ -322,6 +322,8 @@ class QueriesFlights extends Screen {
   Button oneWayBtn;
   PImage swapImg;
   float swapX, swapY, swapW, swapH;
+  ArrayList<String> suggestions = new ArrayList<String>();// drop down suggestions
+  
   
   QueriesFlights() {
     int margin = 100;
@@ -370,7 +372,24 @@ class QueriesFlights extends Screen {
     // Back button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
-
+  void updateSuggestions(String input){
+    suggestions.clear();
+    if(input.length()<2)return;
+    input= input.toLowerCase();
+    for(Flight f:flightsList){
+      String origin = f.origin.toLowerCase();
+      String originCity = f.originCityName.toLowerCase();
+      if(origin.contains(input) || originCity.contains(input)){
+        String suggestion = f.origin + " - "+ f.originCityName;
+        if(!suggestions.contains(suggestion)){
+          suggestions.add(suggestion);
+        }
+        if(suggestions.size()>=5) break;
+      }
+    }
+    
+    
+  }
   void drawBackground() {
     background(RY_BLUE); 
     fill(255);
@@ -403,6 +422,7 @@ class QueriesFlights extends Screen {
     text("FLY FROM", inputFrom.x, inputFrom.y - labelOffset);
     text("FLY TO", inputTo.x, inputTo.y - labelOffset);
     text("DEPARTURE", inputStart.x, inputStart.y - labelOffset);
+    drawSuggestions();
     if (roundTrip) text("RETURN", inputEnd.x, inputEnd.y - labelOffset);
 
     // Draw inputs
@@ -421,8 +441,42 @@ class QueriesFlights extends Screen {
     }
 
   }
+  void drawSuggestions(){
+  if(suggestions.size()==0||currentInput == null) return;
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float w = currentInput.w;
+    float h = 35;
+    
+    for(int i = 0; i<suggestions.size();i++){
+      fill(255);
+      stroke(200);
+      rect(x, y + i*h, w, h);
+      fill(0);
+      textAlign(LEFT, CENTER);
+      text(suggestions.get(i), x+10, y + i*h +h/2);
+    }
+  }
 
   void mousePressed() {
+  if (currentInput != null && suggestions.size() > 0) {
+  float x = currentInput.x;
+  float y = currentInput.y + currentInput.h;
+  float h = 35;
+
+  for (int i = 0; i < suggestions.size(); i++) {
+    if (mouseX > x && mouseX < x + currentInput.w &&
+        mouseY > y + i*h && mouseY < y + (i+1)*h) {
+      
+      String selected = suggestions.get(i);
+
+      currentInput.label =selected.split(" - ")[0];
+
+      suggestions.clear(); // hide dropdown
+      return;
+        }
+      }
+  }
     TextEntryButton[] allInputs = roundTrip 
       ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
       : new TextEntryButton[]{inputFrom, inputTo, inputStart};
@@ -465,7 +519,6 @@ class QueriesFlights extends Screen {
       inputTo.label = temp;
     }
   }
-
   void drawTripSelector() {
     textAlign(LEFT, CENTER);
     textSize(14);
@@ -480,6 +533,9 @@ class QueriesFlights extends Screen {
 
   void keyPressed(char k) {
     if (currentInput != null) currentInput.addChar(k);
+    if(currentInput == inputFrom ||currentInput == inputTo){
+      updateSuggestions(currentInput.label);
+    }
   }
   // Inside your QueriesFlights class
   void searchFlights() {
@@ -526,8 +582,6 @@ class QueriesFlights extends Screen {
     return input; // fallback if already an IATA code
   }
 }
-
-
 
 class QueriesDate extends Screen {
   TextEntryButton inputButton;
