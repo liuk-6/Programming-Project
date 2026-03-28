@@ -48,6 +48,9 @@ class HomeScreen extends Screen {
 
     buttons.add(new Button(width-220, pad,
       buttonW, buttonH, "DASHBOARD", "dashboard", 16, true));
+    
+    buttons.add(new Button(width-620, pad,
+      buttonW, buttonH, "My Flights", "myFlights", 16, true));
 
     buttons.add(new Button(pad, pad,
       100, buttonH, "EXIT", "exit", 16, true));
@@ -114,6 +117,7 @@ class HomeScreen extends Screen {
 
         if (b.type.equals("queries")) goTo(queries);
         if (b.type.equals("dashboard")) goTo(dashboard);
+        if (b.type.equals("myFlights")) goTo(flightsBooked);
         if (b.type.equals("exit")) exit();
       }
     }
@@ -929,13 +933,30 @@ class FlightsOutputScreen extends Screen {
     text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
 
     // SELECT button
-    fill(RY_GOLD);
-    noStroke();
-    rect(x + w - 120, y + 25, 100, 50, 6);
-    fill(RY_BLUE);
-    textAlign(CENTER, CENTER);
-    textSize(16);
-    text("SELECT", x + w - 70, y + 50);
+    boolean isAlreadyBooked = bookedFlights.contains(f);
+
+    if (isAlreadyBooked) 
+    {
+      fill(180); // Gray color
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("SELECTED", x + w - 70, y + 50);
+     } 
+     else 
+     {
+      fill(RY_GOLD);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(16);
+      text("SELECT", x + w - 70, y + 50);
+    }
   }
 
   void drawEmptyState() {
@@ -946,18 +967,18 @@ class FlightsOutputScreen extends Screen {
   }
 
   void mousePressed() {
-    // 1️Check BACK button
+    // 1. Check BACK button
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY) && b.type.equals("back")) {
         goBack();
-        return; // stop further processing
+        return; 
       }
     }
   
-    // 2️Check SELECT buttons for each flight
+    // 2. Check SELECT buttons for each flight
     for (int i = 0; i < results.size(); i++) {
       float cardX = width/2 - 450;
-      float cardY = topMargin + i * cardHeight + scrollY; // include scroll offset
+      float cardY = topMargin + i * cardHeight + scrollY; 
       float cardW = 900;
       float cardH = 100;
   
@@ -966,16 +987,17 @@ class FlightsOutputScreen extends Screen {
       float selectW = 100;
       float selectH = 50;
   
-      // Check if mouse is over the SELECT button
       if (mouseX > selectX && mouseX < selectX + selectW &&
-          mouseY > selectY && mouseY < selectY + selectH) {
+          mouseY > selectY && mouseY < selectY + selectH) 
+      {
+        Flight selected = results.get(i);
         
-        Flight selectedFlight = results.get(i);
-  
-        // Avoid duplicates
-        if (!mySelectedFlights.contains(selectedFlight)) {
-          mySelectedFlights.add(selectedFlight);
-          println("Flight added: " + selectedFlight.carrier + " " + selectedFlight.flightNumber);
+        // This line ensures the code inside ONLY runs if the flight isn't there yet
+        if (!bookedFlights.contains(selected)) {
+          bookedFlights.add(selected);
+          println("Flight added!");
+        } else {
+          println("Already in your list!");
         }
       }
     }
@@ -989,5 +1011,131 @@ class FlightsOutputScreen extends Screen {
   // Limit scrolling so content doesn't go too far
   float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
   scrollY = constrain(scrollY, minScroll, 0);
+  }
+}
+
+class Bookings extends Screen {
+  float scrollY = 0;
+  float scrollSpeed = 40;
+  float cardHeight = 80; // Slimmer cards for the list
+  float listX = 50;      // Positioned on the left
+  
+  Flight selectedForPass = null; // The flight currently being viewed as a boarding pass
+
+  Bookings() {
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+  }
+
+  void draw() {
+    background(RY_BG);
+    
+    // --- HEADER ---
+    fill(RY_BLUE);
+    rect(0, 0, width, 80);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text("MY BOOKED FLIGHTS", width/2, 40);
+
+    // left side - flight list
+    pushMatrix();
+    translate(0, scrollY);
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      drawFlightTab(listX, 120 + i * (cardHeight + 10), bookedFlights.get(i));
+    }
+    popMatrix();
+
+    // Right side - boarding pass
+    if (selectedForPass != null) {
+      drawBoardingPass(width / 2 + 50, 120, selectedForPass);
+    } else {
+      fill(150);
+      textAlign(CENTER);
+      text("Select a flight to view boarding pass", width * 0.75, height / 2);
+    }
+
+    for (Button b : buttons) b.display();
+  }
+
+  // Slimmer card showing only Origin -> Destination
+  void drawFlightTab(float x, float y, Flight f) {
+    boolean isSelected = (f == selectedForPass);
+    
+    fill(isSelected ? RY_GOLD : 255);
+    stroke(RY_BLUE);
+    strokeWeight(isSelected ? 2 : 1);
+    rect(x, y, width/3, cardHeight, 10);
+    
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(18);
+    text(f.origin + "  →  " + f.destination, x + 20, y + cardHeight/2);
+    
+    text(">", x + width/3 - 30, y + cardHeight/2);
+  }
+
+  void drawBoardingPass(float x, float y, Flight f) {
+    float w = 400;
+    float h = 500;
+    
+    // Pass Background
+    fill(255);
+    stroke(200);
+    rect(x, y, w, h, 15);
+    
+    // Top Blue Bar
+    fill(RY_BLUE);
+    rect(x, y, w, 60, 15, 15, 0, 0);
+    fill(255);
+    textSize(20);
+    textAlign(CENTER);
+    text("BOARDING PASS", x + w/2, y + 35);
+    
+    // Pass Details
+    fill(50);
+    textAlign(LEFT);
+    textSize(14);
+    float textY = y + 100;
+    
+    detailRow(x + 30, textY, "PASSENGER", "VALUED CUSTOMER");
+    detailRow(x + 30, textY + 60, "FLIGHT", f.carrier + " " + f.flightNumber);
+    detailRow(x + 30, textY + 120, "DATE", f.date);
+    detailRow(x + 30, textY + 180, "FROM", f.originCityName + " (" + f.origin + ")");
+    detailRow(x + 30, textY + 240, "TO", f.destinationCityName + " (" + f.destination + ")");
+    detailRow(x + 30, textY + 300, "DEPARTS", formatTime(f.scheduledDepartureTime));
+    
+    // Barcode
+    fill(0);
+    for(int i=0; i<w-60; i+=4) {
+      rect(x + 30 + i, y + h - 60, random(1, 3), 40);
+    }
+  }
+
+  void detailRow(float x, float y, String label, String value) {
+    fill(150);
+    textSize(12);
+    text(label, x, y);
+    fill(RY_BLUE);
+    textSize(18);
+    text(value, x, y + 25);
+  }
+
+  void mousePressed() {
+    // Back Button
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+        goBack();
+        return;
+      }
+    }
+
+    // List selection logic
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      float cardY = 120 + i * (cardHeight + 10) + scrollY;
+      if (mouseX > listX && mouseX < listX + width/3 &&
+          mouseY > cardY && mouseY < cardY + cardHeight) {
+        selectedForPass = bookedFlights.get(i);
+      }
+    }
   }
 }
