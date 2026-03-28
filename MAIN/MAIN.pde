@@ -23,7 +23,6 @@ color TEXT_SUB  = #9AA3B2;
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
 /////////// MAIN SCREENS AT START ////////////////
 final int home = 1;
 final int queries = 2;
@@ -34,6 +33,7 @@ final int exit = 4;
 final int flightsSearch = 5;
 final int flightsDate = 6;
 final int flightsTraffic = 7;
+final int flightsBooked = 20;
 
 /////////THIRD LAYER - OUTPUT SCREENS ///////////
 final int flightsOutput = 8;
@@ -110,6 +110,8 @@ TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
+Bookings bookingsScreen;
+
 
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
@@ -118,7 +120,7 @@ ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory;
 ArrayList<Flight> results;
 String flightsFound = "";
-ArrayList<Flight> mySelectedFlights;  // GLOBAL list to store selected flights
+ArrayList<Flight> bookedFlights;  // GLOBAL list to store selected flights
 
 ArrayList<Route> eastCoastRoutes;
 ArrayList<Route> westCoastRoutes;
@@ -308,7 +310,7 @@ void setup() {
   textSize(18);
   
   allFlightCards = new ArrayList<FlightCard>();
-  mySelectedFlights = new ArrayList<Flight>();
+  bookedFlights = new ArrayList<Flight>();
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
   centralRoutes   = new ArrayList<Route>();
@@ -343,6 +345,7 @@ void setup() {
   flightsOutputScreen   = new FlightsOutputScreen();
   dashboardScreen       = new DashboardScreen();
   graphDashboardScreen  = new GraphDashboardScreen();
+  bookingsScreen = new Bookings();
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
@@ -390,6 +393,7 @@ void draw() {
     case flightsOutput: currentScreenObject = flightsOutputScreen; break;
     case dashboard: currentScreenObject = dashboardScreen; break;
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
+    case flightsBooked: currentScreenObject = bookingsScreen; break;
     default: currentScreenObject = homeScreen; break;
   }
 

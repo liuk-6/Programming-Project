@@ -63,7 +63,7 @@ class FlightCard {
     text("SELECT", x + w - 105, y + 55);
     
     // Inside FlightCard.display()
-    boolean isSelected = selectedFlights.contains(f);
+    boolean isSelected = bookedFlights.contains(f);
     
     fill(isSelected ? color(0, 200, 0) : RY_YELLOW); // Green if selected, yellow otherwise
     noStroke();
@@ -83,8 +83,8 @@ class FlightCard {
   for (FlightCard fc : allFlightCards) { // assuming you store them in an ArrayList<FlightCard>
     if (fc.clickSelect()) {
       // Add flight to selectedFlights if not already added
-      if (!selectedFlights.contains(fc.f)) {
-        selectedFlights.add(fc.f);
+      if (!bookedFlights.contains(fc.f)) {
+        bookedFlights.add(fc.f);
         println("Flight selected: " + fc.f.carrier + " " + fc.f.flightNumber);
       }
     }
