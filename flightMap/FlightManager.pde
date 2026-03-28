@@ -1,4 +1,4 @@
-class FlightManager {
+class FlightManager{
   ArrayList<FlightLocation> allFlights = new ArrayList<FlightLocation>();
   ArrayList<FlightLocation> filteredFlights = new ArrayList<FlightLocation>();
   HashSet<String> allowedAirports = new HashSet<String>();

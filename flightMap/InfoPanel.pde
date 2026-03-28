@@ -1,7 +1,7 @@
 class InfoPanel{
   FlightLocation selected;
 
-  void setFlight(FlightLocation f) {
+  void setFlight(FlightLocation f){
     selected = f;
   }
 

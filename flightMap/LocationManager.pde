@@ -1,4 +1,5 @@
-class LocationManager {
+
+class LocationManager{
 
   // Stores code → (lat, lon)
   HashMap<String, PVector> locations = new HashMap<String, PVector>();
