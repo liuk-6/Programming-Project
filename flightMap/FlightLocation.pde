@@ -72,10 +72,10 @@ class FlightLocation {
     PVector p2 = map.geoToScreen(dLat, dLon);
 
     float cx = (p1.x + p2.x) / 2;
-    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * 0.2;
+    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * (2/10);
 
     // sample along curve
-    for (float t = 0; t <= 1; t += 0.05) {
+    for (float t = 0; t <= 1; t += (5/100)) {
       float x = bezierPoint(p1.x, cx, cx, p2.x, t);
       float y = bezierPoint(p1.y, cy, cy, p2.y, t);
 

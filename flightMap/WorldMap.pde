@@ -2,9 +2,9 @@ class WorldMap {
   PShape mapShape;
 
   // Use viewBox values
-  float svgMinX = 11.1;
-  float svgMinY = -2.5;
-  float svgWidth = 937.81;
+  float svgMinX = 111/10;
+  float svgMinY = -25/10;
+  float svgWidth = 93781/100;
   float svgHeight = 545;
 
   // Continental US bounds for lat/lon
@@ -42,10 +42,6 @@ class WorldMap {
     float offsetX = (width - drawW) / 2;
     float offsetY = (height - drawH) / 2;
 
-    //if (lat < 24 || lat > 50) return new PVector(-1000, -1000);
-    return new PVector(
-      offsetX + (x - svgMinX) * scale,
-      offsetY + (y - svgMinY) * scale
-    );
+    return new PVector(offsetX + (x - svgMinX) * scale, offsetY + (y - svgMinY) * scale);
   }
 }
