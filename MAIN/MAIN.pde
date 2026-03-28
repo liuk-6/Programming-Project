@@ -11,8 +11,9 @@ color RY_GOLD = #F4CA35;
 color RY_WHITE = #FFFFFF;
 color RY_BG = #F2F5F7;
 color RY_YELLOW = #F4CA35;
-
-color BG = #1A1D23;
+color BG = #0E2A47;        // base navy
+color BG_TOP = #0B223A;    // darker top
+color BG_BOTTOM = #163A63; // lighter bottom
 color PANEL     = #1C1F26;
 color CARD      = #232833;
 color ACCENT    = #F4CA35; // gold
@@ -24,6 +25,7 @@ String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
 ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
+UILayout ui;
 /////////// MAIN SCREENS AT START ////////////////
 final int home = 1;
 final int queries = 2;
@@ -48,7 +50,9 @@ final int graphDashboard = 14;
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
 UserSelection selection;
-
+Screen nextScreen = null;    // the screen we’re transitioning to
+float transitionAlpha = 0;   // fade opacity
+boolean inTransition = false;
 ////////DISPLAY TABLE FOOTPRINT ///////////
 Table myData;
 TableDisplay myFlights;
@@ -128,6 +132,11 @@ ArrayList<FlightCard> allFlightCards;  // <-- global flight card list
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
+void goToWithTransition(Screen s) {
+  nextScreen = s;
+  transitionAlpha = 0;
+  inTransition = true;
+}
 void drawSearchInfoPanel() {
 
     float w = width * 0.7;
@@ -306,7 +315,7 @@ void drawPanel() {
 void setup() {
   size(1200, 700);
   textSize(18);
-  
+  ui = new UILayout();
   allFlightCards = new ArrayList<FlightCard>();
   mySelectedFlights = new ArrayList<Flight>();
   eastCoastRoutes = new ArrayList<Route>();
