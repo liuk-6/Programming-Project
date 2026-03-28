@@ -22,62 +22,139 @@ class Screen {
 
   void keyPressed(char k) {} //Optional if a feature is to be added
 }
-///////////////////////MENU SCREEN//////////////////////////////////////
-class HomeScreen extends Screen{
+/////////////////////// MENU SCREEN //////////////////////////////////////
+/////////////////////// SOPHISTICATED HOME SCREEN ///////////////////////
+class HomeScreen extends Screen {
 
-  HomeScreen()
-  {
-    int buttonW = 80*6;
-    int buttonH = 50;
-    int yPos = height/2; // 20 px padding from bottom
-    float x1 = 100 ;  // 1st button
-    float x3 = 1100 - buttonW;  // 2nd button
-    buttons.add(new Button(x1, yPos, buttonW, buttonH, "QUERIES", "queries",20, true));
-    buttons.add(new Button(x3, yPos, buttonW, buttonH, "DASHBOARD", "dashboard",20, true));
-    buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
+  int NAV_HEIGHT = 85;
+
+  color bgTop = color(28, 45, 85);
+  color bgBottom = color(12, 20, 45);
+
+  HomeScreen() {
+
+    int buttonW = 180;
+    int buttonH = 38;
+    int pad = 20;
+
+    // navigation buttons
+    buttons.add(new Button(width-420, pad,
+      buttonW, buttonH, "QUERIES", "queries", 16, true));
+
+    buttons.add(new Button(width-220, pad,
+      buttonW, buttonH, "DASHBOARD", "dashboard", 16, true));
+
+    buttons.add(new Button(pad, pad,
+      100, buttonH, "EXIT", "exit", 16, true));
   }
+
+  // ======================================================
   void draw() {
-  drawBackground();   // draws the plane
-  fill(255);
-  textAlign(CENTER);
-  textSize(60);
-  text("F  L  I  G  H  T   S  C  A  N  N  E  R", width/2, height/5);
-  for (Button b : buttons) b.display();  // draws buttons on top
-  }
-  
-  void planeImage(int x, int y)  {
-    int planeX = x + 150;
-    int planeY = y + 100;
-    int planeW = 600;
-    int planeH = 200;
-    
-    fill(200);
-    rect(planeX, planeY, planeW, planeH);
-      
-   }
-   void drawBackground(){
 
-     fill(43, 71, 121);
-     rect(0, 0, width, height);
-     
-     //Line at top
-     fill(255);
-     noStroke();
-     rect(0, 70, width, 2);
-     
-     imageMode(CENTER);
-     image(planeHomeScreen, width/2, height/1.9, width * 0.85, height*0.7);
-     imageMode(CORNER);
-   }
-   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("queries")) goTo(queries);
-      if (b.type.equals("dashboard")) goTo(dashboard);
-      if (b.type.equals("exit")) exit();
-    }
+    drawGradientBackground();
+    drawNavbar();
+    drawHeroPanel();
+    drawPlane();
+
+    // buttons always on top
+    for (Button b : buttons) b.display();
   }
+
+  // ======================================================
+  // GRADIENT BACKGROUND (instant sophistication)
+  void drawGradientBackground() {
+
+    for (int i = 0; i < height; i++) {
+      float inter = map(i, 0, height, 0, 1);
+      stroke(lerpColor(bgTop, bgBottom, inter));
+      line(0, i, width, i);
+    }
+    noStroke();
+  }
+
+  // ======================================================
+  // NAVBAR
+  void drawNavbar() {
+
+    // shadow
+    fill(0, 80);
+    rect(0, 5, width, NAV_HEIGHT);
+
+    // glass bar
+    fill(20, 35, 70, 230);
+    rect(0, 0, width, NAV_HEIGHT);
+
+    // divider
+    fill(255, 40);
+    rect(0, NAV_HEIGHT-1, width, 1);
+
+    
+  }
+
+  // ======================================================
+  // HERO PANEL (website card look)
+  void drawHeroPanel() {
+
+    float panelW = width * 0.55;
+    float panelH = 180;
+
+    float x = width/2 - panelW/2;
+    float y = NAV_HEIGHT + 70;
+
+    // shadow
+    fill(0, 90);
+    rect(x+8, y+8, panelW, panelH, 20);
+
+    // glass panel
+    fill(255, 25);
+    rect(x, y, panelW, panelH, 20);
+
+    // text
+    textAlign(CENTER);
+
+    fill(255);
+    textSize(56);
+    text("Flight Scanner", width/2, y + 70);
+
+    fill(255, 170);
+    textSize(20);
+    text("Search • Analyze • Monitor Flights",
+         width/2, y + 110);
+  }
+
+  // ======================================================
+  // PLANE IMAGE SECTION
+  void drawPlane() {
+
+    imageMode(CENTER);
+
+    // soft glow behind image
+    fill(255, 30);
+    ellipse(width/2, height*0.65, width*0.7, height*0.5);
+
+    image(
+      planeHomeScreen,
+      width/2,
+      height*0.65,
+      width*0.8,
+      height*0.6
+    );
+
+    imageMode(CORNER);
+  }
+
+  // ======================================================
+  void mousePressed() {
+
+    for (Button b : buttons) {
+
+      if (b.over(mouseX, mouseY)) {
+
+        if (b.type.equals("queries")) goTo(queries);
+        if (b.type.equals("dashboard")) goTo(dashboard);
+        if (b.type.equals("exit")) exit();
+      }
+    }
   }
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
