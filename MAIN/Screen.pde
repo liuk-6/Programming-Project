@@ -23,7 +23,6 @@ class Screen {
   void keyPressed(char k) {} //Optional if a feature is to be added
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
-/////////////////////// SOPHISTICATED HOME SCREEN ///////////////////////
 class HomeScreen extends Screen {
 
   int NAV_HEIGHT = 85;
@@ -48,7 +47,6 @@ class HomeScreen extends Screen {
       100, buttonH, "EXIT", "exit", 16, true));
   }
 
-  // ======================================================
   void draw() {
 
     drawGradientBackground();
@@ -60,8 +58,6 @@ class HomeScreen extends Screen {
     for (Button b : buttons) b.display();
   }
 
-  // ======================================================
-  // GRADIENT BACKGROUND (instant sophistication)
   void drawGradientBackground() {
 
     for (int i = 0; i < height; i++) {
@@ -72,8 +68,6 @@ class HomeScreen extends Screen {
     noStroke();
   }
 
-  // ======================================================
-  // NAVBAR
   void drawNavbar() {
 
     // shadow
@@ -91,8 +85,6 @@ class HomeScreen extends Screen {
     
   }
 
-  // ======================================================
-  // HERO PANEL (website card look)
   void drawHeroPanel() {
 
     float panelW = width * 0.55;
@@ -116,13 +108,9 @@ class HomeScreen extends Screen {
     textSize(56);
     text("Flight Scanner", width/2, y + 70);
 
-    fill(255, 170);
-    textSize(20);
-    text("Search • Analyze • Monitor Flights",
-         width/2, y + 110);
+    
   }
 
-  // ======================================================
   // PLANE IMAGE SECTION
   void drawPlane() {
 
@@ -160,107 +148,149 @@ class HomeScreen extends Screen {
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
 
 class QueriesScreen extends Screen {
-  ArrayList<Flight> flights;   // All flights
-  float scrollY = 0;           // For scrolling flights if needed
-  float maxScroll;
-  
-  QueriesScreen() {
-    this.flights = flightsList; // Use your global flightsList
 
+  ArrayList<Flight> flights;
+
+  int NAV_HEIGHT = 85;
+
+  color bgTop = color(28,45,85);
+  color bgBottom = color(12,20,45);
+
+  QueriesScreen() {
+    this.flights = flightsList;
     setupButtons();
   }
 
   void setupButtons() {
-    int buttonW = 250;
-    int buttonH = 50;
 
-    int queryY = height/4;
+    int cardW = 260;
+    int cardH = 120;
     int spacing = 50;
-    
-    textAlign(CENTER);
-    // Back button bottom left (original position)
-    buttons.add(new Button(30, 22, 140, 40, "BACK", "back", 20, true));
 
-    // Centered main query buttons
-    int totalWidth = 3*buttonW + 2*spacing;
-    int startX = width/2 - totalWidth/2;
+    float startX = width/2 - (3*cardW + 2*spacing)/2;
+    float y = 260;
 
-    buttons.add(new Button(startX, queryY, buttonW, buttonH, "FLIGHT SEARCH", "flightQuery", 20, false));
-    buttons.add(new Button(startX + buttonW + spacing, queryY, buttonW, buttonH, "TRAFFIC SEARCH", "airlineQuery", 20, false));
-    buttons.add(new Button(startX + 2*(buttonW + spacing), queryY, buttonW, buttonH, "DATE SEARCH", "dateQuery", 20, false));
-  }
+    // back (navbar style)
+    buttons.add(new Button(
+      20, 22, 120, 38,
+      "BACK", "back", 16, true));
 
-  void drawBackground() {
-    background(RY_BLUE); 
-    
-    // Top header
-    fill(#2B4779);
-    noStroke();
-    rect(0, 0, width, 80, 0, 0, 20, 20);
-    
-    fill(TEXT_MAIN);
-    textSize(36);
-    textAlign(CENTER, CENTER);
-    text("FLIGHT SEARCH", width/2, 50);
+    // card buttons
+    buttons.add(new Button(startX, y,
+      cardW, cardH, "FLIGHT SEARCH", "flightQuery", 18, true));
 
-    // Subtle divider line
-    stroke(255, 50);
-    strokeWeight(2);
-    line(0, 80, width, 80);
-    noStroke();
-    
-    fill(TEXT_SUB);
-    textSize(16);
-    text("Choose how you want to explore flight data",
-     width/2, 90);
-     
-  }
-  void drawSectionLabel() {
-    fill(TEXT_SUB);
-    textSize(22);
-    textAlign(CENTER);
-    text("Search Options", width/2, height/4 - 30);
+    buttons.add(new Button(startX + cardW + spacing, y,
+      cardW, cardH, "TRAFFIC SEARCH", "airlineQuery", 18, true));
+
+    buttons.add(new Button(startX + 2*(cardW + spacing), y,
+      cardW, cardH, "DATE SEARCH", "dateQuery", 18, true));
   }
 
   void draw() {
-    drawBackground();
-    drawSearchInfoPanel();
-    drawSectionLabel();
-    // Buttons
-    for (Button b : buttons) {
-      b.display();
+
+    drawGradientBackground();
+    drawNavbar();
+    drawPageHeader();
+    drawCardsBackground();
+    drawInfoPanel();
+
+    for (Button b : buttons) b.display();
+  }
+
+  void drawGradientBackground() {
+
+    for (int i=0; i<height; i++) {
+      float inter = map(i,0,height,0,1);
+      stroke(lerpColor(bgTop,bgBottom,inter));
+      line(0,i,width,i);
     }
-
+    noStroke();
   }
-  void drawSearchInfoPanel() {
 
-    float w = width * 0.7;
-    float h = 160;
-    float x = width/2 - w/2;
-    float y = height/2 + 60;
-  
-    // panel
-    fill(RY_BG);
-    stroke(255,20);
-    rect(x, y, w, h, 20);
-  
-    fill(TEXT_SUB);
-    textSize(20);
+  void drawNavbar() {
+
+    fill(20,35,70,230);
+    rect(0,0,width,NAV_HEIGHT);
+
+    fill(255,40);
+    rect(0,NAV_HEIGHT-1,width,1);
+
+    
+  }
+
+  // ======================================================
+  // PAGE HEADER
+  void drawPageHeader() {
+
     textAlign(CENTER);
-    text("SMART SEARCH FEATURES", width/2, y + 35);
-  
-    fill(TEXT_SUB);
-    textSize(15);
-  
-    text("• Compare airline routes instantly", width/2, y + 70);
-    text("• Analyze traffic across regions", width/2, y + 95);
-    text("• Explore flights by travel date", width/2, y + 120);
+
+    fill(255);
+    textSize(44);
+    text("Flight Queries", width/2, NAV_HEIGHT + 70);
+
+    fill(255,170);
+    textSize(18);
+    text("Choose how you want to explore flight data",
+         width/2, NAV_HEIGHT + 100);
   }
 
+  // ======================================================
+  // CARD BACKGROUND LAYER (adds website depth)
+  void drawCardsBackground() {
 
+    float w = width*0.8;
+    float h = 200;
+
+    float x = width/2 - w/2;
+    float y = 210;
+
+    // shadow
+    fill(0,80);
+    rect(x+8,y+8,w,h,25);
+
+    // glass panel
+    fill(255,20);
+    rect(x,y,w,h,25);
+  }
+
+  // ======================================================
+  // INFO PANEL
+  void drawInfoPanel() {
+
+    float w = width * 0.6;
+    float h = 170;
+    float x = width/2 - w/2;
+    float y = height - 230;
+
+    // shadow
+    fill(0,80);
+    rect(x+6,y+6,w,h,20);
+
+    // panel
+    fill(255,25);
+    rect(x,y,w,h,20);
+
+    textAlign(CENTER);
+
+    fill(255);
+    textSize(22);
+    text("SMART SEARCH FEATURES", width/2, y+40);
+
+    fill(255,180);
+    textSize(16);
+
+    text("• Compare airline routes instantly", width/2, y+75);
+    text("• Analyze traffic across regions", width/2, y+100);
+    text("• Explore flights by travel date", width/2, y+125);
+  }
+
+  // ======================================================
   void mousePressed() {
+
     for (Button b : buttons) {
+
       if (b.over(mouseX, mouseY)) {
+
         if (b.type.equals("back")) goBack();
         if (b.type.equals("flightQuery")) goTo(flightsSearch);
         if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
