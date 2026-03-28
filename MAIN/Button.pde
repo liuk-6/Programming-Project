@@ -92,7 +92,16 @@ class Button {
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 2);
       
-    } else {
+    } else if (type.equals("dateOutput")) {
+      noStroke();
+      fill(hovers ? color(255, 215, 0) : RY_YELLOW); // yellow background
+      rect(x, y, w, h, 8);
+      fill(RY_BLUE);  // text color
+      textAlign(CENTER, CENTER);
+      textSize(textSize);
+      text(label, x + w/2, y + h/2 - 3);
+    }
+    else {
       noStroke();
       fill(hovers ? #3D5A80 : RY_BLUE);
       rect(x, y, w, h, 10);

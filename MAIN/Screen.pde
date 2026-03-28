@@ -1,26 +1,32 @@
 class Screen {
+
+  UILayout layout = new UILayout();
   ArrayList<Button> buttons = new ArrayList<Button>();
 
+  String title = "";
+
   void draw() {
-    drawBackground();
-    for (Button b : buttons) {
+    layout.beginPage(title);
+    drawContent();
+
+    for (Button b : buttons)
       b.display();
-    }
   }
 
-  void drawBackground() {
-    background(100); // default
-  }
+  // ---------- OVERRIDDEN BY SCREENS ----------
+  void drawContent() {}
 
+  // ---------- EVENTS (IMPORTANT) ----------
   void mousePressed() {
     for (Button b : buttons) b.click();
   }
 
   void mouseMoved() {
-    for (Button b : buttons) b.over(mouseX,mouseY);
+    for (Button b : buttons) b.over(mouseX, mouseY);
   }
 
-  void keyPressed(char k) {} //Optional if a feature is to be added
+  void keyPressed(char k) {}
+
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
 class HomeScreen extends Screen {
@@ -50,43 +56,11 @@ class HomeScreen extends Screen {
       100, buttonH, "EXIT", "exit", 16, true));
   }
 
-  void draw() {
+  void drawContent() {
+  drawHeroPanel();
+  drawPlane();
+}
 
-    drawGradientBackground();
-    drawNavbar();
-    drawHeroPanel();
-    drawPlane();
-
-    // buttons always on top
-    for (Button b : buttons) b.display();
-  }
-
-  void drawGradientBackground() {
-
-    for (int i = 0; i < height; i++) {
-      float inter = map(i, 0, height, 0, 1);
-      stroke(lerpColor(bgTop, bgBottom, inter));
-      line(0, i, width, i);
-    }
-    noStroke();
-  }
-
-  void drawNavbar() {
-
-    // shadow
-    fill(0, 80);
-    rect(0, 5, width, NAV_HEIGHT);
-
-    // glass bar
-    fill(20, 35, 70, 230);
-    rect(0, 0, width, NAV_HEIGHT);
-
-    // divider
-    fill(255, 40);
-    rect(0, NAV_HEIGHT-1, width, 1);
-
-    
-  }
 
   void drawHeroPanel() {
 
@@ -161,6 +135,7 @@ class QueriesScreen extends Screen {
   color bgBottom = color(12,20,45);
 
   QueriesScreen() {
+    this.title = "Flight Queries";
     this.flights = flightsList;
     setupButtons();
   }
@@ -190,37 +165,12 @@ class QueriesScreen extends Screen {
       cardW, cardH, "DATE SEARCH", "dateQuery", 18, true));
   }
 
-  void draw() {
+  void drawContent() {
+  drawPageHeader();
+  drawCardsBackground();
+  drawInfoPanel();
+}
 
-    drawGradientBackground();
-    drawNavbar();
-    drawPageHeader();
-    drawCardsBackground();
-    drawInfoPanel();
-
-    for (Button b : buttons) b.display();
-  }
-
-  void drawGradientBackground() {
-
-    for (int i=0; i<height; i++) {
-      float inter = map(i,0,height,0,1);
-      stroke(lerpColor(bgTop,bgBottom,inter));
-      line(0,i,width,i);
-    }
-    noStroke();
-  }
-
-  void drawNavbar() {
-
-    fill(20,35,70,230);
-    rect(0,0,width,NAV_HEIGHT);
-
-    fill(255,40);
-    rect(0,NAV_HEIGHT-1,width,1);
-
-    
-  }
 
   // ======================================================
   // PAGE HEADER
@@ -361,7 +311,7 @@ class CardButton extends Button {
 class DashboardScreen extends Screen {
 
   DashboardScreen() {
-    
+    title = "Dashboard";
     int buttonW = 180;
     int buttonH = 50;
     int x = 60;
@@ -373,21 +323,11 @@ class DashboardScreen extends Screen {
     textAlign(CORNER);
   }
 
-  void drawBackground() {
-    background(RY_BLUE);
-
-  }
   
-  void draw(){
-    drawBackground();
-    drawSidebar();
-    
-    dashboardCards();
-    
-    for(Button b : buttons){
-      b.display();
-    }  
-  }
+  void drawContent(){
+  drawSidebar();
+  dashboardCards();
+}
   
   void drawSidebar(){
     fill(240, 231, 213);
@@ -439,6 +379,7 @@ class QueriesFlights extends Screen {
   
   
   QueriesFlights() {
+    title = "Flight Search";
     int margin = 100;
     int spacing = 15;
     int buttonH = 45;
@@ -502,18 +443,9 @@ class QueriesFlights extends Screen {
     
     
   }
-  void drawBackground() {
-    background(RY_BLUE); 
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    text("FLIGHT SEARCH", width/2, 40);
-    stroke(255, 60);
-    line(0, 80, width, 80);
-  }
+  
 
-  void draw() {
-    drawBackground();
+  void drawContent() {
     drawTripSelector();
     
     // White card container
@@ -704,6 +636,7 @@ class QueriesDate extends Screen {
   float btnX, btnY, btnW = 120, btnH = 40;
 
   QueriesDate() {
+    title = "Date Search";
     int queryW = 240;
     int queryH = 50;
     
@@ -719,7 +652,7 @@ class QueriesDate extends Screen {
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
     
     // The Search Button
-    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "SEARCH FLIGHTS", "dateOutput", 20, false));    
+    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "Search flights", "dateOutput", 20, false));    
     // Initialize Input Boxes
     inputButton = new TextEntryButton(xq, yq, queryW, queryH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
     inputButton2 = new TextEntryButton(xq2, yq, queryW, queryH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
@@ -727,45 +660,21 @@ class QueriesDate extends Screen {
     buttons.add(inputButton);
     buttons.add(inputButton2);
   }
-
-  void drawBackground() {
-    background(RY_BLUE);    
+  void drawCard(){
     fill(255);
-    textSize(36);
-    textAlign(CENTER, CENTER);
-    text("DATE SEARCH", width/2, 45);
-    
-    // Search Card
-    float cardW = 700;
-    float cardH = 260;
-    float cardX = width/2 - cardW/2;
-    float cardY = height/4;
-    
-    // shadow
-    fill(0, RY_BG);
-    noStroke();
-    rect(cardX + 6, cardY + 6, cardW, cardH, 20);
-    
-    // card body
-    fill(RY_BG);
-    rect(cardX, cardY, cardW, cardH, 20);
-    stroke(255, 20);
-    line(cardX + 40, cardY + 70, cardX + cardW - 40, cardY + 70);
-    noStroke();
-
-    // Decorative Line
-    stroke(255, 50);
-    line(0, 80, width, 80);
-    
-    fill(0);
-    textAlign(CENTER);
-    textSize(18);
-    text("Select a departure date range", width/2, cardY + 40);
+    rect(150, 200, width-300, 250, 20);
+  
   }
 
-  void draw() {
-    drawBackground();
-    
+
+  void drawContent() {
+    drawCard();
+    // Card title
+    fill(RY_BG);
+    textAlign(LEFT);
+    textSize(22);
+    text("Book your next trip", 150, height/3 - 65);
+
     for (Button b : buttons) {
       b.display();
     }
@@ -834,6 +743,7 @@ class TrafficScreen extends Screen {
   TrafficScreen(ArrayList<Route> east,
                 ArrayList<Route> central,
                 ArrayList<Route> west) {
+    title = "Traffic Analytics";
     this.east = east;
     this.central = central;
     this.west = west;
@@ -860,22 +770,9 @@ class TrafficScreen extends Screen {
     buttons.add(westBtn);
   }
 
-  void drawBackground() {
-    background(RY_BLUE);
-    fill(255);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("FLIGHTS ROUTES TRAFFIC", width/2, 50);
-
-    // Line at top
-    fill(255, 50);
-    noStroke();
-    rect(0, 70, width, 2);
-  }
 
   void draw() {
-    drawBackground();
-
+    ui.drawNavbar(title);
     // Draw zone buttons with highlight for selected zone
     for (Button b : buttons) {
       if (b == eastBtn && currentZone.equals("East")) highlightButton(b);
