@@ -4,12 +4,17 @@ class GraphDashboardScreen extends Screen {
   PieChart pieChart;
   graphScreen screen1, screen2;
   graphScreen currentScreen;
-  
+  TopAirlinesPie airlinePie;
+
   String activeFact = "";
   boolean showDestinationChart = true; // default view
   
   GraphDashboardScreen() {
-  
+    // for top airlines
+    loadAirlineNames();
+    HashMap<String, Integer> counts = countAirlineTraffic();
+    airlinePie = new TopAirlinesPie(counts);
+
     // --- Create chart objects ---
     destChart = new BarChart();
     originChart = new OriginBarChart();
@@ -60,6 +65,9 @@ class GraphDashboardScreen extends Screen {
       translate(200, 300);
       pieChart.draw();
       popMatrix();
+      
+      airlinePie.draw(600, 150);
+      
     }
   
     // Draw title

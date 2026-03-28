@@ -81,6 +81,7 @@ class HomeScreen extends Screen{
   }
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
+
 class QueriesScreen extends Screen {
   ArrayList<Flight> flights;   // All flights
   float scrollY = 0;           // For scrolling flights if needed
@@ -314,6 +315,7 @@ class DashboardScreen extends Screen {
   }
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
+
 class QueriesFlights extends Screen {
   TextEntryButton inputFrom, inputTo, inputStart, inputEnd;
   TextEntryButton currentInput;
@@ -337,7 +339,6 @@ class QueriesFlights extends Screen {
     int cardW = width - 140;
     int cardH = 280;
 
-    int titleY   = cardY + 25;       // Card title
     int tripBtnY = cardY + 80;       // Trip buttons below title
     int inputY   = tripBtnY + 45;    // Inputs below trip buttons
     int labelOffset = 12;            // Labels above inputs
