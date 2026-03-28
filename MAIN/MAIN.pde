@@ -26,6 +26,7 @@ boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
 ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
 UILayout ui;
+
 /////////// MAIN SCREENS AT START ////////////////
 final int home = 1;
 final int queries = 2;
@@ -45,6 +46,7 @@ final int trafficOutputEastCoast = 11;
 final int trafficOutputWestCoast = 12;
 final int trafficOutputCentral = 13;
 final int graphDashboard = 14;
+final int flightsOutputTwoWay = 18;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
@@ -114,7 +116,7 @@ TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
-
+TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
 ArrayList<Flight> flightsList;
@@ -129,6 +131,12 @@ ArrayList<Route> westCoastRoutes;
 ArrayList<Route> centralRoutes;
 
 ArrayList<FlightCard> allFlightCards;  // <-- global flight card list
+ArrayList<FlightCard> departureCards = new ArrayList<FlightCard>();
+ArrayList<FlightCard> returnCards = new ArrayList<FlightCard>();
+ArrayList<Flight> departureFlights = new ArrayList<Flight>();
+ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
+
+
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
@@ -269,27 +277,78 @@ void searchFlightsByDate() {
   }
 }
 
-void searchFlight() {
-  results.clear();
-  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
-  try {
-    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
-    LocalDate end   = LocalDate.parse(selection.dateEnd,   csvFormat);
-    for (Flight f : flightsList) {
-      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
-      String userOrigin = selection.origin.split(" - ")[0].toLowerCase().trim();
-      String userDest   = selection.destination.toLowerCase().trim();
-      boolean originMatch = f.origin.equalsIgnoreCase(userOrigin) || f.originCityName.toLowerCase().contains(userOrigin);
-      boolean destMatch   = f.destination.equalsIgnoreCase(userDest) || f.destinationCityName.toLowerCase().contains(userDest);
-      if (originMatch && destMatch && !flightDate.isBefore(start) && !flightDate.isAfter(end)) {
-        results.add(f);
-      }
+void generateFlightCards() {
+    departureCards.clear();
+    returnCards.clear();
+
+    float startY = 100; // Starting Y position for departure flights
+    for (int i = 0; i < departureFlights.size(); i++) {
+        departureCards.add(new FlightCard(50, startY + i*130, departureFlights.get(i)));
     }
-  } catch (Exception e) {
-    println("Search Error: Check date format");
-  }
-  Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-  goTo(flightsOutput);
+
+    float returnStartY = startY + departureFlights.size()*130 + 50; // spacing before return flights
+    for (int j = 0; j < returnFlights.size(); j++) {
+        returnCards.add(new FlightCard(50, returnStartY + j*130, returnFlights.get(j)));
+    }
+}
+
+void searchFlights() {
+    departureFlights.clear();
+    returnFlights.clear();
+    results.clear();
+
+    DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+    try {
+        LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+        LocalDate end   = selection.dateEnd.isEmpty() ? null : LocalDate.parse(selection.dateEnd, csvFormat);
+
+        String userOrigin = selection.origin.split(" - ")[0].trim().toLowerCase();
+        String userDest   = selection.destination.trim().toLowerCase();
+
+        for (Flight f : flightsList) {
+            LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+
+            String flightOriginCode = f.origin.toLowerCase();
+            String flightDestCode   = f.destination.toLowerCase();
+            String flightOriginCity = f.originCityName != null ? f.originCityName.toLowerCase() : "";
+            String flightDestCity   = f.destinationCityName != null ? f.destinationCityName.toLowerCase() : "";
+
+            // --- Departure flights ---
+            boolean depMatch = 
+                (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
+                (flightDestCode.equals(userDest)   || flightDestCity.contains(userDest)) &&
+                !flightDate.isBefore(start) &&
+                (end == null || !flightDate.isAfter(end));
+
+            if (depMatch) departureFlights.add(f);
+
+            // --- Return flights ---
+            if (end != null) {
+                boolean retMatch =
+                    (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
+                    (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin)) &&
+                    flightDate.equals(end);
+
+                if (retMatch) returnFlights.add(f);
+            }
+        }
+
+        // Sort by departure time
+        Collections.sort(departureFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+        Collections.sort(returnFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+
+        // One-way or two-way: choose screen
+        if (end == null) {
+            results.addAll(departureFlights);   // keep old one-way screen compatible
+            goTo(flightsOutput);                // one-way screen
+        } else {
+            goTo(flightsOutputTwoWay);          // two-way screen
+        }
+
+    } catch (Exception e) {
+        println("Search Error: Check date format");
+        e.printStackTrace();
+    }
 }
 
 // ---- DRAWING METHODS FOR TRAFFIC PANEL ----
@@ -382,6 +441,7 @@ void setup() {
   flightsRoutes = new ArrayList<Flight>();
   addFlightsRoutesToTable(flightsRoutes);
   myTrafficRoutes = new TableDisplay(myTrafficData, 250, 150);
+  twoWayFlightsOutputScreen = new TwoWayFlightsOutputScreen();
 }
 
 void draw() {
@@ -395,8 +455,9 @@ void draw() {
     case queries: currentScreenObject = queriesScreen; break;
     case flightsSearch: currentScreenObject = flightsSearchScreen; break;
     case flightsDate: currentScreenObject = flightDateScreen; break;
-    case flightsTraffic: currentScreenObject = trafficScreen; break; // <--- updated
+    case flightsTraffic: currentScreenObject = trafficScreen; break;
     case flightsOutput: currentScreenObject = flightsOutputScreen; break;
+    case flightsOutputTwoWay: currentScreenObject = twoWayFlightsOutputScreen; break;  // <-- added
     case dashboard: currentScreenObject = dashboardScreen; break;
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
     default: currentScreenObject = homeScreen; break;
@@ -485,7 +546,12 @@ void keyPressed() {
 
 void mouseWheel(MouseEvent event) {
   float e = event.getCount();
-  if (currentScreen == flightsOutput) {
-    flightsOutputScreen.scrollFlights(e);
+  if (currentScreenObject != null) {
+    if (currentScreenObject instanceof FlightsOutputScreen) {
+      ((FlightsOutputScreen)currentScreenObject).scrollFlights(e);
+    } 
+    else if (currentScreenObject instanceof TwoWayFlightsOutputScreen) {
+      ((TwoWayFlightsOutputScreen)currentScreenObject).scrollFlights(e);
+    }
   }
 }
