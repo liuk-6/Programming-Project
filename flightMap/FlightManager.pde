@@ -2,8 +2,9 @@ class FlightManager {
   ArrayList<FlightLocation> allFlights = new ArrayList<FlightLocation>();
   ArrayList<FlightLocation> filteredFlights = new ArrayList<FlightLocation>();
   HashSet<String> allowedAirports = new HashSet<String>();
-
-  void loadFromTable(Table table, AirportManager airportManager) {
+  void loadFromTable(Table table, LocationManager locationManager) {
+    final int DELAY_THRESHOLD = 30;
+          
     allFlights.clear();
     allowedAirports.add("DFW");
     allowedAirports.add("ATL");
@@ -24,9 +25,14 @@ class FlightManager {
       String originCode = raw.origin.trim().toUpperCase();
       String destCode = raw.destination.trim().toUpperCase();
 
-      PVector origin = airportManager.getCoords(originCode);
-      PVector dest = airportManager.getCoords(destCode);
 
+      PVector origin = locationManager.getCoords(originCode);
+      PVector dest = locationManager.getCoords(destCode);
+
+      if (origin == null || dest == null) {
+        println("Missing airport:", originCode, destCode);
+        continue;
+      } 
       int schedDep = raw.scheduledDepartureTime;
       int actualDep = raw.actualDepartureTime;
       boolean cancelled = raw.cancelled;
@@ -37,7 +43,7 @@ class FlightManager {
         status = "CANCELLED";
       } else {
         int delay = timeToMinutes(actualDep) - timeToMinutes(schedDep);
-        if (delay > 30) {
+        if (delay > DELAY_THRESHOLD) {
           status = "DELAYED";
         } else {
           status = "ON_TIME";
@@ -50,12 +56,10 @@ class FlightManager {
         float dLat = dest.x;
         float dLon = dest.y;
 
-        // ✅ Skip Alaska, Hawaii, etc.
         if (oLat < 24 || oLat > 50 || dLat < 24 || dLat > 50) {
           continue;
         }
 
-        // ✅ ONLY create flight once
         FlightLocation f = new FlightLocation(
           originCode,
           destCode,
