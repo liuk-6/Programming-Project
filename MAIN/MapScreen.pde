@@ -198,5 +198,9 @@ void mousePressed() {
   FlightLocation clicked = interaction.checkClick(
     getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
+  
+  for(Button b : buttons){
+    if(b.type.equals("back")) goBack();
+  }
 }
 }
