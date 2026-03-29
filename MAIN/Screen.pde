@@ -1160,71 +1160,123 @@ class TwoWayFlightsOutputScreen extends Screen {
     }
   }
 }
-class BookingsScreen extends Screen{
+class BookingsScreen extends Screen {
 
   ArrayList<Flight> bookings;
   ArrayList<Button> buttons;
   int selectedBooking = -1;
-  float scrollOffset = 0;
+
+  float scrollY = 0;           // scroll offset
+  float cardHeight = 110;      // height of each flight card
+  float topMargin = 130;       // space from top before first card
+  float scrollSpeed = 40;      // scroll speed per mouse wheel
 
   BookingsScreen(ArrayList<Flight> bookings) {
     this.bookings = bookings;
+
     buttons = new ArrayList<Button>();
-   buttons.add(new Button(50, 50, 100, 40, "Back", "back", 16, true));
-    buttons.add(new Button(width-150, height-70, 100, 40, "Cancel", "cancel", 16, true));
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    buttons.add(new Button(width - 150, height - 70, 100, 40, "Cancel", "cancel", 15, false));
   }
 
-  void display() {
-    background(230);
+  void draw() {
+    background(RY_BG);
 
+    // --- Header ---
+    fill(RY_BLUE);
+    noStroke();
+    rect(0, 0, width, 80);
+
+    fill(255);
+    textAlign(CENTER, CENTER);
     textSize(24);
-    fill(0);
-    text("My Bookings", width/2, 40);
+    text("My Bookings", width / 2, 35);
 
-    // Display bookings
+    textSize(14);
+    fill(255, 200);
+    text(bookings.size() + " flights booked", width / 2, 60);
+
+    // --- Draw flight cards ---
+    pushMatrix();
+    translate(0, scrollY);
+
+    float yOffset = topMargin;
+
     for (int i = 0; i < bookings.size(); i++) {
-    Flight bk = bookings.get(i); 
-    if (i == selectedBooking) fill(255, 220, 220);
-      else fill(255);
-      rect(50, 100 + i*60 - scrollOffset, width-100, 50);
-      fill(0);
-      text(bk.info(), 60, 130 + i*60 - scrollOffset);
+      Flight f = bookings.get(i);
+      drawFlightCard(width / 2 - 450, yOffset, f, i == selectedBooking);
+      yOffset += cardHeight;
     }
 
-    // Draw buttons
+    popMatrix();
+
+    // --- Buttons ---
     for (Button b : buttons) b.display();
   }
-  void draw() {
-    display();
-  }
-  void cancelBooking(Flight f) {
-      bookedFlights.remove(f);
-      selectedBooking = -1;  // reset selection
+
+  void drawFlightCard(float x, float y, Flight f, boolean selected) {
+    float w = 900;
+    float h = 100;
+
+    if (selected) fill(255, 220, 220);
+    else fill(255);
+    stroke(220);
+    rect(x, y, w, h, 8);
+
+    fill(RY_BLUE);
+    textAlign(LEFT, TOP);
+    textSize(12);
+    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
+
+    textSize(18);
+    text(f.origin + " → " + f.destination, x + 20, y + 45);
+
+    textSize(14);
+    fill(120);
+    text("Departure: " + formatTime(f.scheduledDepartureTime), x + 20, y + 75);
+    text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
+
+    // CANCEL button
+    fill(RY_GOLD);
+    noStroke();
+    rect(x + w - 120, y + 25, 100, 50, 6);
+
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(16);
+    text("CANCEL", x + w - 70, y + 50);
   }
 
   void mousePressed() {
+    // Buttons
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY)) {
-        if (b.type.equals("back")) goBack(); // integration
+        if (b.type.equals("back")) goBack();
         if (b.type.equals("cancel") && selectedBooking != -1) {
-            Flight f = bookedFlights.get(selectedBooking);
-            cancelBooking(f);  // pass the actual Flight object
-        }      
+          Flight f = bookings.get(selectedBooking);
+          bookedFlights.remove(f);
+          bookings.remove(selectedBooking);
+          selectedBooking = -1;
+        }
       }
     }
 
-    // Click to select booking
+    // Click on cards
     for (int i = 0; i < bookings.size(); i++) {
-      if (mouseX > 50 && mouseX < width-50 && mouseY > 100 + i*60 - scrollOffset && mouseY < 150 + i*60 - scrollOffset) {
+      float cardX = width / 2 - 450;
+      float cardY = topMargin + i * cardHeight + scrollY;
+      if (mouseX > cardX && mouseX < cardX + 900 &&
+          mouseY > cardY && mouseY < cardY + 100) {
         selectedBooking = i;
       }
     }
   }
 
   void mouseWheel(MouseEvent event) {
-    float e = event.getCount();
-    scrollOffset += e * 20;
-    scrollOffset = constrain(scrollOffset, 0, max(0, bookings.size()*60 - height + 150));
-  }
+    scrollY += -event.getCount() * scrollSpeed;
 
+    float totalHeight = topMargin + bookings.size() * cardHeight;
+    float minScroll = min(0, height - totalHeight);
+    scrollY = constrain(scrollY, minScroll, 0);
+  }
 }
