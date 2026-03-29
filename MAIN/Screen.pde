@@ -308,17 +308,17 @@ class DashboardScreen extends Screen {
     textAlign(CENTER);
     buttons.add(new Button(x, y, buttonW, buttonH, "HOME", "home", 30, false));
     buttons.add(new Button(x, y + 80, buttonW, buttonH, "GRAPHS", "graphs", 30, false));
-    buttons.add(new Button(x + 525, y + 150, buttonW + 410, buttonH + 220, "", "graphsPage", 30, false));
     buttons.add(new Button(x, y + 160, buttonW, buttonH, "PIE CHARTS", "pieCharts", 30, false));
-    buttons.add(new Button(x + 240, y + 150, buttonW + 90, buttonH + 220, "", "pieChartsPage", 30, false));
     buttons.add(new Button(x, y + 240, buttonW, buttonH, "FLIGHT MAP", "maps", 30, false));
     textAlign(CORNER);
+    buttons.add(new Button(x + 525, y + 150, buttonW + 410, buttonH + 220, "Bar Charts", "graphsPage", 30, false));
+    buttons.add(new Button(x + 240, y + 150, buttonW + 90, buttonH + 220, "Pie Charts", "pieChartsPage", 30, false));
+    buttons.add(new Button(x + 240, y - 195, buttonW + 700, buttonH + 253, "Flight Map", "flightMapPage", 30, false));
   }
 
   
   void drawContent(){
   drawSidebar();
-  dashboardCards();
 }
   
   void drawSidebar(){
@@ -334,10 +334,6 @@ class DashboardScreen extends Screen {
     textSize(18);
     text("FLIGHT SCANNER", 150, 180); 
   }
-  void dashboardCards(){  
-  fill(255);
-  rect(300, 60, 880, 300, 20);
-}
   
   void mousePressed() {
   for (Button b : buttons) {
@@ -350,6 +346,7 @@ class DashboardScreen extends Screen {
         goTo(graphDashboard);
       }
       if  (b.type.equals("maps")) goTo(mapScreen);
+      if  (b.type.equals("flightMapPage")) goTo(mapScreen);
     }
    }
   }
