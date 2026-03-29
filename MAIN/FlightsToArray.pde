@@ -38,6 +38,12 @@ class Flight {
     int m = t % 100;
     return nf(h, 2) + ":" + nf(m, 2); // ensures two digits
   }
+  String info() {
+    return date + " | " + carrier + " " + flightNumber +
+           " : " + origin + " → " + destination +
+           " | Dep: " + formatTime(scheduledDepartureTime) +
+           " Arr: " + formatTime(scheduledArrivalTime);
+  }
 
   // Get flight duration as "Xh Ym"
   String getDuration() {

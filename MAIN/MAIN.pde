@@ -24,7 +24,7 @@ color TEXT_SUB  = #9AA3B2;
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-ArrayList<Flight> selectedFlights = new ArrayList<Flight>();
+
 UILayout ui;
 
 /////////// MAIN SCREENS AT START ////////////////
@@ -37,6 +37,7 @@ final int exit = 4;
 final int flightsSearch = 5;
 final int flightsDate = 6;
 final int flightsTraffic = 7;
+final int flightsBooked = 20;
 
 /////////THIRD LAYER - OUTPUT SCREENS ///////////
 final int flightsOutput = 8;
@@ -46,7 +47,8 @@ final int trafficOutputEastCoast = 11;
 final int trafficOutputWestCoast = 12;
 final int trafficOutputCentral = 13;
 final int graphDashboard = 14;
-final int flightsOutputTwoWay = 18;
+final int bookingsScreens = 15;
+final int flightsOutputTwoWay = 16;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
@@ -116,7 +118,11 @@ TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
+
 TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
+BookingsScreen bookingsScreen;
+
+
 
 ///////// ARRAY LISTS ///////////////////////////////////////////////
 ArrayList<Flight> flightsList;
@@ -124,7 +130,7 @@ ArrayList<Flight> flightsRoutes;
 ArrayList<UserSelection> searchHistory;
 ArrayList<Flight> results;
 String flightsFound = "";
-ArrayList<Flight> mySelectedFlights;  // GLOBAL list to store selected flights
+ArrayList<Flight> bookedFlights;  // GLOBAL list to store selected flights
 
 ArrayList<Route> eastCoastRoutes;
 ArrayList<Route> westCoastRoutes;
@@ -339,10 +345,12 @@ void searchFlights() {
 
         // One-way or two-way: choose screen
         if (end == null) {
-            results.addAll(departureFlights);   // keep old one-way screen compatible
-            goTo(flightsOutput);                // one-way screen
+            results.addAll(departureFlights);   // one-way
+            goTo(flightsOutput);
         } else {
-            goTo(flightsOutputTwoWay);          // two-way screen
+            // ✅ Update the TwoWay screen dynamically
+            twoWayFlightsOutputScreen.setFlights(departureFlights, returnFlights);
+            goTo(flightsOutputTwoWay);
         }
 
     } catch (Exception e) {
@@ -376,7 +384,7 @@ void setup() {
   textSize(18);
   ui = new UILayout();
   allFlightCards = new ArrayList<FlightCard>();
-  mySelectedFlights = new ArrayList<Flight>();
+  bookedFlights = new ArrayList<Flight>();
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
   centralRoutes   = new ArrayList<Route>();
@@ -411,6 +419,7 @@ void setup() {
   flightsOutputScreen   = new FlightsOutputScreen();
   dashboardScreen       = new DashboardScreen();
   graphDashboardScreen  = new GraphDashboardScreen();
+  bookingsScreen = new BookingsScreen(bookedFlights);
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
@@ -441,8 +450,7 @@ void setup() {
   flightsRoutes = new ArrayList<Flight>();
   addFlightsRoutesToTable(flightsRoutes);
   myTrafficRoutes = new TableDisplay(myTrafficData, 250, 150);
-  twoWayFlightsOutputScreen = new TwoWayFlightsOutputScreen();
-}
+  twoWayFlightsOutputScreen = new TwoWayFlightsOutputScreen(departureFlights, returnFlights);}
 
 void draw() {
   background(30);
@@ -460,6 +468,7 @@ void draw() {
     case flightsOutputTwoWay: currentScreenObject = twoWayFlightsOutputScreen; break;  // <-- added
     case dashboard: currentScreenObject = dashboardScreen; break;
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
+    case bookingsScreens: currentScreenObject = bookingsScreen; break;
     default: currentScreenObject = homeScreen; break;
   }
 
@@ -551,7 +560,7 @@ void mouseWheel(MouseEvent event) {
       ((FlightsOutputScreen)currentScreenObject).scrollFlights(e);
     } 
     else if (currentScreenObject instanceof TwoWayFlightsOutputScreen) {
-      ((TwoWayFlightsOutputScreen)currentScreenObject).scrollFlights(e);
+      ((TwoWayFlightsOutputScreen)currentScreenObject).mouseWheel(event);
     }
   }
 }

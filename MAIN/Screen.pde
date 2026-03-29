@@ -48,6 +48,9 @@ class HomeScreen extends Screen {
 
     buttons.add(new Button(width-220, pad,
       buttonW, buttonH, "DASHBOARD", "dashboard", 16, true));
+    
+    buttons.add(new Button(width-620, pad,
+      buttonW, buttonH, "BOOKINGS", "myFlights", 16, true));
 
     buttons.add(new Button(pad, pad,
       100, buttonH, "EXIT", "exit", 16, true));
@@ -105,19 +108,16 @@ class HomeScreen extends Screen {
     imageMode(CORNER);
   }
 
-  // ======================================================
   void mousePressed() {
-
-    for (Button b : buttons) {
-
-      if (b.over(mouseX, mouseY)) {
-
-        if (b.type.equals("queries")) goTo(queries);
-        if (b.type.equals("dashboard")) goTo(dashboard);
-        if (b.type.equals("exit")) exit();
-      }
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+      if (b.type.equals("queries")) goTo(queries);
+      if (b.type.equals("dashboard")) goTo(dashboard);
+      if (b.type.equals("myFlights")) goTo(bookingsScreens); 
+      if (b.type.equals("exit")) exit();
     }
   }
+}
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
 
@@ -168,7 +168,6 @@ class QueriesScreen extends Screen {
 }
 
 
-  // ======================================================
   // PAGE HEADER
   void drawPageHeader() {
 
@@ -184,7 +183,6 @@ class QueriesScreen extends Screen {
          width/2, NAV_HEIGHT + 100);
   }
 
-  // ======================================================
   // CARD BACKGROUND LAYER (adds website depth)
   void drawCardsBackground() {
 
@@ -203,7 +201,6 @@ class QueriesScreen extends Screen {
     rect(x,y,w,h,25);
   }
 
-  // ======================================================
   // INFO PANEL
   void drawInfoPanel() {
 
@@ -234,20 +231,16 @@ class QueriesScreen extends Screen {
     text("• Explore flights by travel date", width/2, y+125);
   }
 
-  // ======================================================
   void mousePressed() {
-
-    for (Button b : buttons) {
-
-      if (b.over(mouseX, mouseY)) {
-
-        if (b.type.equals("back")) goBack();
-        if (b.type.equals("flightQuery")) goTo(flightsSearch);
-        if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
-        if (b.type.equals("dateQuery")) goTo(flightsDate);
-      }
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+      if (b.type.equals("back")) goBack(); // changed for integration
+      if (b.type.equals("flightQuery")) goTo(flightsSearch);
+      if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
+      if (b.type.equals("dateQuery")) goTo(flightsDate);
     }
   }
+}
 
   void keyPressed(char k) {}
 }
@@ -348,17 +341,13 @@ class DashboardScreen extends Screen {
 }
   
   void mousePressed() {
-    for (Button b : buttons) {
-      if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-        if (b.type.equals("home")) {
-          goTo(home);
-        }
-        if (b.type.equals("graphs") || b.type.equals("graphsPage")){
-          goTo(graphDashboard);
-       }
-      }
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY)) {
+      println("Clicked: " + b.type);
+      if (b.type.equals("home")) goTo(home);
+      if (b.type.equals("graphs") || b.type.equals("graphsPage")) goTo(graphDashboard); // unified
     }
+   }
   }
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
@@ -433,7 +422,7 @@ class QueriesFlights extends Screen {
         if(!suggestions.contains(suggestion)){
           suggestions.add(suggestion);
         }
-        if(suggestions.size()>=5) break;
+        if(suggestions.size()>=8) break;
       }
     }
     
@@ -577,40 +566,7 @@ class QueriesFlights extends Screen {
       updateSuggestions(currentInput.label);
     }
   }
-  // Inside your QueriesFlights class
-  void searchFlights() {
-    // Clear previous results
-    results.clear();
   
-    // Get user input from the text fields
-    String originInput = inputFrom.label.trim().toLowerCase();
-    String destInput   = inputTo.label.trim().toLowerCase();
-    String dateInput   = inputStart.label.trim(); // exact format "MM/DD/YYYY"
-  
-    // Loop through all flights
-    for (Flight f : flightsList) {
-      boolean originMatch = f.origin.toLowerCase().equals(originInput) 
-                         || f.originCityName.toLowerCase().contains(originInput);
-  
-      boolean destMatch   = f.destination.toLowerCase().equals(destInput)
-                         || f.destinationCityName.toLowerCase().contains(destInput);
-  
-      boolean dateMatch   = f.date.equals(dateInput);
-  
-      if (originMatch && destMatch && dateMatch) {
-        results.add(f);
-      }
-    }
-  
-    println("Flights found: " + results.size());
-  
-    // Switch to FlightsOutputScreen if flights were found
-    if (results.size() > 0) {
-      goTo(flightsOutput);
-    } else {
-      println("No flights found for this search!");
-    }
-  }
   
   // Helper function to map city name to IATA code
   String getIATACodeFromInput(String input) {
@@ -929,13 +885,30 @@ class FlightsOutputScreen extends Screen {
     text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
 
     // SELECT button
-    fill(RY_GOLD);
-    noStroke();
-    rect(x + w - 120, y + 25, 100, 50, 6);
-    fill(RY_BLUE);
-    textAlign(CENTER, CENTER);
-    textSize(16);
-    text("SELECT", x + w - 70, y + 50);
+    boolean isAlreadyBooked = bookedFlights.contains(f);
+
+    if (isAlreadyBooked) 
+    {
+      fill(180); // Gray color
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("SELECTED", x + w - 70, y + 50);
+     } 
+     else 
+     {
+      fill(RY_GOLD);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(16);
+      text("SELECT", x + w - 70, y + 50);
+    }
   }
 
   void drawEmptyState() {
@@ -944,20 +917,17 @@ class FlightsOutputScreen extends Screen {
     textSize(20);
     text("No flights found for this route or date.", width/2, height/2);
   }
+  
 
   void mousePressed() {
-    // 1️Check BACK button
+    // 1. Check BACK button
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
-        goBack();
-        return; // stop further processing
-      }
-    }
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) goBack();
   
-    // 2️Check SELECT buttons for each flight
+    // 2. Check SELECT buttons for each flight
     for (int i = 0; i < results.size(); i++) {
       float cardX = width/2 - 450;
-      float cardY = topMargin + i * cardHeight + scrollY; // include scroll offset
+      float cardY = topMargin + i * cardHeight + scrollY; 
       float cardW = 900;
       float cardH = 100;
   
@@ -966,19 +936,21 @@ class FlightsOutputScreen extends Screen {
       float selectW = 100;
       float selectH = 50;
   
-      // Check if mouse is over the SELECT button
       if (mouseX > selectX && mouseX < selectX + selectW &&
-          mouseY > selectY && mouseY < selectY + selectH) {
+          mouseY > selectY && mouseY < selectY + selectH) 
+      {
+        Flight selected = results.get(i);
         
-        Flight selectedFlight = results.get(i);
-  
-        // Avoid duplicates
-        if (!mySelectedFlights.contains(selectedFlight)) {
-          mySelectedFlights.add(selectedFlight);
-          println("Flight added: " + selectedFlight.carrier + " " + selectedFlight.flightNumber);
+        // This line ensures the code inside ONLY runs if the flight isn't there yet
+        if (!bookedFlights.contains(selected)) {
+          bookedFlights.add(selected);
+          println("Flight added!");
+        } else {
+          println("Already in your list!");
         }
       }
     }
+   }
   }
 
   // SCROLLING with mouse wheel
@@ -993,52 +965,40 @@ class FlightsOutputScreen extends Screen {
 }
 class TwoWayFlightsOutputScreen extends Screen {
 
-  float scrollY = 0;
-  float scrollSpeed = 40;
-  float cardHeight = 110;
-  float topMargin = 110;
+  ArrayList<Flight> outboundFlights;
+  ArrayList<Flight> returnFlights;
 
-  TwoWayFlightsOutputScreen() {
+  int selectedOutbound = -1;
+  int selectedReturn = -1;
+
+  float scrollY = 0;
+  float cardHeight = 110;
+  float topMargin = 130;  // space from top before first card
+  float scrollSpeed = 40;
+
+  ArrayList<Button> buttons;
+
+  TwoWayFlightsOutputScreen(ArrayList<Flight> outbound, ArrayList<Flight> ret) {
+    this.outboundFlights = outbound;
+    this.returnFlights = ret;
+
+    buttons = new ArrayList<Button>();
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    buttons.add(new Button(width - 150, height - 70, 100, 40, "Select", "select", 15, false));
+  }
+
+  void setFlights(ArrayList<Flight> outbound, ArrayList<Flight> ret) {
+    this.outboundFlights = outbound;
+    this.returnFlights = ret;
+    selectedOutbound = -1;
+    selectedReturn = -1;
+    scrollY = 0;
   }
 
   void draw() {
-    background(RY_BG); 
-    drawHeader();
-    println("TwoWayFlightsOutputScreen draw called");
-    println("departureFlights: " + departureFlights.size() + ", returnFlights: " + returnFlights.size());
-    pushMatrix();
-    translate(0, scrollY);
+    background(RY_BG);
 
-    float yOffset = topMargin;
-
-    // Departure Flights
-    if (departureFlights.size() > 0) {
-      drawSectionHeader("Departure Flights", yOffset - 40);
-      for (int i = 0; i < departureFlights.size(); i++) {
-        drawFlightCard(width/2 - 450, yOffset + i * cardHeight, departureFlights.get(i));
-      }
-      yOffset += departureFlights.size() * cardHeight + 50;
-    }
-
-    // Return Flights
-    if (returnFlights.size() > 0) {
-      drawSectionHeader("Return Flights", yOffset - 40);
-      for (int i = 0; i < returnFlights.size(); i++) {
-        drawFlightCard(width/2 - 450, yOffset + i * cardHeight, returnFlights.get(i));
-      }
-      yOffset += returnFlights.size() * cardHeight + 50;
-    }
-
-    // Empty state
-    if (departureFlights.size() == 0 && returnFlights.size() == 0) drawEmptyState();
-
-    popMatrix();
-
-    for (Button b : buttons) b.display();
-  }
-
-  void drawHeader() {
+    // --- Header ---
     fill(RY_BLUE);
     noStroke();
     rect(0, 0, width, 80);
@@ -1047,27 +1007,61 @@ class TwoWayFlightsOutputScreen extends Screen {
     textAlign(CENTER, CENTER);
     textSize(24);
     String route = selection.origin.toUpperCase() + " → " + selection.destination.toUpperCase();
-    text(route, width/2, 35);
+    text(route, width / 2, 35);
 
     textSize(14);
     fill(255, 200);
-    text(departureFlights.size() + returnFlights.size() + " flights found • " + selection.dateStart + " - " + selection.dateEnd, width/2, 60);
-  }
+    text(outboundFlights.size() + " outbound flights • " + selection.dateStart +
+         (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
+         width / 2, 60);
 
-  void drawSectionHeader(String title, float y) {
-    fill(RY_GOLD);
-    textSize(18);
+    // --- Draw outbound and return flights ---
+    pushMatrix();
+    translate(0, scrollY);
+
+    float yOffset = topMargin;
+
+    // Outbound title
+    fill(0);
     textAlign(LEFT, TOP);
-    text(title, 50, y);
+    textSize(18);
+    text("Outbound Flights", width / 2 - 450, yOffset - 40);
+
+    // Outbound flight cards
+    for (int i = 0; i < outboundFlights.size(); i++) {
+      drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(i),
+                     i == selectedOutbound, "outbound", i);
+      yOffset += cardHeight;
+    }
+
+    yOffset += 40; // gap between outbound and return flights
+
+    // Return title
+    fill(0);
+    textSize(18);
+    text("Return Flights", width / 2 - 450, yOffset - 40);
+
+    // Return flight cards
+    for (int i = 0; i < returnFlights.size(); i++) {
+      drawFlightCard(width / 2 - 450, yOffset, returnFlights.get(i),
+                     i == selectedReturn, "return", i);
+      yOffset += cardHeight;
+    }
+
+    popMatrix();
+
+    // --- Buttons ---
+    for (Button b : buttons) b.display();
   }
 
-  void drawFlightCard(float x, float y, Flight f) {
+  void drawFlightCard(float x, float y, Flight f, boolean selected, String type, int index) {
     float w = 900;
     float h = 100;
 
-    fill(255);
+    if (selected) fill(type.equals("outbound") ? color(200, 230, 255) : color(255, 200, 200));
+    else fill(255);
+
     stroke(220);
-    strokeWeight(1);
     rect(x, y, w, h, 8);
 
     fill(RY_BLUE);
@@ -1075,9 +1069,8 @@ class TwoWayFlightsOutputScreen extends Screen {
     textSize(12);
     text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
 
-    textAlign(LEFT, CENTER);
     textSize(18);
-    text(f.origin + " → " + f.destination, x + 20, y + 50);
+    text(f.origin + " → " + f.destination, x + 20, y + 45);
 
     textSize(14);
     fill(120);
@@ -1085,72 +1078,153 @@ class TwoWayFlightsOutputScreen extends Screen {
     text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
 
     // SELECT button
-    fill(RY_GOLD);
-    noStroke();
-    rect(x + w - 120, y + 25, 100, 50, 6);
-    fill(RY_BLUE);
-    textAlign(CENTER, CENTER);
-    textSize(16);
-    text("SELECT", x + w - 70, y + 50);
-  }
-
-  void drawEmptyState() {
-    fill(150);
-    textAlign(CENTER);
-    textSize(20);
-    text("No flights found for this route or date.", width/2, height/2);
+    boolean isAlreadyBooked = bookedFlights.contains(f);
+    if (isAlreadyBooked) {
+      fill(180); // gray
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("SELECTED", x + w - 70, y + 50);
+    } else {
+      fill(RY_GOLD);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(16);
+      text("SELECT", x + w - 70, y + 50);
+    }
   }
 
   void mousePressed() {
-    // Check back button
+    // Buttons
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
-        goBack();
-        return;
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back")) goBack();
+        if (b.type.equals("select")) selectTwoWayFlight(selectedOutbound, selectedReturn);
       }
     }
 
-    // Check select buttons for departure and return flights
-    handleSelectButtons(departureFlights);
-    handleSelectButtons(returnFlights);
-  }
-
-  void handleSelectButtons(ArrayList<Flight> flights) {
+    // --- Outbound flight cards ---
     float yOffset = topMargin;
-    if (flights == returnFlights) {
-      yOffset += departureFlights.size() * cardHeight + (departureFlights.size() > 0 ? 50 : 0);
+    for (int i = 0; i < outboundFlights.size(); i++) {
+      float cardX = width / 2 - 450;
+      float cardY = yOffset + scrollY;
+      if (mouseX > cardX && mouseX < cardX + 900 &&
+          mouseY > cardY && mouseY < cardY + 100) {
+        selectedOutbound = i;
+      }
+      yOffset += cardHeight;
     }
 
-    for (int i = 0; i < flights.size(); i++) {
-      Flight f = flights.get(i);
-      float cardX = width/2 - 450;
-      float cardY = yOffset + i * cardHeight + scrollY;
-      float cardW = 900;
-      float cardH = 100;
+    yOffset += 40; // gap
 
-      float selectX = cardX + cardW - 120;
-      float selectY = cardY + 25;
-      float selectW = 100;
-      float selectH = 50;
-
-      if (mouseX > selectX && mouseX < selectX + selectW &&
-          mouseY > selectY && mouseY < selectY + selectH) {
-        if (!mySelectedFlights.contains(f)) {
-          mySelectedFlights.add(f);
-          println("Flight added: " + f.carrier + " " + f.flightNumber);
-        }
+    // --- Return flight cards ---
+    for (int i = 0; i < returnFlights.size(); i++) {
+      float cardX = width / 2 - 450;
+      float cardY = yOffset + scrollY;
+      if (mouseX > cardX && mouseX < cardX + 900 &&
+          mouseY > cardY && mouseY < cardY + 100) {
+        selectedReturn = i;
       }
+      yOffset += cardHeight;
     }
   }
 
-  void scrollFlights(float e) {
-    scrollY += -e * scrollSpeed;
+  void mouseWheel(MouseEvent event) {
+    scrollY += -event.getCount() * scrollSpeed;
 
-    float totalHeight = topMargin;
-    totalHeight += departureFlights.size() * cardHeight + (departureFlights.size() > 0 ? 50 : 0);
-    totalHeight += returnFlights.size() * cardHeight + (returnFlights.size() > 0 ? 50 : 0);
-
+    // Calculate max scroll
+    float totalHeight = topMargin + outboundFlights.size() * cardHeight +
+                        40 + returnFlights.size() * cardHeight;
     float minScroll = min(0, height - totalHeight);
     scrollY = constrain(scrollY, minScroll, 0);
   }
+
+  void selectTwoWayFlight(int outboundIndex, int returnIndex) {
+    if (outboundIndex >= 0 && returnIndex >= 0) {
+      Flight outbound = outboundFlights.get(outboundIndex);
+      Flight ret = returnFlights.get(returnIndex);
+
+      bookedFlights.add(outbound);
+      bookedFlights.add(ret);
+
+      println("Selected outbound: " + outbound.info());
+      println("Selected return: " + ret.info());
+
+      goTo(flightsBooked);
+    } else {
+      println("Please select both outbound and return flights!");
+    }
+  }
+}
+class BookingsScreen extends Screen{
+
+  ArrayList<Flight> bookings;
+  ArrayList<Button> buttons;
+  int selectedBooking = -1;
+  float scrollOffset = 0;
+
+  BookingsScreen(ArrayList<Flight> bookings) {
+    this.bookings = bookings;
+    buttons = new ArrayList<Button>();
+   buttons.add(new Button(50, 50, 100, 40, "Back", "back", 16, true));
+    buttons.add(new Button(width-150, height-70, 100, 40, "Cancel", "cancel", 16, true));
+  }
+
+  void display() {
+    background(230);
+
+    textSize(24);
+    fill(0);
+    text("My Bookings", width/2, 40);
+
+    // Display bookings
+    for (int i = 0; i < bookings.size(); i++) {
+    Flight bk = bookings.get(i); 
+    if (i == selectedBooking) fill(255, 220, 220);
+      else fill(255);
+      rect(50, 100 + i*60 - scrollOffset, width-100, 50);
+      fill(0);
+      text(bk.info(), 60, 130 + i*60 - scrollOffset);
+    }
+
+    // Draw buttons
+    for (Button b : buttons) b.display();
+  }
+  void draw() {
+    display();
+  }
+  void cancelBooking(Flight f) {
+      bookedFlights.remove(f);
+      selectedBooking = -1;  // reset selection
+  }
+
+  void mousePressed() {
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back")) goBack(); // integration
+        if (b.type.equals("cancel") && selectedBooking != -1) {
+            Flight f = bookedFlights.get(selectedBooking);
+            cancelBooking(f);  // pass the actual Flight object
+        }      
+      }
+    }
+
+    // Click to select booking
+    for (int i = 0; i < bookings.size(); i++) {
+      if (mouseX > 50 && mouseX < width-50 && mouseY > 100 + i*60 - scrollOffset && mouseY < 150 + i*60 - scrollOffset) {
+        selectedBooking = i;
+      }
+    }
+  }
+
+  void mouseWheel(MouseEvent event) {
+    float e = event.getCount();
+    scrollOffset += e * 20;
+    scrollOffset = constrain(scrollOffset, 0, max(0, bookings.size()*60 - height + 150));
+  }
+
 }
