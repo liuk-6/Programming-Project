@@ -49,6 +49,7 @@ final int trafficOutputCentral = 13;
 final int graphDashboard = 14;
 final int bookingsScreens = 15;
 final int flightsOutputTwoWay = 16;
+final int mapScreen = 17;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
@@ -66,6 +67,14 @@ int SCREENY = 600;
 
 Table table;
 Flight flight;
+float contentX;
+float contentY;
+float contentW;
+float contentH;
+float headerH;
+float footerH;
+String statusFilter = "ALL";
+String selectedAirport = null;  // currently selected airport code
 
 ///////// AIRPORT REGIONS ///////////////////
 String[] westCoastAirports = {
@@ -118,6 +127,7 @@ TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
+MapScreen flightMapScreen;
 
 TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 BookingsScreen bookingsScreen;
@@ -419,6 +429,7 @@ void setup() {
   flightsOutputScreen   = new FlightsOutputScreen();
   dashboardScreen       = new DashboardScreen();
   graphDashboardScreen  = new GraphDashboardScreen();
+  flightMapScreen       = new MapScreen();
   bookingsScreen = new BookingsScreen(bookedFlights);
 
   planeHomeScreen = loadImage("PlaneImg.jpg");
@@ -469,6 +480,7 @@ void draw() {
     case dashboard: currentScreenObject = dashboardScreen; break;
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
     case bookingsScreens: currentScreenObject = bookingsScreen; break;
+    case mapScreen: currentScreenObject = flightMapScreen; break;
     default: currentScreenObject = homeScreen; break;
   }
 
