@@ -215,6 +215,10 @@ class GraphDashboardScreen extends Screen {
      popMatrix();
      popStyle();
   }
+  
+  void goToPieCharts()  {
+    currentScreen = screen2;
+  }
 }
 
 /////////WIDGETS////////////

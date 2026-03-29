@@ -15,18 +15,18 @@ class Button {
     boolean hovers = over(mouseX, mouseY);
     
     if (hovers)  {
-      targetScale = 1.02;
+      targetScale = 1.04;
     } else {
       targetScale = 1.0;
     }
     
-    hoverScale = lerp(hoverScale, targetScale, 0.1); // Lerp gives a smooth transition
+    hoverScale = lerp(hoverScale, targetScale, 0.5); // Lerp gives a smooth transition
   
     pushMatrix();
     translate(x + w/2, y + h/2);
     scale(hoverScale);
     translate(-(x + w/2), -(y + h/2));
-    if (type.equals("graphsPage") || type.equals("pieChartPage")) {
+    if (type.equals("graphsPage") || type.equals("pieChartsPage")) {
       fill(hovers ? color(240, 231, 213) : 255);
       rect(x, y, w, h, 20);
       
@@ -62,7 +62,7 @@ class Button {
       textSize(textSize);
       text("← " + label, x + w/2, y + h/2 - 2);
       
-      } else if (type.equals("home") || type.equals("graphs")){
+      } else if (type.equals("home") || type.equals("graphs") || type.equals("pieCharts")){
       noStroke();
       if(hovers){
         fill(RY_BLUE);
@@ -79,7 +79,7 @@ class Button {
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 2);
       
-      } else if (type.equals("graphsPage")){
+      } else if (type.equals("graphsPage") || type.equals("pieChartsPage")){
       noStroke();
       if(hovers){
         fill(240, 231, 213);
