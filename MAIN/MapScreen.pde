@@ -67,6 +67,9 @@ void draw() {
   legend.display();
   panel.display();
   drawSelectedAirportBox();
+  for(Button b: buttons){
+    b.display();
+  }
 }
 
 // ── Draw airport dots and hover tooltips ──────────────────────
@@ -105,7 +108,7 @@ void drawLayout() {
   fill(255);
   textSize(24);
   textAlign(LEFT, CENTER);
-  text("Flight Paths", 20, headerH / 2);
+  text("Flight Paths", width-150, headerH / 2);
 
   // Footer bar
   fill(14, 42, 71);
@@ -193,5 +196,9 @@ void mousePressed() {
   FlightLocation clicked = interaction.checkClick(
     getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
+  
+  for(Button b : buttons){
+    if(b.type.equals("back")) goBack();
+  }
 }
 }
