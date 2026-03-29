@@ -311,6 +311,7 @@ class DashboardScreen extends Screen {
     buttons.add(new Button(x + 525, y + 150, buttonW + 410, buttonH + 220, "", "graphsPage", 30, false));
     buttons.add(new Button(x, y + 160, buttonW, buttonH, "PIE CHARTS", "pieCharts", 30, false));
     buttons.add(new Button(x + 240, y + 150, buttonW + 90, buttonH + 220, "", "pieChartsPage", 30, false));
+    buttons.add(new Button(x, y + 240, buttonW, buttonH, "FLIGHT MAP", "maps", 30, false));
     textAlign(CORNER);
   }
 
@@ -348,6 +349,7 @@ class DashboardScreen extends Screen {
         graphDashboardScreen.goToPieCharts();
         goTo(graphDashboard);
       }
+      if  (b.type.equals("maps")) goTo(mapScreen);
     }
    }
   }
