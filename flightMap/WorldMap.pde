@@ -1,10 +1,10 @@
-class WorldMap {
+class WorldMap{
   PShape mapShape;
 
   // Use viewBox values
-  float svgMinX = 11.1;
-  float svgMinY = -2.5;
-  float svgWidth = 937.81;
+  float svgMinX = 111/10;
+  float svgMinY = -25/10;
+  float svgWidth = 93781/100;
   float svgHeight = 545;
 
   // Continental US bounds for lat/lon
@@ -16,36 +16,35 @@ class WorldMap {
   WorldMap(String filename) {
     mapShape = loadShape(filename);
   }
+  void display(float x, float y, float w, float h) {
 
-  void display() {
-    float scale = min(width / svgWidth, height / svgHeight);
+    float scale = min(w / svgWidth, h / svgHeight);
 
     float drawW = svgWidth * scale;
     float drawH = svgHeight * scale;
 
-    float offsetX = (width - drawW) / 2;
-    float offsetY = (height - drawH) / 2;
+    float offsetX = x + (w - drawW) / 2;
+    float offsetY = y + (h - drawH) / 2;
 
     shape(mapShape, offsetX, offsetY, drawW, drawH);
   }
 
-  PVector geoToScreen(float lat, float lon) {
-    // Map lon/lat to SVG coordinates
-    float x = map(lon, minLon, maxLon, svgMinX, svgMinX + svgWidth);
-    float y = map(lat, maxLat, minLat, svgMinY, svgMinY + svgHeight);
+  PVector geoToScreen(float lat, float lon, float x, float y, float w, float h) {
 
-    // Scale to screen
-    float scale = min(width / svgWidth, height / svgHeight);
+    float px = map(lon, minLon, maxLon, svgMinX, svgMinX + svgWidth);
+    float py = map(lat, maxLat, minLat, svgMinY, svgMinY + svgHeight);
+
+    float scale = min(w / svgWidth, h / svgHeight);
+
     float drawW = svgWidth * scale;
     float drawH = svgHeight * scale;
 
-    float offsetX = (width - drawW) / 2;
-    float offsetY = (height - drawH) / 2;
+    float offsetX = x + (w - drawW) / 2;
+    float offsetY = y + (h - drawH) / 2;
 
-    //if (lat < 24 || lat > 50) return new PVector(-1000, -1000);
     return new PVector(
-      offsetX + (x - svgMinX) * scale,
-      offsetY + (y - svgMinY) * scale
-    );
+      offsetX + (px - svgMinX) * scale,
+      offsetY + (py - svgMinY) * scale
+      );
   }
 }

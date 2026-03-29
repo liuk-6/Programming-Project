@@ -1,5 +1,4 @@
-class Flight
-{
+class Flight{
   String date;
   String carrier;
   int flightNumber;

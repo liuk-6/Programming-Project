@@ -1,4 +1,4 @@
-class FlightLocation {
+class FlightLocation{
   String origin, destination;
   float oLat, oLon, dLat, dLon;
   String depTime, arrTime;
@@ -24,14 +24,16 @@ class FlightLocation {
   }
 
   void display(WorldMap map, boolean isSelected, String selectedAirport) {
-    PVector p1 = map.geoToScreen(oLat, oLon);
-    PVector p2 = map.geoToScreen(dLat, dLon);
+    PVector p1 = map.geoToScreen(oLat, oLon, contentX, contentY, contentW, contentH);
+    PVector p2 = map.geoToScreen(dLat, dLon, contentX, contentY, contentW, contentH);
 
     noFill();
 
+    float temp1 = 17;
+    float temp2 = 100;
     // Calculate curve control point
     float cx = ((p1.x + p2.x) / 2);
-    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * (0.17);
+    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * temp1/temp2;
 
     if (isSelected) {
       // 🔥 Glow layer
@@ -68,14 +70,17 @@ class FlightLocation {
   }
 
   boolean isClicked(float mx, float my, WorldMap map) {
-    PVector p1 = map.geoToScreen(oLat, oLon);
-    PVector p2 = map.geoToScreen(dLat, dLon);
+    PVector p1 = map.geoToScreen(oLat, oLon,  contentX, contentY, contentW, contentH);
+    PVector p2 = map.geoToScreen(dLat, dLon, contentX, contentY, contentW, contentH);
 
     float cx = (p1.x + p2.x) / 2;
-    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * 0.2;
+    float temp1 = 2;
+    float temp2 = 100;
+    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * temp1/temp2;
 
     // sample along curve
-    for (float t = 0; t <= 1; t += 0.05) {
+    float temp3 = 5;
+    for (float t = 0; t <= 1; t += temp3/temp2) {
       float x = bezierPoint(p1.x, cx, cx, p2.x, t);
       float y = bezierPoint(p1.y, cy, cy, p2.y, t);
 
