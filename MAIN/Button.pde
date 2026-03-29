@@ -22,20 +22,23 @@ class Button {
     
     hoverScale = lerp(hoverScale, targetScale, 0.5); // Lerp gives a smooth transition
   
-    pushMatrix();
-    translate(x + w/2, y + h/2);
-    scale(hoverScale);
-    translate(-(x + w/2), -(y + h/2));
-    if (type.equals("graphsPage") || type.equals("pieChartsPage")) {
-      fill(hovers ? color(240, 231, 213) : 255);
+    if (type.equals("graphsPage") || type.equals("pieChartsPage") || type.equals("flightMapPage")) {
+      pushMatrix();
+      translate(x + w/2, y + h/2);
+      scale(hoverScale);
+      translate(-(x + w/2), -(y + h/2));
+      
+      fill(hovers ? color(RY_BLUE) : 255);
       rect(x, y, w, h, 20);
       
-      fill(RY_BLUE);
-      textAlign(CENTER, CENTER);
+      fill(hovers ? 255 : RY_BLUE);
+      textAlign(LEFT, TOP);
       textSize(textSize);
-      text(label, x + w/2, y + h/2);
+      text(label, x + 15, y + 20);
+      
+      popMatrix();
+      return;
     }
-    popMatrix();
     
     if (hasShadow) {
       noStroke();
@@ -79,7 +82,7 @@ class Button {
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 2);
       
-      } else if (type.equals("graphsPage") || type.equals("pieChartsPage")){
+      } else if (type.equals("graphsPage") || type.equals("pieChartsPage") || type.equals("flightMapPage")){
       noStroke();
       if(hovers){
         fill(240, 231, 213);

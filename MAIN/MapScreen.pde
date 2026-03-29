@@ -67,6 +67,8 @@ void draw() {
   legend.display();
   panel.display();
   drawSelectedAirportBox();
+  
+  for  (Button b : buttons) b.display();
 }
 
 // ── Draw airport dots and hover tooltips ──────────────────────
@@ -102,10 +104,6 @@ void drawLayout() {
   // Header bar
   fill(14, 42, 71);
   rect(0, 0, width, headerH);
-  fill(255);
-  textSize(24);
-  textAlign(LEFT, CENTER);
-  text("Flight Paths", 20, headerH / 2);
 
   // Footer bar
   fill(14, 42, 71);
@@ -172,6 +170,13 @@ String checkAirportClick(float mx, float my) {
 // ── Mouse click handler ───────────────────────────────────────
 void mousePressed() {
 
+   for(Button b : buttons)  {
+     if(b.over(mouseX, mouseY) && b.type.equals("back")){
+       goBack();
+       return;
+     }
+   }
+  
   // 1. Check legend buttons first
   String legendClick = legend.checkClick(mouseX, mouseY);
   if (legendClick != null) {
