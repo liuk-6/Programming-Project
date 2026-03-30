@@ -82,19 +82,6 @@ class Button {
       textSize(textSize);
       text(label, x + w/2, y + h/2 - 2);
       
-      } else if (type.equals("graphsPage") || type.equals("pieChartsPage") || type.equals("flightMapPage")){
-      noStroke();
-      if(hovers){
-        fill(240, 231, 213);
-      } else {
-         fill(255);
-      }
-      rect(x, y, w, h, 10);
-      fill(RY_BLUE);
-      textAlign(CENTER, CENTER);
-      textSize(textSize);
-      text(label, x + w/2, y + h/2 - 2);
-      
     } else if (type.equals("dateOutput")) {
       noStroke();
       fill(hovers ? color(255, 215, 0) : RY_YELLOW); // yellow background

@@ -119,6 +119,9 @@ PImage planeHomeScreen;
 PImage SearchButton;
 PImage arrow;
 PImage logo;
+PImage pieChart;
+PImage barChart;
+PImage flightMap;
 
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
@@ -437,6 +440,9 @@ void setup() {
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
   logo            = loadImage("logo.png");
+  pieChart        = loadImage("pieChart.png");
+  barChart        = loadImage("barChart.png");
+  flightMap       = loadImage("flightMap.png");
   homeScreen = new HomeScreen();
   currentScreenObject = homeScreen;
 

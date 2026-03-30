@@ -29,16 +29,16 @@ class GraphDashboardScreen extends Screen {
     screen2 = new graphScreen(color(255, 200, 150));
   
     // Screen 1 widgets
-    screen1.addWidget(new Widget(20, 20, 140, 40, "Destination"));
-    screen1.addWidget(new Widget(170, 20, 140, 40, "Origin"));
-    screen1.addWidget(new Widget(320, 20, 120, 40, "Next"));
+    screen1.addWidget(new Widget(750, 620, 140, 40, "Destination"));
+    screen1.addWidget(new Widget(900, 620, 140, 40, "Origin"));
+    screen1.addWidget(new Widget(1050, 620, 120, 40, "Next"));
     
     // Screen 2 widgets
-    screen2.addWidget(new Widget(20, 20, 120, 40, "Back"));
+    screen2.addWidget(new Widget(1050, 620, 120, 40, "Bar Chart"));
   
     currentScreen = screen1;
     
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "backPie", 15, false));
   }
   
   void draw() {
@@ -89,7 +89,7 @@ class GraphDashboardScreen extends Screen {
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
-        if(b.type.equals("back")) {
+        if(b.type.equals("backPie")) {
           goBack();
           return;
         }
@@ -130,7 +130,7 @@ class GraphDashboardScreen extends Screen {
       currentScreen = screen2;
       activeFact = "";
     }
-    else if (w.label.equals("Back")) {
+    else if (w.label.equals("Bar Chart")) {
       currentScreen = screen1;
       activeFact = "";
     }
@@ -219,6 +219,11 @@ class GraphDashboardScreen extends Screen {
   void goToPieCharts()  {
     currentScreen = screen2;
   }
+  
+  void onEnter()  {
+    currentScreen = screen1;
+    activeFact = "";
+  }
 }
 
 /////////WIDGETS////////////
@@ -236,13 +241,21 @@ class Widget {
   }
 
   void draw() {
-  if (hover) stroke(255);
-  else stroke(0);
-  fill(127);
-  rect(x, y, w, h);
+  boolean hovers = isInside(mouseX, mouseY);
+  
+  rectMode(CORNER);
+  
+  noStroke();
+  fill(0, 40);
+  rect(x +2, y + 4, w, h, 10);
+  
+  noStroke();
+  fill(hovers ? color(61, 90, 128) :(RY_BLUE));;
+  rect(x, y, w, h, 10);
 
   fill(255);
-  text(label, x + 10, y + 20);
+  textAlign(CENTER, CENTER);
+  text(label, x + w/2, y + h/2);
   }
 
   boolean isInside(int mx, int my) {
