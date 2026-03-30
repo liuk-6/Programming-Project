@@ -11,10 +11,14 @@ class Screen {
 
     for (Button b : buttons)
       b.display();
+      
+   drawImages();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
   void drawContent() {}
+  
+  void drawImages()  {}
 
   // ---------- EVENTS (IMPORTANT) ----------
   void mousePressed() {
@@ -319,6 +323,7 @@ class DashboardScreen extends Screen {
   
   void drawContent(){
   drawSidebar();
+
 }
   
   void drawSidebar(){
@@ -335,12 +340,71 @@ class DashboardScreen extends Screen {
     text("FLIGHT SCANNER", 150, 180); 
   }
   
+  void drawImages()  {
+    imageMode(CORNER);
+    
+    Button pie = null, bar = null, map = null;
+    for (Button b : buttons)  {
+      if(b.type.equals("pieChartsPage"))  pie = b;
+      if(b.type.equals("graphsPage"))  bar = b;
+      if(b.type.equals("flightMapPage")) map = b;
+    }
+    
+    float x = 290;
+    float y = 430;
+    float w = 270;
+    float h = 270;
+    
+    if  (pie != null) {
+      float s = pie.hoverScale;
+      pushMatrix();
+      translate(x + w/2, y + h/2);
+      scale(s);
+      translate(-(x+ w/2), -(y+ h/2));
+      image(pieChart, x, y, w, h);
+      popMatrix();
+    }
+     
+    float bx = 690;
+    float by = 455;
+    float bw = 390;
+    float bh = 200;
+    if  (bar != null) {
+      float s = bar.hoverScale;
+      pushMatrix();
+      translate(bx + bw/2, by + bh/2);
+      scale(s);
+      translate(-(bx+ bw/2), -(by+ bh/2));
+      image(barChart, bx, by, bw, bh);
+      popMatrix(); 
+    }
+    
+    float mx = 390;
+    float my = 80;
+    float mw = 670;
+    float mh = 270;
+    
+    if  (map != null) {
+      float s = map.hoverScale;
+      pushMatrix();
+      translate(mx + mw/2, my + mh/2);
+      scale(s);
+      translate(-(mx+ mw/2), -(my+ mh/2));
+      image(flightMap, mx, my, mw, mh);
+      popMatrix();
+    }
+  }
+  
   void mousePressed() {
   for (Button b : buttons) {
     if (b.over(mouseX, mouseY)) {
       println("Clicked: " + b.type);
       if (b.type.equals("home")) goTo(home);
-      if (b.type.equals("graphs") || b.type.equals("graphsPage")) goTo(graphDashboard); // unified
+      if (b.type.equals("graphs") || b.type.equals("graphsPage")) {
+        graphDashboardScreen.currentScreen = graphDashboardScreen.screen1;
+        graphDashboardScreen.activeFact = "";
+        goTo(graphDashboard);
+      }
       if (b.type.equals("pieCharts") || b.type.equals("pieChartsPage")) {
         graphDashboardScreen.goToPieCharts();
         goTo(graphDashboard);

@@ -128,9 +128,9 @@ void drawSelectedAirportBox() {
   fill(255);
   textSize(14);
   textAlign(LEFT, CENTER);
-  text("Selected Airport:", x + 10, y + 18);
+  text("Selected Airport:", x + 10, y + 15);
   textSize(18);
-  text(selectedAirport, x + 10, y + 38);
+  text(selectedAirport, x + 10, y + 34);
 }
 
 // ── Returns flights that match the active airport + status filters ──
@@ -198,9 +198,5 @@ void mousePressed() {
   FlightLocation clicked = interaction.checkClick(
     getVisibleFlights(), mouseX, mouseY, world);
   panel.setFlight(clicked);
-  
-  for(Button b : buttons){
-    if(b.type.equals("back")) goBack();
   }
-}
 }
