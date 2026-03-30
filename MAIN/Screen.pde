@@ -11,6 +11,7 @@ class Screen {
 
     for (Button b : buttons)
       b.display();
+    drawContent();
       
    drawImages();
   }
@@ -426,7 +427,12 @@ class QueriesFlights extends Screen {
   PImage swapImg;
   float swapX, swapY, swapW, swapH;
   ArrayList<String> suggestions = new ArrayList<String>();// drop down suggestions
+  boolean showCalendar = false;
+  TextEntryButton calendarTarget = null;
   
+  int calMonth;
+  int calYear;
+  float calX, calY;
   
   QueriesFlights() {
     title = "Flight Search";
@@ -434,6 +440,8 @@ class QueriesFlights extends Screen {
     int spacing = 15;
     int buttonH = 45;
     int queryW = (width - (margin * 2) - (spacing * 3)) / 4; 
+    calMonth = 1;
+    calYear  = 2022;
 
     // White card layout
     int cardX = 90;
@@ -497,13 +505,13 @@ class QueriesFlights extends Screen {
 
   void drawContent() {
     drawTripSelector();
-    
-    // White card container
+
+    // White card
     fill(255);
     noStroke();
-    rect(70, height/3 - 90, width - 140, 280, 12);  // Taller card
+    rect(70, height/3 - 90, width - 140, 280, 12);
 
-    // Card title
+    // Title
     fill(RY_BLUE);
     textAlign(LEFT);
     textSize(22);
@@ -516,7 +524,6 @@ class QueriesFlights extends Screen {
     text("FLY FROM", inputFrom.x, inputFrom.y - labelOffset);
     text("FLY TO", inputTo.x, inputTo.y - labelOffset);
     text("DEPARTURE", inputStart.x, inputStart.y - labelOffset);
-    drawSuggestions();
     if (roundTrip) text("RETURN", inputEnd.x, inputEnd.y - labelOffset);
 
     // Draw inputs
@@ -528,13 +535,18 @@ class QueriesFlights extends Screen {
     // Swap arrow
     image(swapImg, swapX, swapY, swapW, swapH);
 
-   // Draw buttons
+    // Draw suggestions
+    drawSuggestions();
+
+    // Draw buttons
     for (Button b : buttons) {
-      if (b == inputEnd && !roundTrip) continue;  // Skip return date if one-way
-      b.display();
+        if (b == inputEnd && !roundTrip) continue;
+        b.display();
     }
 
-  }
+    // 🔹 DRAW CALENDAR LAST → ensures it visually floats above everything
+    drawCalendar();
+}
   void drawSuggestions(){
   if(suggestions.size()==0||currentInput == null) return;
     float x = currentInput.x;
@@ -551,68 +563,252 @@ class QueriesFlights extends Screen {
       text(suggestions.get(i), x+10, y + i*h +h/2);
     }
   }
+  void drawCalendar() {
+  if (!showCalendar || calendarTarget == null) return;
 
-  void mousePressed() {
-  if (currentInput != null && suggestions.size() > 0) {
-  float x = currentInput.x;
-  float y = currentInput.y + currentInput.h;
-  float h = 35;
+  float x = calendarTarget.x;
+  float y = calendarTarget.y + calendarTarget.h + 10;
+  float cell = 35;
+  int cols = 7;
+  int rows = 6; // Max rows for calendar
 
-  for (int i = 0; i < suggestions.size(); i++) {
-    if (mouseX > x && mouseX < x + currentInput.w &&
-        mouseY > y + i*h && mouseY < y + (i+1)*h) {
-      
-      String selected = suggestions.get(i);
+  // Calendar background card
+  fill(255);
+  stroke(200);
+  strokeWeight(1);
+  rect(x, y, cell * cols, cell * rows + 70, 12); // Extra space for header
 
-      currentInput.label =selected.split(" - ")[0];
+  // ---------- MONTH HEADER ----------
+  String[] months = {
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  };
+  
+  fill(RY_BLUE);
+  noStroke();
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text(months[calMonth-1] + " " + calYear, x + cell*cols/2, y + 25);
 
-      suggestions.clear(); // hide dropdown
-      return;
-        }
-      }
+  // Left/Right arrows
+  fill(220);
+  stroke(180);
+  rect(x + 10, y + 15, 25, 25, 5);
+  rect(x + cell*cols - 35, y + 15, 25, 25, 5);
+  fill(0);
+  textSize(14);
+  text("<", x + 22, y + 27);
+  text(">", x + cell*cols - 22, y + 27);
+
+  // ---------- WEEKDAY NAMES ----------
+  String[] weekdays = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+  textSize(12);
+  fill(100);
+  for (int c=0; c<7; c++){
+    text(weekdays[c], x + c*cell + cell/2, y + 55);
   }
-    TextEntryButton[] allInputs = roundTrip 
-      ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
-      : new TextEntryButton[]{inputFrom, inputTo, inputStart};
-    
-    currentInput = null;
-    for (TextEntryButton b : allInputs) {
-      if (b.over(mouseX, mouseY)) {
-        currentInput = b;
-        if (b.label.equals("MM/DD/YYYY") || b.label.equals("Origin") || b.label.equals("Destination")) {
-          b.label = "";
-        }
-      }
+
+  // ---------- DAYS ----------
+  int daysInMonth = getDaysInMonth(calMonth, calYear);
+  int startDay = getStartDay(calMonth, calYear); // Day of week of 1st day
+
+  textAlign(CENTER, CENTER);
+  textSize(14);
+
+  for(int d = 1; d <= daysInMonth; d++){
+    int index = d + startDay - 2;
+    int col = index % 7;
+    int row = index / 7;
+
+    float dx = x + col*cell;
+    float dy = y + row*cell + 70;
+
+    // Hover effect
+    if (mouseX > dx && mouseX < dx+cell && mouseY > dy && mouseY < dy+cell) {
+      fill(#E0F0FF);
+      rect(dx+2, dy+2, cell-4, cell-4, 6);
     }
 
-    for (Button b : buttons) {
-      if (b == inputEnd && !roundTrip) continue;
-      if (b.over(mouseX, mouseY)) {
-          if(b.type.equals("back")) goBack();
-          // Trip type buttons
-          if (b.type.equals("roundTrip")) roundTrip = true;
-          if (b.type.equals("oneWay")) roundTrip = false;
-  
-          // Search button
-          if (b.type.equals("flightsOutput")) {
-              selection.origin      = inputFrom.label;
-              selection.destination = inputTo.label;
-              selection.dateStart   = inputStart.label;
-              selection.dateEnd     = roundTrip ? inputEnd.label : "";
-  
-              searchFlights(); // <- now actually searches!
-          }
-      }
+    // Selected date
+    if(calendarTarget.label.equals(nf(calMonth,2) + "/" + nf(d,2) + "/" + calYear)){
+      fill(RY_BLUE);
+      ellipse(dx + cell/2, dy + cell/2, cell-10, cell-10);
+      fill(255);
+    } else fill(0);
+
+    text(d, dx + cell/2, dy + cell/2);
+  }
 }
 
-    // Swap arrow click
-    if (mouseX > swapX && mouseX < swapX + swapW &&
-        mouseY > swapY && mouseY < swapY + swapH) {
-      String temp = inputFrom.label;
-      inputFrom.label = inputTo.label;
-      inputTo.label = temp;
+// Returns the weekday (1=Sunday,..7=Saturday) for the first day of month
+int getStartDay(int month, int year){
+  java.util.Calendar cal = java.util.Calendar.getInstance();
+  cal.set(year, month-1, 1);
+  int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+  return day;
+}
+  int getDaysInMonth(int m, int y) {
+
+    if (m == 2) { // February
+      if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)
+        return 29;
+      return 28;
+    }
+  
+    if (m==4 || m==6 || m==9 || m==11) return 30;
+  
+    return 31;
+  }
+
+  void mousePressed() {
+
+  // =====================================================
+  // ---- CALENDAR MONTH SWITCH (MOVED TO TOP) ----
+  // =====================================================
+  if (showCalendar && calendarTarget != null) {
+  float x = calendarTarget.x;
+  float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+  float cell = 35;
+
+  // LEFT ARROW
+  if (mouseX > x + 10 && mouseX < x + 35 &&
+      mouseY > y + 15 && mouseY < y + 40) {
+    calMonth--;
+    if (calMonth < 1) {
+      calMonth = 12;
+      calYear--;
+      if (calYear < 2022) calYear = 2022;
+    }
+    return;
+  }
+
+  // RIGHT ARROW
+  if (mouseX > x + cell*7 - 35 && mouseX < x + cell*7 - 10 &&
+      mouseY > y + 15 && mouseY < y + 40) {
+    calMonth++;
+    if (calMonth > 12) {
+      calMonth = 1;
+      calYear++;
+    }
+    return;
+  }
+}
+
+  // =====================================================
+  // ---- CALENDAR DAY CLICK (MOVED UP)
+  // =====================================================
+  if (showCalendar && calendarTarget != null) {
+  float x = calendarTarget.x;
+  float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+  float cell = 35;
+
+  int daysInMonth = getDaysInMonth(calMonth, calYear);
+  int startDay = getStartDay(calMonth, calYear);
+
+  for (int d = 1; d <= daysInMonth; d++) {
+    int index = d + startDay - 2;
+    int col = index % 7;
+    int row = index / 7;
+
+    float dx = x + col*cell;
+    float dy = y + row*cell + 70; // match drawCalendar offset
+
+    if (mouseX > dx && mouseX < dx + cell &&
+        mouseY > dy && mouseY < dy + cell) {
+      String date = nf(calMonth,2) + "/" + nf(d,2) + "/" + calYear;
+      calendarTarget.label = date;
+      showCalendar = false;
+      calendarTarget = null;
+      return;
     }
   }
+}
+
+  // =====================================================
+  // ---- SUGGESTIONS DROPDOWN (UNCHANGED)
+  // =====================================================
+  if (currentInput != null && suggestions.size() > 0) {
+
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float h = 35;
+
+    for (int i = 0; i < suggestions.size(); i++) {
+      if (mouseX > x && mouseX < x + currentInput.w &&
+          mouseY > y + i*h && mouseY < y + (i+1)*h) {
+
+        String selected = suggestions.get(i);
+        currentInput.label = selected.split(" - ")[0];
+        suggestions.clear();
+        return;
+      }
+    }
+  }
+
+  // =====================================================
+  // INPUT SELECTION
+  // =====================================================
+  TextEntryButton[] allInputs = roundTrip 
+    ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
+    : new TextEntryButton[]{inputFrom, inputTo, inputStart};
+
+  currentInput = null;
+
+  for (TextEntryButton b : allInputs) {
+    if (b.over(mouseX, mouseY)) {
+
+      currentInput = b;
+
+      // OPEN CALENDAR FOR DATE INPUTS
+      if (b == inputStart || b == inputEnd) {
+        showCalendar = true;
+        calendarTarget = b;
+      } else {
+        showCalendar = false;
+      }
+
+      if (b.label.equals("MM/DD/YYYY") ||
+          b.label.equals("Origin") ||
+          b.label.equals("Destination")) {
+        b.label = "";
+      }
+    }
+  }
+
+  // =====================================================
+  // BUTTONS (UNCHANGED)
+  // =====================================================
+  for (Button b : buttons) {
+    if (b == inputEnd && !roundTrip) continue;
+
+    if (b.over(mouseX, mouseY)) {
+
+      if(b.type.equals("back")) goBack();
+      if (b.type.equals("roundTrip")) roundTrip = true;
+      if (b.type.equals("oneWay")) roundTrip = false;
+
+      if (b.type.equals("flightsOutput")) {
+        selection.origin      = inputFrom.label;
+        selection.destination = inputTo.label;
+        selection.dateStart   = inputStart.label;
+        selection.dateEnd     = roundTrip ? inputEnd.label : "";
+
+        searchFlights();
+      }
+    }
+  }
+
+  // =====================================================
+  // SWAP BUTTON
+  // =====================================================
+  if (mouseX > swapX && mouseX < swapX + swapW &&
+      mouseY > swapY && mouseY < swapY + swapH) {
+
+    String temp = inputFrom.label;
+    inputFrom.label = inputTo.label;
+    inputTo.label = temp;
+  }
+}
   void drawTripSelector() {
     textAlign(LEFT, CENTER);
     textSize(14);
@@ -648,7 +844,10 @@ class QueriesDate extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
   TextEntryButton currentInput;
-  
+  TextEntryButton calendarTarget = null;
+  boolean showCalendar;
+  int calMonth;
+  int calYear;
   // Button bounds for the manual Search button
   float btnX, btnY, btnW = 120, btnH = 40;
 
@@ -664,6 +863,11 @@ class QueriesDate extends Screen {
     
     int xq  = centerX - queryW - spacing/2;
     int xq2 = centerX + spacing/2;
+    showCalendar = false;
+    
+    
+    calMonth = 1;
+    calYear  = 2022;
 
     // Standard Back Button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
@@ -681,6 +885,79 @@ class QueriesDate extends Screen {
     fill(255);
     rect(150, 200, width-300, 250, 20);
   
+  }
+  int getStartDay(int month, int year){
+  java.util.Calendar cal = java.util.Calendar.getInstance();
+  cal.set(year, month-1, 1);
+  int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+  return day;
+}
+  int getDaysInMonth(int m, int y) {
+
+    if (m == 2) { // February
+      if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)
+        return 29;
+      return 28;
+    }
+  
+    if (m==4 || m==6 || m==9 || m==11) return 30;
+  
+    return 31;
+  }
+  void drawCalendar() {
+    if (!showCalendar || calendarTarget == null) return;
+  
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 45;
+  
+    int cols = 7;
+    int rows = 6;
+  
+    fill(255);
+    stroke(200);
+    rect(x, y, cell*cols, cell*rows + 60, 12);
+  
+    String[] months = {
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    };
+  
+    fill(RY_BLUE);
+    textAlign(CENTER,CENTER);
+    textSize(16);
+    text(months[calMonth-1]+" "+calYear,
+         x + cell*cols/2, y + 25);
+  
+    String[] weekdays = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+    textSize(12);
+    fill(100);
+  
+    for(int c=0;c<7;c++)
+      text(weekdays[c], x+c*cell+cell/2, y+55);
+  
+    int days = getDaysInMonth(calMonth, calYear);
+    int start = getStartDay(calMonth, calYear);
+  
+    textSize(14);
+  
+    for(int d=1; d<=days; d++){
+      int index = d + start - 2;
+      int col = index % 7;
+      int row = index / 7;
+  
+      float dx = x + col*cell;
+      float dy = y + row*cell + 70;
+  
+      if(calendarTarget.label.equals(
+         nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear)){
+        fill(RY_BLUE);
+        ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
+        fill(255);
+      } else fill(0);
+  
+      text(d, dx+cell/2, dy+cell/2);
+    }
   }
 
 
@@ -701,6 +978,7 @@ class QueriesDate extends Screen {
     textAlign(LEFT);
     text("From:", inputButton.x, inputButton.y - 10);
     text("To:", inputButton2.x, inputButton2.y - 10);
+    drawCalendar();
   }
 
   void keyPressed(char k) {
@@ -711,15 +989,52 @@ class QueriesDate extends Screen {
 
   void mousePressed() {
     currentInput = null;
-
+      if (showCalendar && calendarTarget != null) {
+  
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 45;
+  
+    int days = getDaysInMonth(calMonth, calYear);
+    int start = getStartDay(calMonth, calYear);
+  
+    for (int d=1; d<=days; d++) {
+  
+      int index = d + start - 2;
+      int col = index % 7;
+      int row = index / 7;
+  
+      float dx = x + col*cell;
+      float dy = y + row*cell + 70;
+  
+      if (mouseX>dx && mouseX<dx+cell &&
+          mouseY>dy && mouseY<dy+cell) {
+  
+        calendarTarget.label =
+          nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear;
+  
+        showCalendar = false;
+        calendarTarget = null;
+        return;
+      }
+    }
+  }
     // 1. Handle Input Focus
     if (inputButton.over(mouseX, mouseY)) {
       currentInput = inputButton;
-      if(inputButton.label.equals("MM/DD/YYYY")) inputButton.label = "";
+      calendarTarget = inputButton;
+      showCalendar = true;
+    
+      if(inputButton.label.equals("MM/DD/YYYY"))
+          inputButton.label = "";
     }
     if (inputButton2.over(mouseX, mouseY)) {
       currentInput = inputButton2;
-      if(inputButton2.label.equals("MM/DD/YYYY")) inputButton2.label = "";
+      calendarTarget = inputButton2;
+      showCalendar = true;
+    
+      if(inputButton2.label.equals("MM/DD/YYYY"))
+          inputButton2.label = "";
     }
 
     for (Button b : buttons) {
@@ -788,7 +1103,7 @@ class TrafficScreen extends Screen {
   }
 
 
-  void draw() {
+  void drawContent() {
     ui.drawNavbar(title);
     // Draw zone buttons with highlight for selected zone
     for (Button b : buttons) {
@@ -893,7 +1208,7 @@ class FlightsOutputScreen extends Screen {
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
-  void draw() {
+  void drawContent() {
     background(RY_BG); 
     fill(RY_BLUE);
     noStroke();
@@ -1060,7 +1375,7 @@ class TwoWayFlightsOutputScreen extends Screen {
     scrollY = 0;
   }
 
-  void draw() {
+  void drawContent() {
     background(RY_BG);
 
     // --- Header ---
