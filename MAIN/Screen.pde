@@ -1241,7 +1241,6 @@ class BookingsScreen extends Screen {
 
     buttons = new ArrayList<Button>();
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-    buttons.add(new Button(width - 150, height - 70, 100, 40, "Cancel", "cancel", 15, false));
   }
 
   void draw() {
@@ -1326,12 +1325,33 @@ class BookingsScreen extends Screen {
       }
     }
 
-    // Click on cards
+    // Click on cards + cancel buttons
     for (int i = 0; i < bookings.size(); i++) {
+    
       float cardX = width / 2 - 450;
       float cardY = topMargin + i * cardHeight + scrollY;
-      if (mouseX > cardX && mouseX < cardX + 900 &&
-          mouseY > cardY && mouseY < cardY + 100) {
+    
+      float w = 900;
+      float h = 100;
+    
+      // ---- CANCEL BUTTON AREA ----
+      float cancelX = cardX + w - 120;
+      float cancelY = cardY + 25;
+      float cancelW = 100;
+      float cancelH = 50;
+    
+      // If cancel button clicked
+      if (mouseX > cancelX && mouseX < cancelX + cancelW &&
+          mouseY > cancelY && mouseY < cancelY + cancelH) {
+    
+        Flight f = bookings.get(i);
+        bookings.remove(i);
+        return; // stop checking after deletion
+      }
+    
+      // ---- CARD SELECTION ----
+      if (mouseX > cardX && mouseX < cardX + w &&
+          mouseY > cardY && mouseY < cardY + h) {
         selectedBooking = i;
       }
     }
