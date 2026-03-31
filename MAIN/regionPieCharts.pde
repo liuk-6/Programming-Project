@@ -224,10 +224,24 @@ class TopAirlinesPie {
     labels[limit] = "Other Airlines";
     values[limit] = otherTotal;
 
+    color[] palette = {
+      color(#A26360),
+      color(#899689),
+      color(#CAB99E),
+      color(#C6A0D4),
+      color(#EDCC8B),
+      color(#D4A29C),
+      color(#9AACAB),
+      color(#8DD6E2),
+      color(#CAB99E),
+      color(#707F84),
+      color(#E8B298),
+      color(#9CA998)
+    };
     // Generate random colours
     colours = new color[labels.length];
     for (int i = 0; i < colours.length; i++) {
-      colours[i] = color(random(50, 255), random(50, 255), random(50, 255));
+      colours[i] = palette[i % palette.length];
     }
   }
 

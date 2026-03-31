@@ -122,6 +122,18 @@ PImage logo;
 PImage pieChart;
 PImage barChart;
 PImage flightMap;
+PImage LAX;
+PImage JFK;
+PImage SEA;
+PImage HON;
+PImage LGA;
+PImage PHX;
+PImage MCO;
+PImage ATL;
+PImage Dallas;
+PImage CLT;
+PImage DEN;
+PImage ORD;
 
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
