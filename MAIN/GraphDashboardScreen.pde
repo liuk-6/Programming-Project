@@ -31,7 +31,7 @@ class GraphDashboardScreen extends Screen {
     // Screen 1 widgets
     screen1.addWidget(new Widget(750, 620, 140, 40, "Destination"));
     screen1.addWidget(new Widget(900, 620, 140, 40, "Origin"));
-    screen1.addWidget(new Widget(1050, 620, 120, 40, "Next"));
+    screen1.addWidget(new Widget(1050, 620, 120, 40, "Pie Charts"));
     
     // Screen 2 widgets
     screen2.addWidget(new Widget(1050, 620, 120, 40, "Bar Chart"));
@@ -126,7 +126,7 @@ class GraphDashboardScreen extends Screen {
     else if (w.label.equals("Origin")) {
       showDestinationChart = false;
     }
-    else if (w.label.equals("Next")) {
+    else if (w.label.equals("Pie Charts")) {
       currentScreen = screen2;
       activeFact = "";
     }
@@ -143,28 +143,52 @@ class GraphDashboardScreen extends Screen {
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
       activeFact = "LAX — \nLos Angeles International Airport. \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n It has an official song.";
+      loadImage("Dallas.png");
+      
     } else if (code.equals("JFK")) {
       activeFact = "JFK — \n John F Kennedy International Airport \n There is a pet-only terminal.";
+      loadImage("Dallas.png");
+      
     } else if (code.equals("SEA")) {
       activeFact = "SEA — \n Seattle-Tacoma International Airport. \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
+      loadImage("Dallas.png");
+      
     } else if (code.equals("HON")) {
       activeFact = "HON — \n Honolulu International Airport. \n The largest airport in Hawaii.";
+      loadImage("Dallas.png");
+  
     } else if (code.equals("LGA")) {
       activeFact = "LGA — \n LaGuardia Airport. \n The airport lies partly on reclaimed land, created using landfill .";
+      loadImage("Dallas.png");
+    
     } else if (code.equals("PHX")) {
       activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n It is Arizona's largest and busiest airport. .";
+      loadImage("Dallas.png");
+    
     }else if (code.equals("MCO")) {
       activeFact = "MCO — \n Orlando International Airport. \n Has over $41 billion in economic impact.";
+      loadImage("Dallas.png");
+    
     } else if (code.equals("ATL")) {
       activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
+      loadImage("ATL.jpg");
+    
     }else if (code.equals("DFW")) {
       activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n it serves 269 destinations (196 domestic and 73 international).";
+      loadImage("Dallas.png");
+    
     }else if (code.equals("CLT")) {
       activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolinas GDP.";
+      loadImage("Dallas.png");
+    
     }else if (code.equals("DEN")) {
       activeFact = "DEN — \n Denver International Airport . \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
+      loadImage("Dallas.png");
+    
     } else if (code.equals("ORD")) {
       activeFact = "ORD — \n Chicago Ohare International Airport. \n  Built in February of 1944.";
+      loadImage("Dallas.png");
+    
     } else {
       activeFact = code + " — No facts available yet.";
     }
@@ -187,7 +211,24 @@ class GraphDashboardScreen extends Screen {
     textSize(14);
     textAlign(LEFT, TOP);
     text(msg, x + 15, y + 15, boxW - 30, boxH - 30);
-  }
+
+    imageMode(CENTER);
+    
+    image(Dallas, x, y + boxH, 70, 40);
+    image(ATL, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    image(Dallas, x, y + boxH, 70, 40);
+    
+    imageMode(CORNER);
+ }
   void drawTopAirportBox() {
     pushStyle(); 
     pushMatrix();
@@ -288,7 +329,20 @@ class OriginBarChart {
   float[] values;      // top 10 counts
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
+  HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
   OriginBarChart(){
+    airportColours.put("ATL", color(78, 96, 129));
+    airportColours.put("LAX", color(65, 74, 90));
+    airportColours.put("ORD", color(51));
+    airportColours.put("DFW", color(101, 110, 93));
+    airportColours.put("DEN", color(151, 168, 135));
+    airportColours.put("JFK", color(203, 208, 181));
+    airportColours.put("SEA", color(255, 247, 227));
+    airportColours.put("LAS", color(187, 159, 136));
+    airportColours.put("MCO", color(153, 115, 90));
+    airportColours.put("CLT", color(142, 89, 99));
+    airportColours.put("PHX", color(103, 71, 44));
+    airportColours.put("LGA", color(236, 174, 164));
   }
     void setup() {
       buttons.clear();
@@ -363,12 +417,10 @@ class OriginBarChart {
       float barWidth = (pg.width - 50) / (float)values.length;
     
       for (int i = 0; i < values.length; i++) {
-    
-        // changing colours between bars 
-        if (i % 2 == 0) {
-          pg.fill(100, 0, 100);
-        } else {
-          pg.fill(0, 200, 175);
+          if(airportColours.containsKey(airports[i]))  {
+          pg.fill((int)airportColours.get(airports[i]));
+        }else {
+          pg.fill(0);
         }
     
         float h = map(values[i], 0, maxVal, 0, pg.height - 40);
@@ -383,19 +435,27 @@ class OriginBarChart {
         pg.text(airports[i], x + (barWidth - 5)/2, pg.height - 25);
         
       }
-      pg.text("Bar chart of most popular origin airports", pg.width/2, 10);
-      pg.text("Most popular origin airports", pg.width/2, pg.height-15);
-      // --- Y-axis label (rotated) ---
-        pg.pushMatrix();
-        pg.translate(10, pg.height/2);  // move to left side, halfway down
-        pg.rotate(-HALF_PI);            // rotate 90° counter‑clockwise
-        pg.textAlign(CENTER, CENTER);
-        pg.fill(0);
-        pg.text("Quantity of flights", 0, 0);
-        pg.popMatrix();
+      
       pg.endDraw();
-    
       image(pg, 0, 0);
+      
+      // --- Y-axis label (rotated) ---
+        pushMatrix();
+        translate(-15, pg.height/2);  // move to left side, halfway down
+        rotate(-HALF_PI);            // rotate 90° counter‑clockwise
+        textAlign(CENTER, CENTER);
+        fill(0);
+        text("Quantity of flights", 0, 0);
+        popMatrix();
+      
+      fill(0);
+      textAlign(CENTER, TOP);
+      textSize(20);
+      text("Bar Chart of Most Popular Origin Airports", pg.width/2, -50);
+      
+      textSize(14);
+      textAlign(CENTER, BOTTOM);
+      text("Most popular origin airports", pg.width/2, pg.height + 5);
     }
    String checkClick(float mx, float my) {
       float localX = mx - 300;   // X offset of the origin chart
@@ -466,9 +526,9 @@ class PieChart {
 
   PieChart(){
     colours = new color[] {
-      color(40, 200, 40),   // on-time
-      color(250, 255, 80),    // delayed
-      color(255, 80, 80)    // cancelled
+      color(149, 148, 109),   // on-time
+      color(216, 174, 112),    // delayed
+      color(193, 105, 82)    // cancelled
     };
   }
     
@@ -639,7 +699,20 @@ class BarChart {
   float[] values;      // top 10 counts
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
+  HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
   BarChart(){
+    airportColours.put("ATL", color(78, 96, 129));
+    airportColours.put("LAX", color(65, 74, 90));
+    airportColours.put("ORD", color(51));
+    airportColours.put("DFW", color(101, 110, 93));
+    airportColours.put("DEN", color(151, 168, 135));
+    airportColours.put("JFK", color(203, 208, 181));
+    airportColours.put("SEA", color(255, 247, 227));
+    airportColours.put("LAS", color(187, 159, 136));
+    airportColours.put("MCO", color(153, 115, 90));
+    airportColours.put("CLT", color(142, 89, 99));
+    airportColours.put("PHX", color(103, 71, 44));
+    airportColours.put("LGA", color(236, 174, 164));
   }
     void setup() {
       buttons.clear();
@@ -714,14 +787,12 @@ class BarChart {
       float barWidth = (pg.width - 50) / (float)values.length;
     
       for (int i = 0; i < values.length; i++) {
-    
-        // changing colours between bars 
-        if (i % 2 == 0) {
-          pg.fill(100, 0, 100);
-        } else {
-          pg.fill(0, 200, 175);
+        if(airportColours.containsKey(airports[i]))  {
+          pg.fill((int)airportColours.get(airports[i]));
+        }else {
+          pg.fill(0);
         }
-    
+        
         float h = map(values[i], 0, maxVal, 0, pg.height - 40);
         float x = 40 + i * barWidth;
         float y = pg.height - 30 - h;
@@ -734,19 +805,27 @@ class BarChart {
         pg.text(airports[i], x + (barWidth - 5)/2, pg.height - 25);
         
       }
-      pg.text("Bar chart of most popular destination airports", pg.width/2, 10);
-      pg.text("Most popular destination airports", pg.width/2, pg.height-15);
-      // --- Y-axis label (rotated) ---
-        pg.pushMatrix();
-        pg.translate(10, pg.height/2);  // move to left side, halfway down
-        pg.rotate(-HALF_PI);            // rotate 90° counter‑clockwise
-        pg.textAlign(CENTER, CENTER);
-        pg.fill(0);
-        pg.text("Quantity of flights", 0, 0);
-        pg.popMatrix();
       pg.endDraw();
-    
       image(pg, 0, 0);
+      
+      // --- Y-axis label (rotated) ---
+        pushMatrix();
+        translate(-15, pg.height/2);  // move to left side, halfway down
+        rotate(-HALF_PI);            // rotate 90° counter‑clockwise
+        textAlign(CENTER, CENTER);
+        fill(0);
+        text("Quantity of flights", 0, 0);
+        popMatrix();
+   
+      
+      fill(0);
+      textAlign(CENTER, TOP);
+      textSize(20);
+      text("Bar Chart of Most Popular Destination Airports", pg.width/2, -50);
+      
+      textSize(14);
+      textAlign(CENTER, BOTTOM);
+      text("Most popular destination airports", pg.width/2, pg.height + 5);
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
