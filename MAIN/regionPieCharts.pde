@@ -284,6 +284,8 @@ class TopAirlinesPie {
       pg.fill(0);
       pg.text(labels[i] + " (" + int(values[i]) + ")", lx + box + 8, ly + i * 20 + box/2);
     }
+        pg.fill(0);
+      pg.text("Percentage of Flights per Airline ", pg.width/2 , 10);
 
     pg.endDraw();
     image(pg, x, y);
