@@ -429,7 +429,7 @@ class QueriesFlights extends Screen {
   ArrayList<String> suggestions = new ArrayList<String>();// drop down suggestions
   boolean showCalendar = false;
   TextEntryButton calendarTarget = null;
-  
+  String activeInput1; // "origin" or "destination"
   int calMonth;
   int calYear;
   float calX, calY;
@@ -452,7 +452,7 @@ class QueriesFlights extends Screen {
     int tripBtnY = cardY + 80;       // Trip buttons below title
     int inputY   = tripBtnY + 45;    // Inputs below trip buttons
     int labelOffset = 12;            // Labels above inputs
-
+    activeInput1 = "";
     // Trip type buttons
     roundTripBtn = new Button(cardX + 10, tripBtnY-20, 140, 30, "Round Trip", "roundTrip", 14, false);
     oneWayBtn    = new Button(cardX + 160, tripBtnY-20, 120, 30, "One Way", "oneWay", 14, false);
@@ -482,6 +482,8 @@ class QueriesFlights extends Screen {
 
     // Back button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    
+    String activeInput = ""; // tracks which input field is currently active
   }
   void updateSuggestions(String input){
     suggestions.clear();
@@ -495,14 +497,13 @@ class QueriesFlights extends Screen {
         if(!suggestions.contains(suggestion)){
           suggestions.add(suggestion);
         }
-        if(suggestions.size()>=8) break;
+        if(suggestions.size()>=10) break;
       }
     }
     
     
   }
   
-
   void drawContent() {
     drawTripSelector();
 
@@ -544,7 +545,7 @@ class QueriesFlights extends Screen {
         b.display();
     }
 
-    // 🔹 DRAW CALENDAR LAST → ensures it visually floats above everything
+    //DRAW CALENDAR LAST - ensures it visually floats above everything
     drawCalendar();
 }
   void drawSuggestions(){
@@ -693,7 +694,7 @@ int getStartDay(int month, int year){
     return;
   }
 }
-
+  
   // =====================================================
   // ---- CALENDAR DAY CLICK (MOVED UP)
   // =====================================================
@@ -728,19 +729,32 @@ int getStartDay(int month, int year){
   // ---- SUGGESTIONS DROPDOWN (UNCHANGED)
   // =====================================================
   if (currentInput != null && suggestions.size() > 0) {
-
     float x = currentInput.x;
     float y = currentInput.y + currentInput.h;
     float h = 35;
-
+  
     for (int i = 0; i < suggestions.size(); i++) {
+      float sy = y + i * h;
       if (mouseX > x && mouseX < x + currentInput.w &&
-          mouseY > y + i*h && mouseY < y + (i+1)*h) {
-
-        String selected = suggestions.get(i);
-        currentInput.label = selected.split(" - ")[0];
+          mouseY > sy && mouseY < sy + h) {
+  
+        // Split the suggestion into IATA and city name
+        String[] parts = suggestions.get(i).split(" - ");
+        String code = parts[0];
+        String city = parts[1];
+  
+        // Update both the selection (airport code) and the input label (city + code)
+        if (activeInput1.equals("origin")) {
+          selection.origin = code;
+          currentInput.label = city + " (" + code + ")";
+        } else if (activeInput1.equals("destination")) {
+          selection.destination = code;
+          currentInput.label = city + " (" + code + ")";
+        }
+  
+        // Clear suggestions after click
         suggestions.clear();
-        return;
+        break;
       }
     }
   }
