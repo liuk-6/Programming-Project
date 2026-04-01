@@ -11,7 +11,6 @@ class Screen {
 
     for (Button b : buttons)
       b.display();
-    drawContent();
       
    drawImages();
   }
