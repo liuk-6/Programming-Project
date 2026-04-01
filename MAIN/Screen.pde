@@ -11,14 +11,17 @@ class Screen {
 
     for (Button b : buttons)
       b.display();
-      
-   drawImages();
+    //drawContent();
+
+    drawImages();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
-  void drawContent() {}
-  
-  void drawImages()  {}
+  void drawContent() {
+  }
+
+  void drawImages() {
+  }
 
   // ---------- EVENTS (IMPORTANT) ----------
   void mousePressed() {
@@ -29,8 +32,8 @@ class Screen {
     for (Button b : buttons) b.over(mouseX, mouseY);
   }
 
-  void keyPressed(char k) {}
-
+  void keyPressed(char k) {
+  }
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
 class HomeScreen extends Screen {
@@ -39,6 +42,26 @@ class HomeScreen extends Screen {
 
   color bgTop = color(28, 45, 85);
   color bgBottom = color(12, 20, 45);
+
+  // --- Slideshow state ---
+  PImage[] slides;
+  String[] captions;
+  int currentSlide = 0;
+  int nextSlide = -1;       // -1 means no transition happening
+  float fadeAlpha = 0;      // 0-255, alpha of the incoming slide
+  boolean transitioning = false;
+
+  int slideInterval = 7000; // ms between auto-advances
+  int lastSlideTime = 0;
+
+  int FADE_DURATION = 1200;  // ms for cross-fade
+  int fadeStartTime = 0;
+
+  float arrowW = 52;
+  float arrowH = 52;
+  float leftArrowX, rightArrowX, arrowY;
+  boolean leftHover  = false;
+  boolean rightHover = false;
 
   HomeScreen() {
 
@@ -52,18 +75,58 @@ class HomeScreen extends Screen {
 
     buttons.add(new Button(width-220, pad,
       buttonW, buttonH, "DASHBOARD", "dashboard", 16, true));
-    
+
     buttons.add(new Button(width-620, pad,
       buttonW, buttonH, "BOOKINGS", "myFlights", 16, true));
 
     buttons.add(new Button(pad, pad,
       100, buttonH, "EXIT", "exit", 16, true));
+
+
+    slides = new PImage[]{
+      planeHomeScreen, // your existing image
+      loadImage("PlaneImg.jpg"), // add more as needed
+      loadImage("pictureA.jpg"),
+      loadImage("pictureC.jpg"),
+      loadImage("airportA.jpg"),
+      loadImage("pictureD.jpg"),
+      loadImage("pictureE.jpg"),
+      loadImage("pictureF.jpg"),
+      loadImage("airportB.jpg"),
+      loadImage("pictureG.jpg"),
+      loadImage("airplaneA.jpg"),
+      loadImage("pictureH.jpg"),
+      loadImage("airportB.jpg")
+
+    };
+
+    captions = new String[]{
+      "america 1",
+      "america 2",
+      "JFK International Airport, New York, USA",
+      "bla",
+      "blaa",
+      "blaaa",
+      "we",
+      "wee",
+      "weee",
+      "shush",
+      "shuush",
+      "shuuush",
+      "hehehe"
+    };
+
+    arrowY      = height * 0.65;
+    leftArrowX  = width * 0.1;
+    rightArrowX = width * 0.9;
+
+    lastSlideTime = millis();
   }
 
   void drawContent() {
-  drawHeroPanel();
-  drawPlane();
-}
+    drawHeroPanel();
+    drawSlideshow();
+  }
 
 
   void drawHeroPanel() {
@@ -88,40 +151,181 @@ class HomeScreen extends Screen {
     fill(255);
     textSize(56);
     text("Flight Scanner", width/2, y + 70);
+  }
+  
+  void drawSlideshow() {
+    int now = millis();
 
+    // Auto-advance trigger
+    if (!transitioning && now - lastSlideTime > slideInterval) {
+      startTransition((currentSlide + 1) % slides.length);
+    }
+    // Update fade progress
+    if (transitioning) {
+      float elapsed = now - fadeStartTime;
+      float t = constrain(elapsed / (float)FADE_DURATION, 0, 1);
+      float eased = t < 0.5
+        ? 2 * t * t                          // ease-in
+        : -1 + (4 - 2*t) * t;               // ease-out  (combined = smoothstep-ish)
+      fadeAlpha = eased * 255;
+
+      if (elapsed >= FADE_DURATION) {
+        currentSlide  = nextSlide;
+        transitioning = false;
+        nextSlide     = -1;
+        fadeAlpha     = 0;
+        lastSlideTime = millis();
+      }
+    }
+    imageMode(CENTER);
+    float cx = width / 2;
+    float cy = height * 0.65;
+    float iw = width * 0.8;
+    float ih = height * 0.6;
+
+    // Soft glow
+    fill(255, 30);
+    ellipse(cx, cy, width * 0.7, height * 0.5);
+
+    // Draw current slide (fully opaque)
+    tint(255, 255);
+    image(slides[currentSlide], cx, cy, iw, ih);
+
+    // Draw incoming slide fading in on top
+    if (transitioning && nextSlide >= 0) {
+      tint(255, fadeAlpha);
+      image(slides[nextSlide], cx, cy, iw, ih);
+    }
+
+    noTint();
+    imageMode(CORNER);
     
+    // Draw arrow hints
+    drawArrowButtons();
+    
+    // Draw navigation dots
+    drawDots(cx, cy + ih * 0.5 + 20);
+    drawCaption(cx, cy + ih * 0.5 - 40);   // sits just below the dots
   }
 
-  // PLANE IMAGE SECTION
-  void drawPlane() {
+  void drawArrowButtons() {
+    float half = arrowW / 2;
 
-    imageMode(CENTER);
+    // Left arrow
+    float lAlpha = leftHover ? 220 : 130;
+    drawArrowButton(leftArrowX, arrowY, half, lAlpha, "◀");
 
-    // soft glow behind image
-    fill(255, 30);
-    ellipse(width/2, height*0.65, width*0.7, height*0.5);
+    // Right arrow
+    float rAlpha = rightHover ? 220 : 130;
+    drawArrowButton(rightArrowX, arrowY, half, rAlpha, "▶");
+  }
 
-    image(
-      planeHomeScreen,
-      width/2,
-      height*0.65,
-      width*0.8,
-      height*0.6
-    );
+  void drawArrowButton(float cx, float cy, float half, float alpha, String symbol) {
+    // Pill background
+    noStroke();
+    fill(255, alpha * 0.35);
+    ellipse(cx, cy, arrowW, arrowH);
 
-    imageMode(CORNER);
+    // Border ring
+    stroke(255, alpha);
+    strokeWeight(1.5);
+    noFill();
+    ellipse(cx, cy, arrowW, arrowH);
+    noStroke();
+
+    // Arrow glyph
+    fill(255, alpha);
+    textAlign(CENTER, CENTER);
+    textSize(20);
+    text(symbol, cx, cy);
+  }
+
+  boolean overLeftArrow(float mx, float my) {
+    return dist(mx, my, leftArrowX, arrowY) < arrowW / 2;
+  }
+  boolean overRightArrow(float mx, float my) {
+    return dist(mx, my, rightArrowX, arrowY) < arrowW / 2;
+  }
+
+  void drawDots(float x, float y) {
+    int gap = 20;
+    float totalW = (slides.length - 1) * gap;
+    float startX = x - totalW / 2;
+    int active = transitioning ? nextSlide : currentSlide;
+    for (int i = 0; i < slides.length; i++) {
+      noStroke();
+      float dotR = (i == active) ? 7 : 5;
+      fill(i == active ? color(255, 220) : color(255, 80));
+      ellipse(startX + i * gap, y, dotR, dotR);
+    }
+  }
+
+  void drawCaption(float cx, float y) {
+    // Pick the caption to show (cross-fade caption text too)
+    String cap = transitioning && nextSlide >= 0
+      ? captions[nextSlide]
+      : captions[currentSlide];
+
+    float boxW = 340;
+    float boxH = 32;
+    float bx   = cx - boxW / 2;
+
+    // Frosted glass pill
+    noStroke();
+    fill(10, 30, 70, 180);
+    rect(bx, y, boxW, boxH, 16);
+
+    // Thin highlight border
+    stroke(255, 40);
+    strokeWeight(1);
+    noFill();
+    rect(bx, y, boxW, boxH, 16);
+    noStroke();
+
+    // Caption text
+    fill(220, 235, 255);
+    textAlign(CENTER, CENTER);
+    textSize(13);
+    text(cap, cx, y + boxH / 2);
+  }
+
+  void startTransition(int target) {
+    if (target == currentSlide || transitioning) return;
+    nextSlide     = target;
+    fadeAlpha     = 0;
+    fadeStartTime = millis();
+    transitioning = true;
   }
 
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      if (b.type.equals("queries")) goTo(queries);
-      if (b.type.equals("dashboard")) goTo(dashboard);
-      if (b.type.equals("myFlights")) goTo(bookingsScreens); 
-      if (b.type.equals("exit")) exit();
+    // Arrow buttons
+    if (overLeftArrow(mouseX, mouseY)) {
+      startTransition((currentSlide - 1 + slides.length) % slides.length);
+      return;
+    }
+    if (overRightArrow(mouseX, mouseY)) {
+      startTransition((currentSlide + 1) % slides.length);
+      return;
+    }
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("queries")) goTo(queries);
+        if (b.type.equals("dashboard")) goTo(dashboard);
+        if (b.type.equals("myFlights")) goTo(bookingsScreens);
+        if (b.type.equals("exit")) exit();
+      }
     }
   }
-}
+  
+  void mouseMoved() {
+    leftHover  = overLeftArrow(mouseX, mouseY);
+    rightHover = overRightArrow(mouseX, mouseY);
+    for (Button b : buttons) b.over(mouseX, mouseY);
+  }
+  void keyPressed(char k) {
+    if (keyCode == LEFT)  startTransition((currentSlide - 1 + slides.length) % slides.length);
+    if (keyCode == RIGHT) startTransition((currentSlide + 1) % slides.length);
+  }
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
 
@@ -131,8 +335,8 @@ class QueriesScreen extends Screen {
 
   int NAV_HEIGHT = 85;
 
-  color bgTop = color(28,45,85);
-  color bgBottom = color(12,20,45);
+  color bgTop = color(28, 45, 85);
+  color bgBottom = color(12, 20, 45);
 
   QueriesScreen() {
     this.title = "Flight Queries";
@@ -166,10 +370,10 @@ class QueriesScreen extends Screen {
   }
 
   void drawContent() {
-  drawPageHeader();
-  drawCardsBackground();
-  drawInfoPanel();
-}
+    drawPageHeader();
+    drawCardsBackground();
+    drawInfoPanel();
+  }
 
 
   // PAGE HEADER
@@ -181,10 +385,10 @@ class QueriesScreen extends Screen {
     textSize(44);
     text("Flight Queries", width/2, NAV_HEIGHT + 70);
 
-    fill(255,170);
+    fill(255, 170);
     textSize(18);
     text("Choose how you want to explore flight data",
-         width/2, NAV_HEIGHT + 100);
+      width/2, NAV_HEIGHT + 100);
   }
 
   // CARD BACKGROUND LAYER (adds website depth)
@@ -197,12 +401,12 @@ class QueriesScreen extends Screen {
     float y = 210;
 
     // shadow
-    fill(0,80);
-    rect(x+8,y+8,w,h,25);
+    fill(0, 80);
+    rect(x+8, y+8, w, h, 25);
 
     // glass panel
-    fill(255,20);
-    rect(x,y,w,h,25);
+    fill(255, 20);
+    rect(x, y, w, h, 25);
   }
 
   // INFO PANEL
@@ -214,12 +418,12 @@ class QueriesScreen extends Screen {
     float y = height - 230;
 
     // shadow
-    fill(0,80);
-    rect(x+6,y+6,w,h,20);
+    fill(0, 80);
+    rect(x+6, y+6, w, h, 20);
 
     // panel
-    fill(255,25);
-    rect(x,y,w,h,20);
+    fill(255, 25);
+    rect(x, y, w, h, 20);
 
     textAlign(CENTER);
 
@@ -227,7 +431,7 @@ class QueriesScreen extends Screen {
     textSize(22);
     text("SMART SEARCH FEATURES", width/2, y+40);
 
-    fill(255,180);
+    fill(255, 180);
     textSize(16);
 
     text("• Compare airline routes instantly", width/2, y+75);
@@ -236,17 +440,18 @@ class QueriesScreen extends Screen {
   }
 
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      if (b.type.equals("back")) goBack(); // changed for integration
-      if (b.type.equals("flightQuery")) goTo(flightsSearch);
-      if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
-      if (b.type.equals("dateQuery")) goTo(flightsDate);
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back")) goBack(); // changed for integration
+        if (b.type.equals("flightQuery")) goTo(flightsSearch);
+        if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
+        if (b.type.equals("dateQuery")) goTo(flightsDate);
+      }
     }
   }
-}
 
-  void keyPressed(char k) {}
+  void keyPressed(char k) {
+  }
 }
 
 // Card button class with hover animation
@@ -268,7 +473,7 @@ class CardButton extends Button {
   }
 
   @Override
-  void display() {
+    void display() {
     pushMatrix();
     translate(x + w/2, y + h/2);
     scale(hoverScale);
@@ -320,41 +525,40 @@ class DashboardScreen extends Screen {
     buttons.add(new Button(x + 240, y - 195, buttonW + 700, buttonH + 253, "Flight Map", "flightMapPage", 30, false));
   }
 
-  
-  void drawContent(){
-  drawSidebar();
 
-}
-  
-  void drawSidebar(){
+  void drawContent() {
+    drawSidebar();
+  }
+
+  void drawSidebar() {
     fill(240, 231, 213);
     noStroke();
     rect(40, 40, 220, 640, 20);
     fill(255);
     ellipse(150, 120, 80, 80);
     image(logo, 110, 80, 90, 90);
-    
+
     fill(0);
     textAlign(CENTER);
     textSize(18);
-    text("FLIGHT SCANNER", 150, 180); 
+    text("FLIGHT SCANNER", 150, 180);
   }
-  
-  void drawImages()  {
+
+  void drawImages() {
     imageMode(CORNER);
-    
+
     Button pie = null, bar = null, map = null;
-    for (Button b : buttons)  {
-      if(b.type.equals("pieChartsPage"))  pie = b;
-      if(b.type.equals("graphsPage"))  bar = b;
-      if(b.type.equals("flightMapPage")) map = b;
+    for (Button b : buttons) {
+      if (b.type.equals("pieChartsPage"))  pie = b;
+      if (b.type.equals("graphsPage"))  bar = b;
+      if (b.type.equals("flightMapPage")) map = b;
     }
-    
+
     float x = 290;
     float y = 430;
     float w = 270;
     float h = 270;
-    
+
     if  (pie != null) {
       float s = pie.hoverScale;
       pushMatrix();
@@ -364,7 +568,7 @@ class DashboardScreen extends Screen {
       image(pieChart, x, y, w, h);
       popMatrix();
     }
-     
+
     float bx = 690;
     float by = 455;
     float bw = 390;
@@ -376,14 +580,14 @@ class DashboardScreen extends Screen {
       scale(s);
       translate(-(bx+ bw/2), -(by+ bh/2));
       image(barChart, bx, by, bw, bh);
-      popMatrix(); 
+      popMatrix();
     }
-    
+
     float mx = 390;
     float my = 80;
     float mw = 670;
     float mh = 270;
-    
+
     if  (map != null) {
       float s = map.hoverScale;
       pushMatrix();
@@ -394,25 +598,25 @@ class DashboardScreen extends Screen {
       popMatrix();
     }
   }
-  
+
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("home")) goTo(home);
-      if (b.type.equals("graphs") || b.type.equals("graphsPage")) {
-        graphDashboardScreen.currentScreen = graphDashboardScreen.screen1;
-        graphDashboardScreen.activeFact = "";
-        goTo(graphDashboard);
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        println("Clicked: " + b.type);
+        if (b.type.equals("home")) goTo(home);
+        if (b.type.equals("graphs") || b.type.equals("graphsPage")) {
+          graphDashboardScreen.currentScreen = graphDashboardScreen.screen1;
+          graphDashboardScreen.activeFact = "";
+          goTo(graphDashboard);
+        }
+        if (b.type.equals("pieCharts") || b.type.equals("pieChartsPage")) {
+          graphDashboardScreen.goToPieCharts();
+          goTo(graphDashboard);
+        }
+        if  (b.type.equals("maps")) goTo(mapScreen);
+        if  (b.type.equals("flightMapPage")) goTo(mapScreen);
       }
-      if (b.type.equals("pieCharts") || b.type.equals("pieChartsPage")) {
-        graphDashboardScreen.goToPieCharts();
-        goTo(graphDashboard);
-      }
-      if  (b.type.equals("maps")) goTo(mapScreen);
-      if  (b.type.equals("flightMapPage")) goTo(mapScreen);
     }
-   }
   }
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
@@ -432,13 +636,13 @@ class QueriesFlights extends Screen {
   int calMonth;
   int calYear;
   float calX, calY;
-  
+
   QueriesFlights() {
     title = "Flight Search";
     int margin = 100;
     int spacing = 15;
     int buttonH = 45;
-    int queryW = (width - (margin * 2) - (spacing * 3)) / 4; 
+    int queryW = (width - (margin * 2) - (spacing * 3)) / 4;
     calMonth = 1;
     calYear  = 2022;
 
@@ -455,7 +659,7 @@ class QueriesFlights extends Screen {
     // Trip type buttons
     roundTripBtn = new Button(cardX + 10, tripBtnY-20, 140, 30, "Round Trip", "roundTrip", 14, false);
     oneWayBtn    = new Button(cardX + 160, tripBtnY-20, 120, 30, "One Way", "oneWay", 14, false);
-    
+
     buttons.add(roundTripBtn);
     buttons.add(oneWayBtn);
 
@@ -464,7 +668,7 @@ class QueriesFlights extends Screen {
     inputTo    = new TextEntryButton(cardX + (queryW + spacing)+15, inputY, queryW, buttonH, "Destination", "enter", 25, 16, false, 2);
     inputStart = new TextEntryButton(cardX + (queryW + spacing) * 2+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 3);
     inputEnd   = new TextEntryButton(cardX + (queryW + spacing) * 3+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 4);
-    
+
     buttons.add(inputFrom);
     buttons.add(inputTo);
     buttons.add(inputStart);
@@ -481,28 +685,26 @@ class QueriesFlights extends Screen {
 
     // Back button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-    
+
     String activeInput = ""; // tracks which input field is currently active
   }
-  void updateSuggestions(String input){
+  void updateSuggestions(String input) {
     suggestions.clear();
-    if(input.length()<2)return;
+    if (input.length()<2)return;
     input= input.toLowerCase();
-    for(Flight f:flightsList){
+    for (Flight f : flightsList) {
       String origin = f.origin.toLowerCase();
       String originCity = f.originCityName.toLowerCase();
-      if(origin.contains(input) || originCity.contains(input)){
+      if (origin.contains(input) || originCity.contains(input)) {
         String suggestion = f.origin + " - "+ f.originCityName;
-        if(!suggestions.contains(suggestion)){
+        if (!suggestions.contains(suggestion)) {
           suggestions.add(suggestion);
         }
-        if(suggestions.size()>=10) break;
+        if (suggestions.size()>=10) break;
       }
     }
-    
-    
   }
-  
+
   void drawContent() {
     drawTripSelector();
 
@@ -540,21 +742,21 @@ class QueriesFlights extends Screen {
 
     // Draw buttons
     for (Button b : buttons) {
-        if (b == inputEnd && !roundTrip) continue;
-        b.display();
+      if (b == inputEnd && !roundTrip) continue;
+      b.display();
     }
 
     //DRAW CALENDAR LAST - ensures it visually floats above everything
     drawCalendar();
-}
-  void drawSuggestions(){
-  if(suggestions.size()==0||currentInput == null) return;
+  }
+  void drawSuggestions() {
+    if (suggestions.size()==0||currentInput == null) return;
     float x = currentInput.x;
     float y = currentInput.y + currentInput.h;
     float w = currentInput.w;
     float h = 35;
-    
-    for(int i = 0; i<suggestions.size();i++){
+
+    for (int i = 0; i<suggestions.size(); i++) {
       fill(255);
       stroke(200);
       rect(x, y + i*h, w, h);
@@ -564,89 +766,89 @@ class QueriesFlights extends Screen {
     }
   }
   void drawCalendar() {
-  if (!showCalendar || calendarTarget == null) return;
+    if (!showCalendar || calendarTarget == null) return;
 
-  float x = calendarTarget.x;
-  float y = calendarTarget.y + calendarTarget.h + 10;
-  float cell = 35;
-  int cols = 7;
-  int rows = 6; // Max rows for calendar
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 35;
+    int cols = 7;
+    int rows = 6; // Max rows for calendar
 
-  // Calendar background card
-  fill(255);
-  stroke(200);
-  strokeWeight(1);
-  rect(x, y, cell * cols, cell * rows + 70, 12); // Extra space for header
+    // Calendar background card
+    fill(255);
+    stroke(200);
+    strokeWeight(1);
+    rect(x, y, cell * cols, cell * rows + 70, 12); // Extra space for header
 
-  // ---------- MONTH HEADER ----------
-  String[] months = {
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  };
-  
-  fill(RY_BLUE);
-  noStroke();
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text(months[calMonth-1] + " " + calYear, x + cell*cols/2, y + 25);
+    // ---------- MONTH HEADER ----------
+    String[] months = {
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    };
 
-  // Left/Right arrows
-  fill(220);
-  stroke(180);
-  rect(x + 10, y + 15, 25, 25, 5);
-  rect(x + cell*cols - 35, y + 15, 25, 25, 5);
-  fill(0);
-  textSize(14);
-  text("<", x + 22, y + 27);
-  text(">", x + cell*cols - 22, y + 27);
+    fill(RY_BLUE);
+    noStroke();
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text(months[calMonth-1] + " " + calYear, x + cell*cols/2, y + 25);
 
-  // ---------- WEEKDAY NAMES ----------
-  String[] weekdays = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
-  textSize(12);
-  fill(100);
-  for (int c=0; c<7; c++){
-    text(weekdays[c], x + c*cell + cell/2, y + 55);
-  }
+    // Left/Right arrows
+    fill(220);
+    stroke(180);
+    rect(x + 10, y + 15, 25, 25, 5);
+    rect(x + cell*cols - 35, y + 15, 25, 25, 5);
+    fill(0);
+    textSize(14);
+    text("<", x + 22, y + 27);
+    text(">", x + cell*cols - 22, y + 27);
 
-  // ---------- DAYS ----------
-  int daysInMonth = getDaysInMonth(calMonth, calYear);
-  int startDay = getStartDay(calMonth, calYear); // Day of week of 1st day
-
-  textAlign(CENTER, CENTER);
-  textSize(14);
-
-  for(int d = 1; d <= daysInMonth; d++){
-    int index = d + startDay - 2;
-    int col = index % 7;
-    int row = index / 7;
-
-    float dx = x + col*cell;
-    float dy = y + row*cell + 70;
-
-    // Hover effect
-    if (mouseX > dx && mouseX < dx+cell && mouseY > dy && mouseY < dy+cell) {
-      fill(#E0F0FF);
-      rect(dx+2, dy+2, cell-4, cell-4, 6);
+    // ---------- WEEKDAY NAMES ----------
+    String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    textSize(12);
+    fill(100);
+    for (int c=0; c<7; c++) {
+      text(weekdays[c], x + c*cell + cell/2, y + 55);
     }
 
-    // Selected date
-    if(calendarTarget.label.equals(nf(calMonth,2) + "/" + nf(d,2) + "/" + calYear)){
-      fill(RY_BLUE);
-      ellipse(dx + cell/2, dy + cell/2, cell-10, cell-10);
-      fill(255);
-    } else fill(0);
+    // ---------- DAYS ----------
+    int daysInMonth = getDaysInMonth(calMonth, calYear);
+    int startDay = getStartDay(calMonth, calYear); // Day of week of 1st day
 
-    text(d, dx + cell/2, dy + cell/2);
+    textAlign(CENTER, CENTER);
+    textSize(14);
+
+    for (int d = 1; d <= daysInMonth; d++) {
+      int index = d + startDay - 2;
+      int col = index % 7;
+      int row = index / 7;
+
+      float dx = x + col*cell;
+      float dy = y + row*cell + 70;
+
+      // Hover effect
+      if (mouseX > dx && mouseX < dx+cell && mouseY > dy && mouseY < dy+cell) {
+        fill(#E0F0FF);
+        rect(dx+2, dy+2, cell-4, cell-4, 6);
+      }
+
+      // Selected date
+      if (calendarTarget.label.equals(nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear)) {
+        fill(RY_BLUE);
+        ellipse(dx + cell/2, dy + cell/2, cell-10, cell-10);
+        fill(255);
+      } else fill(0);
+
+      text(d, dx + cell/2, dy + cell/2);
+    }
   }
-}
 
-// Returns the weekday (1=Sunday,..7=Saturday) for the first day of month
-int getStartDay(int month, int year){
-  java.util.Calendar cal = java.util.Calendar.getInstance();
-  cal.set(year, month-1, 1);
-  int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
-  return day;
-}
+  // Returns the weekday (1=Sunday,..7=Saturday) for the first day of month
+  int getStartDay(int month, int year) {
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.set(year, month-1, 1);
+    int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+    return day;
+  }
   int getDaysInMonth(int m, int y) {
 
     if (m == 2) { // February
@@ -654,179 +856,179 @@ int getStartDay(int month, int year){
         return 29;
       return 28;
     }
-  
+
     if (m==4 || m==6 || m==9 || m==11) return 30;
-  
+
     return 31;
   }
 
   void mousePressed() {
 
-  // =====================================================
-  // ---- CALENDAR MONTH SWITCH (MOVED TO TOP) ----
-  // =====================================================
-  if (showCalendar && calendarTarget != null) {
-  float x = calendarTarget.x;
-  float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
-  float cell = 35;
+    // =====================================================
+    // ---- CALENDAR MONTH SWITCH (MOVED TO TOP) ----
+    // =====================================================
+    if (showCalendar && calendarTarget != null) {
+      float x = calendarTarget.x;
+      float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+      float cell = 35;
 
-  // LEFT ARROW
-  if (mouseX > x + 10 && mouseX < x + 35 &&
-      mouseY > y + 15 && mouseY < y + 40) {
-    calMonth--;
-    if (calMonth < 1) {
-      calMonth = 12;
-      calYear--;
-      if (calYear < 2022) calYear = 2022;
-    }
-    return;
-  }
-
-  // RIGHT ARROW
-  if (mouseX > x + cell*7 - 35 && mouseX < x + cell*7 - 10 &&
-      mouseY > y + 15 && mouseY < y + 40) {
-    calMonth++;
-    if (calMonth > 12) {
-      calMonth = 1;
-      calYear++;
-    }
-    return;
-  }
-}
-  
-  // =====================================================
-  // ---- CALENDAR DAY CLICK (MOVED UP)
-  // =====================================================
-  if (showCalendar && calendarTarget != null) {
-  float x = calendarTarget.x;
-  float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
-  float cell = 35;
-
-  int daysInMonth = getDaysInMonth(calMonth, calYear);
-  int startDay = getStartDay(calMonth, calYear);
-
-  for (int d = 1; d <= daysInMonth; d++) {
-    int index = d + startDay - 2;
-    int col = index % 7;
-    int row = index / 7;
-
-    float dx = x + col*cell;
-    float dy = y + row*cell + 70; // match drawCalendar offset
-
-    if (mouseX > dx && mouseX < dx + cell &&
-        mouseY > dy && mouseY < dy + cell) {
-      String date = nf(calMonth,2) + "/" + nf(d,2) + "/" + calYear;
-      calendarTarget.label = date;
-      showCalendar = false;
-      calendarTarget = null;
-      return;
-    }
-  }
-}
-
-  // =====================================================
-  // ---- SUGGESTIONS DROPDOWN (UNCHANGED)
-  // =====================================================
-  if (currentInput != null && suggestions.size() > 0) {
-    float x = currentInput.x;
-    float y = currentInput.y + currentInput.h;
-    float h = 35;
-  
-    for (int i = 0; i < suggestions.size(); i++) {
-      float sy = y + i * h;
-      if (mouseX > x && mouseX < x + currentInput.w &&
-          mouseY > sy && mouseY < sy + h) {
-  
-        // Split the suggestion into IATA and city name
-        String[] parts = suggestions.get(i).split(" - ");
-        String code = parts[0];
-        String city = parts[1];
-  
-        // Update both the selection (airport code) and the input label (city + code)
-        if (activeInput1.equals("origin")) {
-          selection.origin = code;
-          currentInput.label = city + " (" + code + ")";
-        } else if (activeInput1.equals("destination")) {
-          selection.destination = code;
-          currentInput.label = city + " (" + code + ")";
+      // LEFT ARROW
+      if (mouseX > x + 10 && mouseX < x + 35 &&
+        mouseY > y + 15 && mouseY < y + 40) {
+        calMonth--;
+        if (calMonth < 1) {
+          calMonth = 12;
+          calYear--;
+          if (calYear < 2022) calYear = 2022;
         }
-  
-        // Clear suggestions after click
-        suggestions.clear();
-        break;
+        return;
+      }
+
+      // RIGHT ARROW
+      if (mouseX > x + cell*7 - 35 && mouseX < x + cell*7 - 10 &&
+        mouseY > y + 15 && mouseY < y + 40) {
+        calMonth++;
+        if (calMonth > 12) {
+          calMonth = 1;
+          calYear++;
+        }
+        return;
       }
     }
-  }
 
-  // =====================================================
-  // INPUT SELECTION
-  // =====================================================
-  TextEntryButton[] allInputs = roundTrip 
-    ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
-    : new TextEntryButton[]{inputFrom, inputTo, inputStart};
+    // =====================================================
+    // ---- CALENDAR DAY CLICK (MOVED UP)
+    // =====================================================
+    if (showCalendar && calendarTarget != null) {
+      float x = calendarTarget.x;
+      float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+      float cell = 35;
 
-  currentInput = null;
+      int daysInMonth = getDaysInMonth(calMonth, calYear);
+      int startDay = getStartDay(calMonth, calYear);
 
-  for (TextEntryButton b : allInputs) {
-    if (b.over(mouseX, mouseY)) {
+      for (int d = 1; d <= daysInMonth; d++) {
+        int index = d + startDay - 2;
+        int col = index % 7;
+        int row = index / 7;
 
-      currentInput = b;
+        float dx = x + col*cell;
+        float dy = y + row*cell + 70; // match drawCalendar offset
 
-      // OPEN CALENDAR FOR DATE INPUTS
-      if (b == inputStart || b == inputEnd) {
-        showCalendar = true;
-        calendarTarget = b;
-      } else {
-        showCalendar = false;
+        if (mouseX > dx && mouseX < dx + cell &&
+          mouseY > dy && mouseY < dy + cell) {
+          String date = nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
+          calendarTarget.label = date;
+          showCalendar = false;
+          calendarTarget = null;
+          return;
+        }
       }
+    }
 
-      if (b.label.equals("MM/DD/YYYY") ||
+    // =====================================================
+    // ---- SUGGESTIONS DROPDOWN (UNCHANGED)
+    // =====================================================
+    if (currentInput != null && suggestions.size() > 0) {
+      float x = currentInput.x;
+      float y = currentInput.y + currentInput.h;
+      float h = 35;
+
+      for (int i = 0; i < suggestions.size(); i++) {
+        float sy = y + i * h;
+        if (mouseX > x && mouseX < x + currentInput.w &&
+          mouseY > sy && mouseY < sy + h) {
+
+          // Split the suggestion into IATA and city name
+          String[] parts = suggestions.get(i).split(" - ");
+          String code = parts[0];
+          String city = parts[1];
+
+          // Update both the selection (airport code) and the input label (city + code)
+          if (activeInput1.equals("origin")) {
+            selection.origin = code;
+            currentInput.label = city + " (" + code + ")";
+          } else if (activeInput1.equals("destination")) {
+            selection.destination = code;
+            currentInput.label = city + " (" + code + ")";
+          }
+
+          // Clear suggestions after click
+          suggestions.clear();
+          break;
+        }
+      }
+    }
+
+    // =====================================================
+    // INPUT SELECTION
+    // =====================================================
+    TextEntryButton[] allInputs = roundTrip
+      ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
+      : new TextEntryButton[]{inputFrom, inputTo, inputStart};
+
+    currentInput = null;
+
+    for (TextEntryButton b : allInputs) {
+      if (b.over(mouseX, mouseY)) {
+
+        currentInput = b;
+
+        // OPEN CALENDAR FOR DATE INPUTS
+        if (b == inputStart || b == inputEnd) {
+          showCalendar = true;
+          calendarTarget = b;
+        } else {
+          showCalendar = false;
+        }
+
+        if (b.label.equals("MM/DD/YYYY") ||
           b.label.equals("Origin") ||
           b.label.equals("Destination")) {
-        b.label = "";
+          b.label = "";
+        }
       }
     }
-  }
 
-  // =====================================================
-  // BUTTONS (UNCHANGED)
-  // =====================================================
-  for (Button b : buttons) {
-    if (b == inputEnd && !roundTrip) continue;
+    // =====================================================
+    // BUTTONS (UNCHANGED)
+    // =====================================================
+    for (Button b : buttons) {
+      if (b == inputEnd && !roundTrip) continue;
 
-    if (b.over(mouseX, mouseY)) {
+      if (b.over(mouseX, mouseY)) {
 
-      if(b.type.equals("back")) goBack();
-      if (b.type.equals("roundTrip")) roundTrip = true;
-      if (b.type.equals("oneWay")) roundTrip = false;
+        if (b.type.equals("back")) goBack();
+        if (b.type.equals("roundTrip")) roundTrip = true;
+        if (b.type.equals("oneWay")) roundTrip = false;
 
-      if (b.type.equals("flightsOutput")) {
-        selection.origin      = inputFrom.label;
-        selection.destination = inputTo.label;
-        selection.dateStart   = inputStart.label;
-        selection.dateEnd     = roundTrip ? inputEnd.label : "";
+        if (b.type.equals("flightsOutput")) {
+          selection.origin      = inputFrom.label;
+          selection.destination = inputTo.label;
+          selection.dateStart   = inputStart.label;
+          selection.dateEnd     = roundTrip ? inputEnd.label : "";
 
-        searchFlights();
+          searchFlights();
+        }
       }
     }
-  }
 
-  // =====================================================
-  // SWAP BUTTON
-  // =====================================================
-  if (mouseX > swapX && mouseX < swapX + swapW &&
+    // =====================================================
+    // SWAP BUTTON
+    // =====================================================
+    if (mouseX > swapX && mouseX < swapX + swapW &&
       mouseY > swapY && mouseY < swapY + swapH) {
 
-    String temp = inputFrom.label;
-    inputFrom.label = inputTo.label;
-    inputTo.label = temp;
+      String temp = inputFrom.label;
+      inputFrom.label = inputTo.label;
+      inputTo.label = temp;
+    }
   }
-}
   void drawTripSelector() {
     textAlign(LEFT, CENTER);
     textSize(14);
     if (roundTrip) {
-      fill(#A8D05F); 
+      fill(#A8D05F);
       rect(roundTripBtn.x-5, roundTripBtn.y-5, roundTripBtn.w+10, roundTripBtn.h+10, 8);
     } else {
       fill(#A8D05F);
@@ -836,12 +1038,12 @@ int getStartDay(int month, int year){
 
   void keyPressed(char k) {
     if (currentInput != null) currentInput.addChar(k);
-    if(currentInput == inputFrom ||currentInput == inputTo){
+    if (currentInput == inputFrom ||currentInput == inputTo) {
       updateSuggestions(currentInput.label);
     }
   }
-  
-  
+
+
   // Helper function to map city name to IATA code
   String getIATACodeFromInput(String input) {
     input = input.trim().toLowerCase();
@@ -868,43 +1070,42 @@ class QueriesDate extends Screen {
     title = "Date Search";
     int queryW = 240;
     int queryH = 50;
-    
+
     int centerX = width/2;
     int yq = height/4 +100;
-    
+
     int spacing = 40;
-    
+
     int xq  = centerX - queryW - spacing/2;
     int xq2 = centerX + spacing/2;
     showCalendar = false;
-    
-    
+
+
     calMonth = 1;
     calYear  = 2022;
 
     // Standard Back Button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-    
+
     // The Search Button
-    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "Search flights", "dateOutput", 20, false));    
+    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "Search flights", "dateOutput", 20, false));
     // Initialize Input Boxes
     inputButton = new TextEntryButton(xq, yq, queryW, queryH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
     inputButton2 = new TextEntryButton(xq2, yq, queryW, queryH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
-    
+
     buttons.add(inputButton);
     buttons.add(inputButton2);
   }
-  void drawCard(){
+  void drawCard() {
     fill(255);
     rect(150, 200, width-300, 250, 20);
-  
   }
-  int getStartDay(int month, int year){
-  java.util.Calendar cal = java.util.Calendar.getInstance();
-  cal.set(year, month-1, 1);
-  int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
-  return day;
-}
+  int getStartDay(int month, int year) {
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.set(year, month-1, 1);
+    int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+    return day;
+  }
   int getDaysInMonth(int m, int y) {
 
     if (m == 2) { // February
@@ -912,63 +1113,63 @@ class QueriesDate extends Screen {
         return 29;
       return 28;
     }
-  
+
     if (m==4 || m==6 || m==9 || m==11) return 30;
-  
+
     return 31;
   }
   void drawCalendar() {
     if (!showCalendar || calendarTarget == null) return;
-  
+
     float x = calendarTarget.x;
     float y = calendarTarget.y + calendarTarget.h + 10;
     float cell = 45;
-  
+
     int cols = 7;
     int rows = 6;
-  
+
     fill(255);
     stroke(200);
     rect(x, y, cell*cols, cell*rows + 60, 12);
-  
+
     String[] months = {
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     };
-  
+
     fill(RY_BLUE);
-    textAlign(CENTER,CENTER);
+    textAlign(CENTER, CENTER);
     textSize(16);
     text(months[calMonth-1]+" "+calYear,
-         x + cell*cols/2, y + 25);
-  
-    String[] weekdays = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+      x + cell*cols/2, y + 25);
+
+    String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     textSize(12);
     fill(100);
-  
-    for(int c=0;c<7;c++)
+
+    for (int c=0; c<7; c++)
       text(weekdays[c], x+c*cell+cell/2, y+55);
-  
+
     int days = getDaysInMonth(calMonth, calYear);
     int start = getStartDay(calMonth, calYear);
-  
+
     textSize(14);
-  
-    for(int d=1; d<=days; d++){
+
+    for (int d=1; d<=days; d++) {
       int index = d + start - 2;
       int col = index % 7;
       int row = index / 7;
-  
+
       float dx = x + col*cell;
       float dy = y + row*cell + 70;
-  
-      if(calendarTarget.label.equals(
-         nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear)){
+
+      if (calendarTarget.label.equals(
+        nf(calMonth, 2)+"/"+nf(d, 2)+"/"+calYear)) {
         fill(RY_BLUE);
         ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
         fill(255);
       } else fill(0);
-  
+
       text(d, dx+cell/2, dy+cell/2);
     }
   }
@@ -985,7 +1186,7 @@ class QueriesDate extends Screen {
     for (Button b : buttons) {
       b.display();
     }
-    
+
     textSize(18);
     fill(0);
     textAlign(LEFT);
@@ -1002,68 +1203,68 @@ class QueriesDate extends Screen {
 
   void mousePressed() {
     currentInput = null;
-      if (showCalendar && calendarTarget != null) {
-  
-    float x = calendarTarget.x;
-    float y = calendarTarget.y + calendarTarget.h + 10;
-    float cell = 45;
-  
-    int days = getDaysInMonth(calMonth, calYear);
-    int start = getStartDay(calMonth, calYear);
-  
-    for (int d=1; d<=days; d++) {
-  
-      int index = d + start - 2;
-      int col = index % 7;
-      int row = index / 7;
-  
-      float dx = x + col*cell;
-      float dy = y + row*cell + 70;
-  
-      if (mouseX>dx && mouseX<dx+cell &&
+    if (showCalendar && calendarTarget != null) {
+
+      float x = calendarTarget.x;
+      float y = calendarTarget.y + calendarTarget.h + 10;
+      float cell = 45;
+
+      int days = getDaysInMonth(calMonth, calYear);
+      int start = getStartDay(calMonth, calYear);
+
+      for (int d=1; d<=days; d++) {
+
+        int index = d + start - 2;
+        int col = index % 7;
+        int row = index / 7;
+
+        float dx = x + col*cell;
+        float dy = y + row*cell + 70;
+
+        if (mouseX>dx && mouseX<dx+cell &&
           mouseY>dy && mouseY<dy+cell) {
-  
-        calendarTarget.label =
-          nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear;
-  
-        showCalendar = false;
-        calendarTarget = null;
-        return;
+
+          calendarTarget.label =
+            nf(calMonth, 2)+"/"+nf(d, 2)+"/"+calYear;
+
+          showCalendar = false;
+          calendarTarget = null;
+          return;
+        }
       }
     }
-  }
     // 1. Handle Input Focus
     if (inputButton.over(mouseX, mouseY)) {
       currentInput = inputButton;
       calendarTarget = inputButton;
       showCalendar = true;
-    
-      if(inputButton.label.equals("MM/DD/YYYY"))
-          inputButton.label = "";
+
+      if (inputButton.label.equals("MM/DD/YYYY"))
+        inputButton.label = "";
     }
     if (inputButton2.over(mouseX, mouseY)) {
       currentInput = inputButton2;
       calendarTarget = inputButton2;
       showCalendar = true;
-    
-      if(inputButton2.label.equals("MM/DD/YYYY"))
-          inputButton2.label = "";
+
+      if (inputButton2.label.equals("MM/DD/YYYY"))
+        inputButton2.label = "";
     }
 
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY)) {
         println("Clicked: " + b.type);
-        
+
         if (b.type.equals("back")) goBack();
-        
-        
+
+
         if (b.type.equals("dateOutput")) {
           selection.dateStart = inputButton.label;
           selection.dateEnd = inputButton2.label;
-          
-          searchFlightsDateRange(); 
-          
-          goTo(flightsOutput); 
+
+          searchFlightsDateRange();
+
+          goTo(flightsOutput);
         }
       }
     }
@@ -1086,8 +1287,8 @@ class TrafficScreen extends Screen {
   Button eastBtn, centralBtn, westBtn;
 
   TrafficScreen(ArrayList<Route> east,
-                ArrayList<Route> central,
-                ArrayList<Route> west) {
+    ArrayList<Route> central,
+    ArrayList<Route> west) {
     title = "Traffic Analytics";
     this.east = east;
     this.central = central;
@@ -1101,7 +1302,7 @@ class TrafficScreen extends Screen {
     buttons.add(backBtn);
 
     // Zone selection buttons
-    int buttonW = width/3-30; 
+    int buttonW = width/3-30;
     int buttonH = 30;
     int spacing = 10;
     int y = 75;
@@ -1143,11 +1344,9 @@ class TrafficScreen extends Screen {
     drawRoutesPanel(zoneTitle, currentList);
     if (currentZone.equals("East")) {
       eastPie.draw(width - 420, 150);
-    }
-    else if (currentZone.equals("Central")) {
+    } else if (currentZone.equals("Central")) {
       centralPie.draw(width - 420, 150);
-    }
-    else if (currentZone.equals("West")) {
+    } else if (currentZone.equals("West")) {
       westPie.draw(width - 420, 150);
     }
   }
@@ -1222,7 +1421,7 @@ class FlightsOutputScreen extends Screen {
   }
 
   void drawContent() {
-    background(RY_BG); 
+    background(RY_BG);
     fill(RY_BLUE);
     noStroke();
     rect(0, 0, width, 80); // header
@@ -1280,23 +1479,22 @@ class FlightsOutputScreen extends Screen {
     // SELECT button
     boolean isAlreadyBooked = bookedFlights.contains(f);
 
-    if (isAlreadyBooked) 
+    if (isAlreadyBooked)
     {
       fill(180); // Gray color
       noStroke();
       rect(x + w - 120, y + 25, 100, 50, 6);
-      
+
       fill(255);
       textAlign(CENTER, CENTER);
       textSize(14);
       text("SELECTED", x + w - 70, y + 50);
-     } 
-     else 
-     {
+    } else
+    {
       fill(RY_GOLD);
       noStroke();
       rect(x + w - 120, y + 25, 100, 50, 6);
-      
+
       fill(RY_BLUE);
       textAlign(CENTER, CENTER);
       textSize(16);
@@ -1310,55 +1508,55 @@ class FlightsOutputScreen extends Screen {
     textSize(20);
     text("No flights found for this route or date.", width/2, height/2);
   }
-  
+
 
   void mousePressed() {
     // 1. Check BACK button
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY) && b.type.equals("back")) goBack();
-  
-    // 2. Check SELECT buttons for each flight
-    for (int i = 0; i < results.size(); i++) {
-      float cardX = width/2 - 450;
-      float cardY = topMargin + i * cardHeight + scrollY; 
-      float cardW = 900;
-      float cardH = 100;
-  
-      float selectX = cardX + cardW - 120;
-      float selectY = cardY + 25;
-      float selectW = 100;
-      float selectH = 50;
-  
-      if (mouseX > selectX && mouseX < selectX + selectW &&
-          mouseY > selectY && mouseY < selectY + selectH) 
-      {
-        Flight selected = results.get(i);
-        
-        // This line ensures the code inside ONLY runs if the flight isn't there yet
-        if (!bookedFlights.contains(selected)) {
-          bookedFlights.add(selected);
-          println("Flight added!");
-        
-          // Show confirmation screen
-          ArrayList<Flight> justBooked = new ArrayList<Flight>();
-          justBooked.add(selected);
-          goTo(flightConfirmedScreen);
-        } else {
-          println("Already in your list!");
+
+      // 2. Check SELECT buttons for each flight
+      for (int i = 0; i < results.size(); i++) {
+        float cardX = width/2 - 450;
+        float cardY = topMargin + i * cardHeight + scrollY;
+        float cardW = 900;
+        float cardH = 100;
+
+        float selectX = cardX + cardW - 120;
+        float selectY = cardY + 25;
+        float selectW = 100;
+        float selectH = 50;
+
+        if (mouseX > selectX && mouseX < selectX + selectW &&
+          mouseY > selectY && mouseY < selectY + selectH)
+        {
+          Flight selected = results.get(i);
+
+          // This line ensures the code inside ONLY runs if the flight isn't there yet
+          if (!bookedFlights.contains(selected)) {
+            bookedFlights.add(selected);
+            println("Flight added!");
+
+            // Show confirmation screen
+            ArrayList<Flight> justBooked = new ArrayList<Flight>();
+            justBooked.add(selected);
+            goTo(flightConfirmedScreen);
+          } else {
+            println("Already in your list!");
+          }
         }
       }
     }
-   }
   }
 
   // SCROLLING with mouse wheel
-  
-  void scrollFlights(float e) {
-  scrollY += -e * scrollSpeed;
 
-  // Limit scrolling so content doesn't go too far
-  float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
-  scrollY = constrain(scrollY, minScroll, 0);
+  void scrollFlights(float e) {
+    scrollY += -e * scrollSpeed;
+
+    // Limit scrolling so content doesn't go too far
+    float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
+    scrollY = constrain(scrollY, minScroll, 0);
   }
 }
 class TwoWayFlightsOutputScreen extends Screen {
@@ -1410,8 +1608,8 @@ class TwoWayFlightsOutputScreen extends Screen {
     textSize(14);
     fill(255, 200);
     text(outboundFlights.size() + " outbound flights • " + selection.dateStart +
-         (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
-         width / 2, 60);
+      (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
+      width / 2, 60);
 
     pushMatrix();
     translate(0, scrollY);
@@ -1496,79 +1694,79 @@ class TwoWayFlightsOutputScreen extends Screen {
   }
 
   void mousePressed() {
-  // --- BACK button ---
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY) && b.type.equals("back")) {
-      goBack();
-      return; // stop further checks if back pressed
-    }
-  }
-
-  float yOffset = topMargin;
-
-  // --- OUTBOUND flights ---
-  if (selectedOutbound >= 0) {
-    // Only selected outbound is visible
-    float cardX = width / 2 - 450;
-    float cardY = yOffset + scrollY;
-    Flight f = outboundFlights.get(selectedOutbound);
-
-    if (clickedSelectButton(cardX, cardY, 900)) {
-      // toggle selection
-      bookedFlights.remove(f);
-      selectedOutbound = -1;
-      selectedReturn = -1;
-      scrollY = 0;
-      println("Outbound flight unselected!");
+    // --- BACK button ---
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+        goBack();
+        return; // stop further checks if back pressed
+      }
     }
 
-    yOffset += cardHeight;
-  } else {
-    // Show all outbound flights
-    for (int i = 0; i < outboundFlights.size(); i++) {
+    float yOffset = topMargin;
+
+    // --- OUTBOUND flights ---
+    if (selectedOutbound >= 0) {
+      // Only selected outbound is visible
       float cardX = width / 2 - 450;
       float cardY = yOffset + scrollY;
-      Flight f = outboundFlights.get(i);
+      Flight f = outboundFlights.get(selectedOutbound);
 
       if (clickedSelectButton(cardX, cardY, 900)) {
-        if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
-        bookedFlights.add(f);
-        selectedOutbound = i;
-        selectedReturn = -1; // reset return
+        // toggle selection
+        bookedFlights.remove(f);
+        selectedOutbound = -1;
+        selectedReturn = -1;
         scrollY = 0;
-        println("Outbound flight selected!");
+        println("Outbound flight unselected!");
+      }
+
+      yOffset += cardHeight;
+    } else {
+      // Show all outbound flights
+      for (int i = 0; i < outboundFlights.size(); i++) {
+        float cardX = width / 2 - 450;
+        float cardY = yOffset + scrollY;
+        Flight f = outboundFlights.get(i);
+
+        if (clickedSelectButton(cardX, cardY, 900)) {
+          if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
+          bookedFlights.add(f);
+          selectedOutbound = i;
+          selectedReturn = -1; // reset return
+          scrollY = 0;
+          println("Outbound flight selected!");
+        }
+
+        yOffset += cardHeight;
+      }
+    }
+
+    yOffset += 40; // spacing before return flights
+
+    // --- RETURN flights ---
+    for (int i = 0; i < returnFlights.size(); i++) {
+      float cardX = width / 2 - 450;
+      float cardY = yOffset + scrollY;
+      Flight f = returnFlights.get(i);
+
+      if (clickedSelectButton(cardX, cardY, 900)) {
+        if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
+        bookedFlights.add(f);
+        selectedReturn = i;
+        println("Return flight selected!");
       }
 
       yOffset += cardHeight;
     }
-  }
 
-  yOffset += 40; // spacing before return flights
-
-  // --- RETURN flights ---
-  for (int i = 0; i < returnFlights.size(); i++) {
-    float cardX = width / 2 - 450;
-    float cardY = yOffset + scrollY;
-    Flight f = returnFlights.get(i);
-
-    if (clickedSelectButton(cardX, cardY, 900)) {
-      if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
-      bookedFlights.add(f);
-      selectedReturn = i;
-      println("Return flight selected!");
+    // --- Show confirmation if both selected ---
+    if (selectedOutbound >= 0 && selectedReturn >= 0) {
+      ArrayList<Flight> justBooked = new ArrayList<Flight>();
+      justBooked.add(outboundFlights.get(selectedOutbound));
+      justBooked.add(returnFlights.get(selectedReturn));
+      goTo(flightConfirmedScreen);
     }
-
-    yOffset += cardHeight;
   }
-
-  // --- Show confirmation if both selected ---
-  if (selectedOutbound >= 0 && selectedReturn >= 0) {
-    ArrayList<Flight> justBooked = new ArrayList<Flight>();
-    justBooked.add(outboundFlights.get(selectedOutbound));
-    justBooked.add(returnFlights.get(selectedReturn));
-    goTo(flightConfirmedScreen);
-  }
-}
 
   void mouseWheel(MouseEvent event) {
     scrollY += -event.getCount() * scrollSpeed;
@@ -1681,31 +1879,31 @@ class BookingsScreen extends Screen {
 
     // Click on cards + cancel buttons
     for (int i = 0; i < bookings.size(); i++) {
-    
+
       float cardX = width / 2 - 450;
       float cardY = topMargin + i * cardHeight + scrollY;
-    
+
       float w = 900;
       float h = 100;
-    
+
       // ---- CANCEL BUTTON AREA ----
       float cancelX = cardX + w - 120;
       float cancelY = cardY + 25;
       float cancelW = 100;
       float cancelH = 50;
-    
+
       // If cancel button clicked
       if (mouseX > cancelX && mouseX < cancelX + cancelW &&
-          mouseY > cancelY && mouseY < cancelY + cancelH) {
-    
+        mouseY > cancelY && mouseY < cancelY + cancelH) {
+
         Flight f = bookings.get(i);
         bookings.remove(i);
         return; // stop checking after deletion
       }
-    
+
       // ---- CARD SELECTION ----
       if (mouseX > cardX && mouseX < cardX + w &&
-          mouseY > cardY && mouseY < cardY + h) {
+        mouseY > cardY && mouseY < cardY + h) {
         selectedBooking = i;
       }
     }
