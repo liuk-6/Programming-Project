@@ -1325,6 +1325,11 @@ class FlightsOutputScreen extends Screen {
         if (!bookedFlights.contains(selected)) {
           bookedFlights.add(selected);
           println("Flight added!");
+        
+          // Show confirmation screen
+          ArrayList<Flight> justBooked = new ArrayList<Flight>();
+          justBooked.add(selected);
+          goTo(flightConfirmedScreen);
         } else {
           println("Already in your list!");
         }
@@ -1353,7 +1358,7 @@ class TwoWayFlightsOutputScreen extends Screen {
 
   float scrollY = 0;
   float cardHeight = 110;
-  float topMargin = 130;  // space from top before first card
+  float topMargin = 130;
   float scrollSpeed = 40;
 
   ArrayList<Button> buttons;
@@ -1364,7 +1369,7 @@ class TwoWayFlightsOutputScreen extends Screen {
 
     buttons = new ArrayList<Button>();
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-    buttons.add(new Button(width - 150, height - 70, 100, 40, "Select", "select", 15, false));
+    // Removed redundant corner "Select" button
   }
 
   void setFlights(ArrayList<Flight> outbound, ArrayList<Flight> ret) {
@@ -1378,7 +1383,7 @@ class TwoWayFlightsOutputScreen extends Screen {
   void drawContent() {
     background(RY_BG);
 
-    // --- Header ---
+    // Header
     fill(RY_BLUE);
     noStroke();
     rect(0, 0, width, 80);
@@ -1395,52 +1400,51 @@ class TwoWayFlightsOutputScreen extends Screen {
          (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
          width / 2, 60);
 
-    // --- Draw outbound and return flights ---
     pushMatrix();
     translate(0, scrollY);
 
     float yOffset = topMargin;
 
-    // Outbound title
+    // Outbound flights title
     fill(0);
     textAlign(LEFT, TOP);
     textSize(18);
     text("Outbound Flights", width / 2 - 450, yOffset - 40);
 
-    // Outbound flight cards
-    for (int i = 0; i < outboundFlights.size(); i++) {
-      drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(i),
-                     i == selectedOutbound, "outbound", i);
+    // Outbound flights: show only selected if one chosen
+    if (selectedOutbound >= 0) {
+      drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(selectedOutbound), "outbound", selectedOutbound);
       yOffset += cardHeight;
+    } else {
+      for (int i = 0; i < outboundFlights.size(); i++) {
+        drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(i), "outbound", i);
+        yOffset += cardHeight;
+      }
     }
 
-    yOffset += 40; // gap between outbound and return flights
+    yOffset += 40; // spacing before return flights
 
-    // Return title
+    // Return flights title
     fill(0);
     textSize(18);
     text("Return Flights", width / 2 - 450, yOffset - 40);
 
-    // Return flight cards
+    // Return flights: show all return flights (no collapse)
     for (int i = 0; i < returnFlights.size(); i++) {
-      drawFlightCard(width / 2 - 450, yOffset, returnFlights.get(i),
-                     i == selectedReturn, "return", i);
+      drawFlightCard(width / 2 - 450, yOffset, returnFlights.get(i), "return", i);
       yOffset += cardHeight;
     }
 
     popMatrix();
 
-    // --- Buttons ---
     for (Button b : buttons) b.display();
   }
 
-  void drawFlightCard(float x, float y, Flight f, boolean selected, String type, int index) {
+  void drawFlightCard(float x, float y, Flight f, String type, int index) {
     float w = 900;
     float h = 100;
 
-    if (selected) fill(type.equals("outbound") ? color(200, 230, 255) : color(255, 200, 200));
-    else fill(255);
-
+    fill(255); // neutral background
     stroke(220);
     rect(x, y, w, h, 8);
 
@@ -1450,7 +1454,7 @@ class TwoWayFlightsOutputScreen extends Screen {
     text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
 
     textSize(18);
-    text(f.origin + " → " + f.destination, x + 20, y + 45);
+    text(f.origin + " → " + f.destination, x + 20, y + 50);
 
     textSize(14);
     fill(120);
@@ -1460,7 +1464,7 @@ class TwoWayFlightsOutputScreen extends Screen {
     // SELECT button
     boolean isAlreadyBooked = bookedFlights.contains(f);
     if (isAlreadyBooked) {
-      fill(180); // gray
+      fill(180);
       noStroke();
       rect(x + w - 120, y + 25, 100, 50, 6);
       fill(255);
@@ -1479,65 +1483,87 @@ class TwoWayFlightsOutputScreen extends Screen {
   }
 
   void mousePressed() {
-    // Buttons
-    for (Button b : buttons) {
-      if (b.over(mouseX, mouseY)) {
-        if (b.type.equals("back")) goBack();
-        if (b.type.equals("select")) selectTwoWayFlight(selectedOutbound, selectedReturn);
-      }
+  // --- BACK button ---
+  for (Button b : buttons) {
+    if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+      goBack();
+      return; // stop further checks if back pressed
+    }
+  }
+
+  float yOffset = topMargin;
+
+  // --- OUTBOUND flights ---
+  if (selectedOutbound >= 0) {
+    // Only selected outbound is visible
+    float cardX = width / 2 - 450;
+    float cardY = yOffset + scrollY;
+    Flight f = outboundFlights.get(selectedOutbound);
+
+    if (clickedSelectButton(cardX, cardY, 900)) {
+      // toggle selection
+      bookedFlights.remove(f);
+      selectedOutbound = -1;
+      selectedReturn = -1;
+      scrollY = 0;
+      println("Outbound flight unselected!");
     }
 
-    // --- Outbound flight cards ---
-    float yOffset = topMargin;
+    yOffset += cardHeight;
+  } else {
+    // Show all outbound flights
     for (int i = 0; i < outboundFlights.size(); i++) {
       float cardX = width / 2 - 450;
       float cardY = yOffset + scrollY;
-      if (mouseX > cardX && mouseX < cardX + 900 &&
-          mouseY > cardY && mouseY < cardY + 100) {
+      Flight f = outboundFlights.get(i);
+
+      if (clickedSelectButton(cardX, cardY, 900)) {
+        if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
+        bookedFlights.add(f);
         selectedOutbound = i;
+        selectedReturn = -1; // reset return
+        scrollY = 0;
+        println("Outbound flight selected!");
       }
-      yOffset += cardHeight;
-    }
 
-    yOffset += 40; // gap
-
-    // --- Return flight cards ---
-    for (int i = 0; i < returnFlights.size(); i++) {
-      float cardX = width / 2 - 450;
-      float cardY = yOffset + scrollY;
-      if (mouseX > cardX && mouseX < cardX + 900 &&
-          mouseY > cardY && mouseY < cardY + 100) {
-        selectedReturn = i;
-      }
       yOffset += cardHeight;
     }
   }
+
+  yOffset += 40; // spacing before return flights
+
+  // --- RETURN flights ---
+  for (int i = 0; i < returnFlights.size(); i++) {
+    float cardX = width / 2 - 450;
+    float cardY = yOffset + scrollY;
+    Flight f = returnFlights.get(i);
+
+    if (clickedSelectButton(cardX, cardY, 900)) {
+      if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
+      bookedFlights.add(f);
+      selectedReturn = i;
+      println("Return flight selected!");
+    }
+
+    yOffset += cardHeight;
+  }
+
+  // --- Show confirmation if both selected ---
+  if (selectedOutbound >= 0 && selectedReturn >= 0) {
+    ArrayList<Flight> justBooked = new ArrayList<Flight>();
+    justBooked.add(outboundFlights.get(selectedOutbound));
+    justBooked.add(returnFlights.get(selectedReturn));
+    goTo(flightConfirmedScreen);
+  }
+}
 
   void mouseWheel(MouseEvent event) {
     scrollY += -event.getCount() * scrollSpeed;
 
-    // Calculate max scroll
-    float totalHeight = topMargin + outboundFlights.size() * cardHeight +
-                        40 + returnFlights.size() * cardHeight;
+    float outboundHeight = (selectedOutbound >= 0 ? cardHeight : outboundFlights.size() * cardHeight);
+    float totalHeight = topMargin + outboundHeight + 40 + returnFlights.size() * cardHeight;
     float minScroll = min(0, height - totalHeight);
     scrollY = constrain(scrollY, minScroll, 0);
-  }
-
-  void selectTwoWayFlight(int outboundIndex, int returnIndex) {
-    if (outboundIndex >= 0 && returnIndex >= 0) {
-      Flight outbound = outboundFlights.get(outboundIndex);
-      Flight ret = returnFlights.get(returnIndex);
-
-      bookedFlights.add(outbound);
-      bookedFlights.add(ret);
-
-      println("Selected outbound: " + outbound.info());
-      println("Selected return: " + ret.info());
-
-      goTo(flightsBooked);
-    } else {
-      println("Please select both outbound and return flights!");
-    }
   }
 }
 class BookingsScreen extends Screen {
@@ -1678,5 +1704,38 @@ class BookingsScreen extends Screen {
     float totalHeight = topMargin + bookings.size() * cardHeight;
     float minScroll = min(0, height - totalHeight);
     scrollY = constrain(scrollY, minScroll, 0);
+  }
+}
+class FlightConfirmedScreen extends Screen {
+
+  String message;
+  int timer = 0;         // to track frames (for auto-return)
+  int delayFrames = 360; // e.g., 2 seconds if frameRate = 60
+
+  FlightConfirmedScreen(String msg) {
+    this.message = msg;
+  }
+
+  void drawContent() {
+    background(RY_BG);
+
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text(message, width / 2, height / 2);
+
+    textSize(16);
+    fill(150);
+    text("Returning to home...", width / 2, height / 2 + 40);
+
+    timer++;
+    if (timer >= delayFrames) {
+      goTo(home); // change back to home automatically
+    }
+  }
+
+  void mousePressed() {
+    // optional: allow skipping the timer
+    goTo(home);
   }
 }
