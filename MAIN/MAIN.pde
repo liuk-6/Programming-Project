@@ -450,7 +450,7 @@ void setup() {
   bookingsScreen = new BookingsScreen(bookedFlights);
   flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
-  planeHomeScreen = loadImage("PlaneImg.jpg");
+  planeHomeScreen = loadImage("pictureB.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
