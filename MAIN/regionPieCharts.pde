@@ -17,7 +17,7 @@ class RegionPieChart {
   PGraphics pg;
 
   RegionPieChart(String[] regionAirports) {
-    pg = createGraphics(450, 260);
+    pg = createGraphics(350, 260);
     compute(regionAirports);
   }
 
@@ -98,7 +98,6 @@ class RegionPieChart {
       pg.fill(0);
       pg.text(labels[i], lx + box + 8, ly + i * 20 + box/2);
     }
-    pg.textAlign(CENTER,CENTER);
     pg.text("Percentage of On Time flights", pg.width/2 , 10); 
     
     pg.endDraw();
@@ -197,7 +196,7 @@ class TopAirlinesPie {
   PGraphics pg;
 
   TopAirlinesPie(HashMap<String, Integer> counts) {
-    pg = createGraphics(550, 350);
+    pg = createGraphics(450, 350);
 
     // Sort airlines by flight count
     ArrayList<String> keys = new ArrayList<String>(counts.keySet());
@@ -205,26 +204,27 @@ class TopAirlinesPie {
 
     int limit = min(10, keys.size());
 
-    labels = new String[limit + 1];   // +1 for "Other"
-    values = new float[limit + 1];
-
+     // Count "other" first so we know whether to include the slice
     float otherTotal = 0;
-
-    for (int i = 0; i < keys.size(); i++) {
-      String carrier = keys.get(i);
-      int count = counts.get(carrier);
-
-      if (i < limit) {
-        labels[i] = getAirlineName(carrier); // FULL NAME
-        values[i] = count;
-      } else {
-        otherTotal += count;
-      }
+    for (int i = limit; i < keys.size(); i++) {
+      otherTotal += counts.get(keys.get(i));
     }
-
-    labels[limit] = "Other Airlines";
-    values[limit] = otherTotal;
-
+ 
+    // Only add an "Other" slice when it actually has flights
+    int slices = (otherTotal > 0) ? limit + 1 : limit;
+    labels = new String[slices];
+    values = new float[slices];
+ 
+    for (int i = 0; i < limit; i++) {
+      labels[i] = getAirlineName(keys.get(i));
+      values[i] = counts.get(keys.get(i));
+    }
+ 
+    if (otherTotal > 0) {
+      labels[limit] = "Other Airlines";
+      values[limit] = otherTotal;
+    }
+    
     color[] palette = {
       color(#A26360),
       color(#899689),
@@ -252,7 +252,7 @@ class TopAirlinesPie {
   // ---------------------------------------------------------
   void draw(float x, float y) {
     pg.beginDraw();
-    pg.background(RY_BG);
+    pg.background(255);
     pg.noStroke();
 
     float total = 0;
@@ -274,8 +274,8 @@ class TopAirlinesPie {
     pg.textAlign(LEFT, CENTER);
     pg.textSize(12);
 
-    int lx = (int)(pg.width/2) + 140;
-    int ly = 30;
+    int lx = 10;
+    int ly = 10;
     int box = 12;
 
     for (int i = 0; i < labels.length; i++) {
@@ -285,9 +285,6 @@ class TopAirlinesPie {
       pg.fill(0);
       pg.text(labels[i] + " (" + int(values[i]) + ")", lx + box + 8, ly + i * 20 + box/2);
     }
-      pg.fill(0);
-      pg.textAlign(CENTER, CENTER);
-      pg.text("Percentage of Flights per Airline ", pg.width/2 , 10);
 
     pg.endDraw();
     image(pg, x, y);
