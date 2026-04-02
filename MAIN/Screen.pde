@@ -919,10 +919,10 @@ class QueriesFlights extends Screen {
           // Update both the selection (airport code) and the input label (city + code)
           if (activeInput1.equals("origin")) {
             selection.origin = code;
-            currentInput.label = city + " (" + code + ")";
+            currentInput.label = city;
           } else if (activeInput1.equals("destination")) {
             selection.destination = code;
-            currentInput.label = city + " (" + code + ")";
+            currentInput.label = city;
           }
 
           // Clear suggestions after click
@@ -945,6 +945,13 @@ class QueriesFlights extends Screen {
       if (b.over(mouseX, mouseY)) {
 
         currentInput = b;
+        
+        if (b == inputFrom) {
+            activeInput1 = "origin";
+          }
+          else if (b == inputTo) {
+            activeInput1 = "destination";
+          }
 
         // OPEN CALENDAR FOR DATE INPUTS
         if (b == inputStart || b == inputEnd) {
@@ -1037,7 +1044,9 @@ class QueriesDate extends Screen {
   int calYear;
   // Button bounds for the manual Search button
   float btnX, btnY, btnW = 120, btnH = 40;
-
+  float leftArrowX, rightArrowX;
+  float arrowY;
+  float arrowSize;
   QueriesDate() {
     title = "Date Search";
     int queryW = 240;
@@ -1055,6 +1064,10 @@ class QueriesDate extends Screen {
 
     calMonth = 1;
     calYear  = 2022;
+    
+
+    
+    arrowSize = 25;
 
     // Standard Back Button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
@@ -1096,7 +1109,6 @@ class QueriesDate extends Screen {
     float x = calendarTarget.x;
     float y = calendarTarget.y + calendarTarget.h + 10;
     float cell = 45;
-
     int cols = 7;
     int rows = 6;
 
@@ -1112,9 +1124,30 @@ class QueriesDate extends Screen {
     fill(RY_BLUE);
     textAlign(CENTER, CENTER);
     textSize(16);
-    text(months[calMonth-1]+" "+calYear,
-      x + cell*cols/2, y + 25);
-
+    
+    float headerY = y + 25;
+    float centerX = x + cell*cols/2;
+    
+    text(months[calMonth-1]+" "+calYear, centerX, headerY);
+    
+    // arrow positions
+    leftArrowX = x + 20;
+    rightArrowX = x + cell*cols - 20;
+    arrowY = headerY;
+    
+    // LEFT ARROW  (<)
+    triangle(
+      leftArrowX-8, arrowY,
+      leftArrowX+8, arrowY-8,
+      leftArrowX+8, arrowY+8
+    );
+    
+    // RIGHT ARROW (>)
+    triangle(
+      rightArrowX+8, arrowY,
+      rightArrowX-8, arrowY-8,
+      rightArrowX-8, arrowY+8
+    );
     String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     textSize(12);
     fill(100);
@@ -1128,20 +1161,40 @@ class QueriesDate extends Screen {
     textSize(14);
 
     for (int d=1; d<=days; d++) {
+
       int index = d + start - 2;
       int col = index % 7;
       int row = index / 7;
-
+    
       float dx = x + col*cell;
       float dy = y + row*cell + 70;
-
-      if (calendarTarget.label.equals(
-        nf(calMonth, 2)+"/"+nf(d, 2)+"/"+calYear)) {
+    
+      boolean hovering =
+        mouseX > dx && mouseX < dx+cell &&
+        mouseY > dy && mouseY < dy+cell;
+    
+      String thisDate =
+        nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear;
+    
+      // SELECTED DATE
+      if (calendarTarget.label.equals(thisDate)) {
         fill(RY_BLUE);
         ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
         fill(255);
-      } else fill(0);
-
+      }
+    
+      // HOVER EFFECT
+      else if (hovering) {
+        fill(200,220,255);
+        ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
+        fill(0);
+      }
+    
+      // NORMAL DAY
+      else {
+        fill(0);
+      }
+    
       text(d, dx+cell/2, dy+cell/2);
     }
   }
@@ -1183,7 +1236,31 @@ class QueriesDate extends Screen {
 
       int days = getDaysInMonth(calMonth, calYear);
       int start = getStartDay(calMonth, calYear);
-
+      
+      // Month navigation
+      if (showCalendar && calendarTarget != null) {
+      
+        // LEFT
+        if (dist(mouseX, mouseY, leftArrowX, arrowY) < arrowSize) {
+          calMonth--;
+          if (calMonth < 1) {
+            calMonth = 12;
+            calYear--;
+          }
+          return;
+        }
+      
+        // RIGHT
+        if (dist(mouseX, mouseY, rightArrowX, arrowY) < arrowSize) {
+          calMonth++;
+          if (calMonth > 12) {
+            calMonth = 1;
+            calYear++;
+          }
+          return;
+        }
+      }
+      
       for (int d=1; d<=days; d++) {
 
         int index = d + start - 2;
@@ -1575,6 +1652,7 @@ class FlightsOutputScreen extends Screen {
             // Show confirmation screen
             ArrayList<Flight> justBooked = new ArrayList<Flight>();
             justBooked.add(selected);
+            flightConfirmedScreenObj.start();
             goTo(flightConfirmedScreen);
           } else {
             println("Already in your list!");
@@ -1799,6 +1877,7 @@ class TwoWayFlightsOutputScreen extends Screen {
       ArrayList<Flight> justBooked = new ArrayList<Flight>();
       justBooked.add(outboundFlights.get(selectedOutbound));
       justBooked.add(returnFlights.get(selectedReturn));
+      flightConfirmedScreenObj.start();
       goTo(flightConfirmedScreen);
     }
   }
@@ -1962,7 +2041,9 @@ class FlightConfirmedScreen extends Screen {
       goTo(home); 
     }
   }
-
+  void start() {
+  timer = 0;
+}
   void mousePressed() {
     goTo(home);
   }
