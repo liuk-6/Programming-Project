@@ -482,7 +482,7 @@ void setup() {
   }
   println("CSV loaded: " + lines.length + " lines");
 
-  table = loadTable("flights2k.csv", "header");
+  table = loadTable("flights100k.csv", "header");
   flightsList = new ArrayList<Flight>();
   for (int row = 0; row < table.getRowCount(); row++) {
     flightsList.add(new Flight(row));
