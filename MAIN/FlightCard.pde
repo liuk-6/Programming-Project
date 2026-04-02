@@ -32,8 +32,8 @@ class FlightCard {
     textAlign(LEFT, TOP);
     textSize(12);
     text(formatDate(f.date) + "  |  " +
-         f.carrier + " " + f.flightNumber,
-         x + 30, y + 10);
+      f.carrier + " " + f.flightNumber,
+      x + 30, y + 10);
 
     // Departure
     fill(0);
@@ -73,7 +73,7 @@ class FlightCard {
     text(f.destination, x + w - 250, y + 90);
 
     // SELECT BUTTON
-    fill(isSelected ? color(0,200,0) : RY_YELLOW);
+    fill(isSelected ? color(0, 200, 0) : RY_YELLOW);
     noStroke();
     rect(x + w - 180, y + 30, 150, 60, 8);
 
@@ -81,14 +81,14 @@ class FlightCard {
     textAlign(CENTER, CENTER);
     textSize(18);
     text(isSelected ? "SELECTED" : "SELECT",
-         x + w - 105, y + 60);
+      x + w - 105, y + 60);
   }
 
   boolean clickSelect() {
     return mouseX > x + w - 180 &&
-           mouseX < x + w - 30 &&
-           mouseY > y + 30 &&
-           mouseY < y + 90;
+      mouseX < x + w - 30 &&
+      mouseY > y + 30 &&
+      mouseY < y + 90;
   }
 
   void mousePressed() {
