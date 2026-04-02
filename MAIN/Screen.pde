@@ -86,13 +86,13 @@ class HomeScreen extends Screen {
 
     slides = new PImage[]{
       planeHomeScreen, // your existing image
-      //loadImage("pictureA.jpg"),
       loadImage("pictureC.jpg"),
       loadImage("pictureD.jpg"),
       loadImage("pictureE.jpg"),
       loadImage("pictureF.jpg"),
       loadImage("pictureG.jpg"),
       loadImage("pictureH.jpg"),
+      loadImage("pictureJ.jpg")
 
     };
 
@@ -104,6 +104,7 @@ class HomeScreen extends Screen {
       "Chicago, Illinois, USA",
       "San Francisco, California, USA",
       "Seattle, Washington, USA",
+      "Anchorage, Alaska, USA"
     };
 
     arrowY      = height * 0.65;

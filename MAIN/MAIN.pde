@@ -59,7 +59,7 @@ final int flightConfirmedScreen = 19;
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
 UserSelection selection;
-Screen nextScreen = null;    // the screen we’re transitioning to
+Screen nextScreen = null;    // the screen we're transitioning to
 float transitionAlpha = 0;   // fade opacity
 boolean inTransition = false;
 ////////DISPLAY TABLE FOOTPRINT ///////////
