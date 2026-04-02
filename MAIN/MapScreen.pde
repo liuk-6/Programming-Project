@@ -91,7 +91,7 @@ void drawAirports() {
         rect(mouseX + 10, mouseY - 20, 60, 20, 5);
         fill(255);
         textSize(12);
-        text(code, mouseX + 15, mouseY - 5);
+        text(code, mouseX + 40, mouseY -10);
       }
     }
   }
@@ -112,6 +112,10 @@ void drawLayout() {
   // Content area background
   fill(218, 224, 242);
   rect(0, headerH, width, height - headerH - footerH, 25);
+  
+  fill(255);
+  textSize(35);
+  text("Flight Map", width-85, headerH-30);
 }
 
 // ── Small box showing the currently selected airport ─────────

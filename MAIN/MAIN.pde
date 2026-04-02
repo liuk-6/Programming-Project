@@ -50,8 +50,12 @@ final int graphDashboard = 14;
 final int bookingsScreens = 15;
 final int flightsOutputTwoWay = 16;
 final int mapScreen = 17;
+<<<<<<< HEAD
 final int routeDetails = 18;
 
+=======
+final int flightConfirmedScreen = 18;
+>>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
 //////// STORING CHOICE //////////////////////
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
@@ -144,8 +148,12 @@ FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
 MapScreen flightMapScreen;
+<<<<<<< HEAD
 RouteDetailsScreen routeDetailsScreen;
 
+=======
+FlightConfirmedScreen flightConfirmedScreenObj;
+>>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
 TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 BookingsScreen bookingsScreen;
 Route selectedRoute = null;
@@ -174,6 +182,20 @@ ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
+boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+  float selectX = cardX + cardW - 120;
+  float selectY = cardY + 25;
+  float selectW = 100;
+  float selectH = 50;
+
+  return (
+    mouseX > selectX &&
+    mouseX < selectX + selectW &&
+    mouseY > selectY &&
+    mouseY < selectY + selectH
+  );
+}
 void goToWithTransition(Screen s) {
   nextScreen = s;
   transitionAlpha = 0;
@@ -484,9 +506,10 @@ void setup() {
   dashboardScreen       = new DashboardScreen();
   graphDashboardScreen  = new GraphDashboardScreen();
   flightMapScreen       = new MapScreen();
-  bookingsScreen = new BookingsScreen(bookedFlights);
+  bookingsScreen = new BookingsScreen();
+  flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
-  planeHomeScreen = loadImage("PlaneImg.jpg");
+  planeHomeScreen = loadImage("pictureB.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
@@ -528,6 +551,7 @@ void draw() {
   }
 
   switch(currentScreen) {
+<<<<<<< HEAD
   case home:
     currentScreenObject = homeScreen;
     break;
@@ -567,6 +591,21 @@ void draw() {
   default:
     currentScreenObject = homeScreen;
     break;
+=======
+    case home: currentScreenObject = homeScreen; break;
+    case queries: currentScreenObject = queriesScreen; break;
+    case flightsSearch: currentScreenObject = flightsSearchScreen; break;
+    case flightsDate: currentScreenObject = flightDateScreen; break;
+    case flightsTraffic: currentScreenObject = trafficScreen; break;
+    case flightsOutput: currentScreenObject = flightsOutputScreen; break;
+    case flightsOutputTwoWay: currentScreenObject = twoWayFlightsOutputScreen; break;  // <-- added
+    case dashboard: currentScreenObject = dashboardScreen; break;
+    case graphDashboard: currentScreenObject = graphDashboardScreen; break;
+    case bookingsScreens: currentScreenObject = bookingsScreen; break;
+    case mapScreen: currentScreenObject = flightMapScreen; break;
+    case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
+    default: currentScreenObject = homeScreen; break;
+>>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
   }
 
   if (currentScreenObject != null) currentScreenObject.draw();
