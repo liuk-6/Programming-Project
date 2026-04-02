@@ -253,7 +253,7 @@ class TopAirlinesPie {
   // ---------------------------------------------------------
   void draw(float x, float y) {
     pg.beginDraw();
-    pg.background(255);
+    pg.background(RY_BG);
     pg.noStroke();
 
     float total = 0;

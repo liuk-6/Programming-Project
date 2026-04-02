@@ -525,10 +525,10 @@ class DashboardScreen extends Screen {
       if (b.type.equals("flightMapPage")) map = b;
     }
 
-    float x = 160;
-    float y = 430;
-    float w = 270;
-    float h = 270;
+    float x = 200;
+    float y = 465;
+    float w = 190;
+    float h = 190;
 
     if  (pie != null) {
       float s = pie.hoverScale;
