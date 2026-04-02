@@ -53,7 +53,7 @@ final int mapScreen = 17;
 final int routeDetails = 18;
 
 
-final int flightConfirmedScreen = 18;
+final int flightConfirmedScreen = 19;
 
 //////// STORING CHOICE //////////////////////
 int currentScreen;
@@ -564,6 +564,7 @@ void draw() {
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
     case bookingsScreens: currentScreenObject = bookingsScreen; break;
     case mapScreen: currentScreenObject = flightMapScreen; break;
+    case routeDetails: currentScreenObject = routeDetailsScreen; break;
     case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
     default: currentScreenObject = homeScreen; break;
 

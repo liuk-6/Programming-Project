@@ -6,6 +6,7 @@ class RouteDetailsScreen extends Screen {
 
   void drawContent() {
     background(BG);
+    
 
     // Header
     fill(RY_BLUE);
