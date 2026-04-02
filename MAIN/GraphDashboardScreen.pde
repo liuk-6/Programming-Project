@@ -96,10 +96,10 @@ class GraphDashboardScreen extends Screen {
       popMatrix();
     }
     if (currentScreen == screen2) {
-      airlinePie.draw(500, 150);
+      airlinePie.draw(650, 150);
      if (currentScreen == screen2) {
       pushMatrix();
-      translate(200, 300);
+      translate(150, 300);
       pieChart.draw();
       popMatrix();
      }
