@@ -1,3 +1,4 @@
+
 // A flight that has been matched to geographic coordinates
 // and had its status (ON_TIME / DELAYED / CANCELLED) computed
 class FlightLocation {
@@ -96,7 +97,7 @@ class FlightManager {
       PVector origin = loc.getCoords(originCode);
       PVector dest   = loc.getCoords(destCode);
       if (origin == null || dest == null) {
-        println("Missing coords for:", originCode, destCode);
+        //println("Missing coords for:", originCode, destCode);
         continue;
       }
 
@@ -286,7 +287,7 @@ class LocationManager {
   void loadLocations(String filename) {
     String[] lines = loadStrings(filename);
     if (lines == null) {
-      println("LocationManager: file not found ->", filename);
+      //println("LocationManager: file not found ->", filename);
       return;
     }
 
@@ -303,7 +304,7 @@ class LocationManager {
         float  lon  = Float.valueOf(trim(parts[2]));
         locations.put(code, new PVector(lat, lon));
       } catch (Exception e) {
-        println("LocationManager: skipping bad line:", line);
+        //println("LocationManager: skipping bad line:", line);
       }
     }
   }

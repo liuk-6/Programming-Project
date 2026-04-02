@@ -8,6 +8,9 @@ class GraphDashboardScreen extends Screen {
 
   String activeFact = "";
   boolean showDestinationChart = true; // default view
+  PImage currentAirportImg;
+  float ImgX;
+  float ImgY;
   
   Button destBtn, originBtn;
   
@@ -173,51 +176,75 @@ class GraphDashboardScreen extends Screen {
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
       activeFact = "LAX — \nLos Angeles International Airport. \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n It has an official song.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
       
     } else if (code.equals("JFK")) {
       activeFact = "JFK — \n John F Kennedy International Airport \n There is a pet-only terminal.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
       
     } else if (code.equals("SEA")) {
       activeFact = "SEA — \n Seattle-Tacoma International Airport. \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
       
     } else if (code.equals("HON")) {
       activeFact = "HON — \n Honolulu International Airport. \n The largest airport in Hawaii.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
   
     } else if (code.equals("LGA")) {
       activeFact = "LGA — \n LaGuardia Airport. \n The airport lies partly on reclaimed land, created using landfill .";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     } else if (code.equals("PHX")) {
       activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n It is Arizona's largest and busiest airport. .";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     }else if (code.equals("MCO")) {
       activeFact = "MCO — \n Orlando International Airport. \n Has over $41 billion in economic impact.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     } else if (code.equals("ATL")) {
       activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
-      loadImage("ATL.jpg");
+      currentAirportImg = loadImage("ATL.jpg");
+      ImgX = 50;
+      ImgY = height - 270;
     
     }else if (code.equals("DFW")) {
       activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n it serves 269 destinations (196 domestic and 73 international).";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     }else if (code.equals("CLT")) {
       activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolinas GDP.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     }else if (code.equals("DEN")) {
       activeFact = "DEN — \n Denver International Airport . \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     } else if (code.equals("ORD")) {
       activeFact = "ORD — \n Chicago Ohare International Airport. \n  Built in February of 1944.";
-      loadImage("Dallas.png");
+      currentAirportImg = loadImage("Dallas.png");
+      ImgX = 50;
+      ImgY = height - 270;
     
     } else {
       activeFact = code + " — No facts available yet.";
@@ -241,23 +268,12 @@ class GraphDashboardScreen extends Screen {
     textSize(14);
     textAlign(LEFT, TOP);
     text(msg, x + 15, y + 15, boxW - 30, boxH - 30);
-
-    imageMode(CENTER);
     
-    image(Dallas, x, y + boxH, 70, 40);
-    image(ATL, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    image(Dallas, x, y + boxH, 70, 40);
-    
-    imageMode(CORNER);
+    if( currentAirportImg !=null)  {
+      imageMode(CENTER);
+      image(currentAirportImg, ImgX, ImgY, 70, 40);
+      imageMode(CORNER);
+    }
  }
   void drawTopAirportBox() {
     pushStyle(); 
@@ -492,7 +508,7 @@ class OriginBarChart {
       float localY = my - 200;   // Y offset of the origin chart
     
       for (AirportButton b : buttons) {
-        if (b.isInside(localX, localY)) {
+        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) {
           return b.code;
         }
       }
@@ -859,7 +875,7 @@ class BarChart {
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - 300, my - 200)) { 
+        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) { 
           // subtract translation offset (50,50)
           return b.code;
         }
