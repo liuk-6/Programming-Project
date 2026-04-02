@@ -14,6 +14,7 @@ class Screen {
     //drawContent();
 
     drawImages();
+    drawContent();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
@@ -85,35 +86,25 @@ class HomeScreen extends Screen {
 
     slides = new PImage[]{
       planeHomeScreen, // your existing image
-      loadImage("PlaneImg.jpg"), // add more as needed
-      loadImage("pictureA.jpg"),
       loadImage("pictureC.jpg"),
-      loadImage("airportA.jpg"),
       loadImage("pictureD.jpg"),
       loadImage("pictureE.jpg"),
       loadImage("pictureF.jpg"),
-      loadImage("airportB.jpg"),
       loadImage("pictureG.jpg"),
-      loadImage("airplaneA.jpg"),
       loadImage("pictureH.jpg"),
-      loadImage("airportB.jpg")
+      loadImage("pictureJ.jpg")
 
     };
 
     captions = new String[]{
-      "america 1",
-      "america 2",
-      "JFK International Airport, New York, USA",
-      "bla",
-      "blaa",
-      "blaaa",
-      "we",
-      "wee",
-      "weee",
-      "shush",
-      "shuush",
-      "shuuush",
-      "hehehe"
+      "Manhattan, New York City, USA",
+      "Los Angelos, California, USA",
+      "Capital Building, Washington D.C., USA",
+      "Miami Beach, Florida, USA",
+      "Chicago, Illinois, USA",
+      "San Francisco, California, USA",
+      "Seattle, Washington, USA",
+      "Anchorage, Alaska, USA"
     };
 
     arrowY      = height * 0.65;
@@ -928,10 +919,10 @@ class QueriesFlights extends Screen {
           // Update both the selection (airport code) and the input label (city + code)
           if (activeInput1.equals("origin")) {
             selection.origin = code;
-            currentInput.label = city + " (" + code + ")";
+            currentInput.label = city;
           } else if (activeInput1.equals("destination")) {
             selection.destination = code;
-            currentInput.label = city + " (" + code + ")";
+            currentInput.label = city;
           }
 
           // Clear suggestions after click
@@ -954,6 +945,13 @@ class QueriesFlights extends Screen {
       if (b.over(mouseX, mouseY)) {
 
         currentInput = b;
+        
+        if (b == inputFrom) {
+            activeInput1 = "origin";
+          }
+          else if (b == inputTo) {
+            activeInput1 = "destination";
+          }
 
         // OPEN CALENDAR FOR DATE INPUTS
         if (b == inputStart || b == inputEnd) {
@@ -1046,7 +1044,9 @@ class QueriesDate extends Screen {
   int calYear;
   // Button bounds for the manual Search button
   float btnX, btnY, btnW = 120, btnH = 40;
-
+  float leftArrowX, rightArrowX;
+  float arrowY;
+  float arrowSize;
   QueriesDate() {
     title = "Date Search";
     int queryW = 240;
@@ -1064,6 +1064,10 @@ class QueriesDate extends Screen {
 
     calMonth = 1;
     calYear  = 2022;
+    
+
+    
+    arrowSize = 25;
 
     // Standard Back Button
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
@@ -1105,7 +1109,6 @@ class QueriesDate extends Screen {
     float x = calendarTarget.x;
     float y = calendarTarget.y + calendarTarget.h + 10;
     float cell = 45;
-
     int cols = 7;
     int rows = 6;
 
@@ -1121,9 +1124,30 @@ class QueriesDate extends Screen {
     fill(RY_BLUE);
     textAlign(CENTER, CENTER);
     textSize(16);
-    text(months[calMonth-1]+" "+calYear,
-      x + cell*cols/2, y + 25);
-
+    
+    float headerY = y + 25;
+    float centerX = x + cell*cols/2;
+    
+    text(months[calMonth-1]+" "+calYear, centerX, headerY);
+    
+    // arrow positions
+    leftArrowX = x + 20;
+    rightArrowX = x + cell*cols - 20;
+    arrowY = headerY;
+    
+    // LEFT ARROW  (<)
+    triangle(
+      leftArrowX-8, arrowY,
+      leftArrowX+8, arrowY-8,
+      leftArrowX+8, arrowY+8
+    );
+    
+    // RIGHT ARROW (>)
+    triangle(
+      rightArrowX+8, arrowY,
+      rightArrowX-8, arrowY-8,
+      rightArrowX-8, arrowY+8
+    );
     String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     textSize(12);
     fill(100);
@@ -1137,20 +1161,40 @@ class QueriesDate extends Screen {
     textSize(14);
 
     for (int d=1; d<=days; d++) {
+
       int index = d + start - 2;
       int col = index % 7;
       int row = index / 7;
-
+    
       float dx = x + col*cell;
       float dy = y + row*cell + 70;
-
-      if (calendarTarget.label.equals(
-        nf(calMonth, 2)+"/"+nf(d, 2)+"/"+calYear)) {
+    
+      boolean hovering =
+        mouseX > dx && mouseX < dx+cell &&
+        mouseY > dy && mouseY < dy+cell;
+    
+      String thisDate =
+        nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear;
+    
+      // SELECTED DATE
+      if (calendarTarget.label.equals(thisDate)) {
         fill(RY_BLUE);
         ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
         fill(255);
-      } else fill(0);
-
+      }
+    
+      // HOVER EFFECT
+      else if (hovering) {
+        fill(200,220,255);
+        ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
+        fill(0);
+      }
+    
+      // NORMAL DAY
+      else {
+        fill(0);
+      }
+    
       text(d, dx+cell/2, dy+cell/2);
     }
   }
@@ -1192,7 +1236,31 @@ class QueriesDate extends Screen {
 
       int days = getDaysInMonth(calMonth, calYear);
       int start = getStartDay(calMonth, calYear);
-
+      
+      // Month navigation
+      if (showCalendar && calendarTarget != null) {
+      
+        // LEFT
+        if (dist(mouseX, mouseY, leftArrowX, arrowY) < arrowSize) {
+          calMonth--;
+          if (calMonth < 1) {
+            calMonth = 12;
+            calYear--;
+          }
+          return;
+        }
+      
+        // RIGHT
+        if (dist(mouseX, mouseY, rightArrowX, arrowY) < arrowSize) {
+          calMonth++;
+          if (calMonth > 12) {
+            calMonth = 1;
+            calYear++;
+          }
+          return;
+        }
+      }
+      
       for (int d=1; d<=days; d++) {
 
         int index = d + start - 2;
@@ -1251,8 +1319,6 @@ class QueriesDate extends Screen {
     }
   }
 }
-
-
 class TrafficScreen extends Screen {
 
   ArrayList<Route> east;
@@ -1262,10 +1328,12 @@ class TrafficScreen extends Screen {
   RegionPieChart westPie;
   RegionPieChart centralPie;
 
-  String currentZone = "East";  // "East", "Central", "West"
+  String currentZone = "East";
 
   Button backBtn;
   Button eastBtn, centralBtn, westBtn;
+
+  float[] routeRowY = new float[0];  // fixed declaration
 
   TrafficScreen(ArrayList<Route> east,
     ArrayList<Route> central,
@@ -1274,55 +1342,63 @@ class TrafficScreen extends Screen {
     this.east = east;
     this.central = central;
     this.west = west;
-    eastPie = new RegionPieChart(eastCoastAirports);
+    eastPie    = new RegionPieChart(eastCoastAirports);
     centralPie = new RegionPieChart(centralAirports);
-    westPie = new RegionPieChart(westCoastAirports);
+    westPie    = new RegionPieChart(westCoastAirports);
 
-    // Back button
-    backBtn = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
+    backBtn    = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
     buttons.add(backBtn);
 
+
+    int buttonW = width/3 - 30;
+
     // Zone selection buttons
-    int buttonW = width/3-30;
+
+
     int buttonH = 30;
     int spacing = 10;
-    int y = 75;
-    int xStart = width/2 - buttonW*3/2 - spacing;
-    eastBtn    = new Button(xStart, y, buttonW, buttonH, "EAST-COAST", "east", 16, false);
-    centralBtn = new Button(xStart + buttonW + spacing, y, buttonW, buttonH, "CENTRAL", "central", 16, false);
-    westBtn    = new Button(xStart + (buttonW + spacing)*2, y, buttonW, buttonH, "WEST-COAST", "west", 16, false);
+    int y       = 75;
+    int xStart  = width/2 - buttonW*3/2 - spacing;
+
+    eastBtn    = new Button(xStart,                      y, buttonW, buttonH, "EAST-COAST", "east",    16, false);
+    centralBtn = new Button(xStart + buttonW + spacing,  y, buttonW, buttonH, "CENTRAL",    "central", 16, false);
+    westBtn    = new Button(xStart + (buttonW+spacing)*2,y, buttonW, buttonH, "WEST-COAST", "west",    16, false);
 
     buttons.add(eastBtn);
     buttons.add(centralBtn);
     buttons.add(westBtn);
   }
 
-
   void drawContent() {
     ui.drawNavbar(title);
-    // Draw zone buttons with highlight for selected zone
+
     for (Button b : buttons) {
-      if (b == eastBtn && currentZone.equals("East")) highlightButton(b);
+      if      (b == eastBtn    && currentZone.equals("East"))    highlightButton(b);
       else if (b == centralBtn && currentZone.equals("Central")) highlightButton(b);
-      else if (b == westBtn && currentZone.equals("West")) highlightButton(b);
-      else b.display();  // normal button display
+      else if (b == westBtn    && currentZone.equals("West"))    highlightButton(b);
+      else b.display();
     }
 
-    // Draw the routes panel for current zone
     ArrayList<Route> currentList;
     String zoneTitle;
     if (currentZone.equals("East")) {
       currentList = east;
-      zoneTitle = "EAST COAST";
+      zoneTitle   = "EAST COAST";
     } else if (currentZone.equals("Central")) {
       currentList = central;
-      zoneTitle = "CENTRAL";
+      zoneTitle   = "CENTRAL";
     } else {
       currentList = west;
-      zoneTitle = "WEST COAST";
+      zoneTitle   = "WEST COAST";
     }
 
     drawRoutesPanel(zoneTitle, currentList);
+
+
+    if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
+    else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
+    else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
+
     if (currentZone.equals("East")) {
       eastPie.draw(width - 420, 150);
     } else if (currentZone.equals("Central")) {
@@ -1330,46 +1406,87 @@ class TrafficScreen extends Screen {
     } else if (currentZone.equals("West")) {
       westPie.draw(width - 420, 150);
     }
+
   }
 
   void highlightButton(Button b) {
-    // Draw a highlight background
-    fill(255, 215, 0);  // golden highlight
+    fill(255, 215, 0);
     rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
-
-    // Draw the button text on top
     b.display();
   }
 
   void drawRoutesPanel(String title, ArrayList<Route> routes) {
-    float panelWidth = width -50;
+    float panelWidth  = width - 50;
     float panelHeight = 560;
-    float x = width/2;
-    float yStart = 120;
+    float x           = panelWidth/2 + 25;
+    float yStart      = 120;
+    float rowH        = 28;
 
-    // Panel background
     fill(RY_BG);
     rectMode(CENTER);
     rect(x, yStart + panelHeight/2, panelWidth, panelHeight, 20);
     rectMode(CORNER);
 
-    // Panel title
     fill(0);
     textAlign(CENTER);
-    textSize(40);
-    text(title, x, yStart+60 - 20);
+    textSize(30);
+    text(title, x, yStart + 40);
 
-    // List routes
-    fill(0);
+    fill(100);
+    textSize(13);
     textAlign(LEFT);
-    textSize(24);
-    float padding = 30;
-    float y = yStart+100;
+    float lx = x - panelWidth/2 + 20;
+    text("RANK                   ROUTE                                                FLIGHTS   CANCEL%   DELAY%   ONTIME%", lx, yStart + 75);
+
+    stroke(180);
+    line(lx, yStart + 85, x + panelWidth/2 - 20, yStart + 85);
+    noStroke();
+
+    float y  = yStart + 100;
     int rank = 1;
 
-    for (Route r : routes) {
-      text(rank + ". " + r.origin + " -> " + r.destination + " (" + r.passengers + ")", x - panelWidth/2 + padding, y);
-      y += 22;
+    routeRowY = new float[routes.size()];
+
+    for (int i = 0; i < routes.size(); i++) {
+      Route r = routes.get(i);
+      routeRowY[i] = y;
+
+      boolean hovering = mouseX > lx && mouseX < x + panelWidth/2 - 20 &&
+                         mouseY > y  && mouseY < y + rowH;
+      if (hovering) {
+        fill(200, 220, 255, 150);
+        noStroke();
+        rect(lx - 5, y - 2, panelWidth - 30, rowH, 5);
+        cursor(HAND);
+      }
+
+      fill(30);
+      textSize(14);
+      textAlign(LEFT);
+      text(rank + ".", lx, y + 18);
+      text(r.origin + " > " + r.destination, lx + 40, y + 18);
+
+      textAlign(RIGHT);
+      fill(50);
+      text(r.passengers, lx + 280, y + 18);
+
+      fill(r.cancelRate > 10 ? color(220,50,50) :
+           r.cancelRate > 5  ? color(255,160,0) : color(40,180,40));
+      text(nf(r.cancelRate, 1, 1) + "%", lx + 360, y + 18);
+
+      fill(r.delayRate > 20 ? color(220,50,50) :
+           r.delayRate > 10 ? color(255,160,0) : color(40,180,40));
+      text(nf(r.delayRate, 1, 1) + "%", lx + 430, y + 18);
+
+      fill(r.onTimeRate > 80 ? color(40,180,40) :
+           r.onTimeRate > 60 ? color(255,160,0) : color(220,50,50));
+      text(nf(r.onTimeRate, 1, 1) + "%", lx + 510, y + 18);
+
+      stroke(200, 80);
+      line(lx, y + rowH, x + panelWidth/2 - 20, y + rowH);
+      noStroke();
+
+      y += rowH;
       rank++;
       if (y > yStart + panelHeight - 20) break;
     }
@@ -1378,17 +1495,31 @@ class TrafficScreen extends Screen {
   void mousePressed() {
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY)) {
-        // Back button
-        if (b.type.equals("back")) goBack();
-
-        // Zone selection buttons
-        if (b.type.equals("east")) currentZone = "East";
+        if (b.type.equals("back"))    goBack();
+        if (b.type.equals("east"))    currentZone = "East";
         if (b.type.equals("central")) currentZone = "Central";
-        if (b.type.equals("west")) currentZone = "West";
+        if (b.type.equals("west"))    currentZone = "West";
       }
     }
-  }
-}
+
+    // Check route row clicks
+    ArrayList<Route> currentList = currentZone.equals("East")    ? east :
+                                   currentZone.equals("Central") ? central : west;
+
+    float panelWidth = width - 50;
+    float lx         = 45; // x - panelWidth/2 + 20 = (panelWidth/2+25) - panelWidth/2 + 20
+
+    for (int i = 0; i < routeRowY.length && i < currentList.size(); i++) {
+      if (mouseX > lx && mouseX < lx + panelWidth - 30 &&
+          mouseY > routeRowY[i] && mouseY < routeRowY[i] + 28) {
+        selectedRoute = currentList.get(i);
+        goTo(routeDetails);
+        return;
+      }
+    }
+  } 
+
+} 
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
 class FlightsOutputScreen extends Screen {
 
@@ -1521,6 +1652,7 @@ class FlightsOutputScreen extends Screen {
             // Show confirmation screen
             ArrayList<Flight> justBooked = new ArrayList<Flight>();
             justBooked.add(selected);
+            flightConfirmedScreenObj.start();
             goTo(flightConfirmedScreen);
           } else {
             println("Already in your list!");
@@ -1745,6 +1877,7 @@ class TwoWayFlightsOutputScreen extends Screen {
       ArrayList<Flight> justBooked = new ArrayList<Flight>();
       justBooked.add(outboundFlights.get(selectedOutbound));
       justBooked.add(returnFlights.get(selectedReturn));
+      flightConfirmedScreenObj.start();
       goTo(flightConfirmedScreen);
     }
   }
@@ -1908,7 +2041,9 @@ class FlightConfirmedScreen extends Screen {
       goTo(home); 
     }
   }
-
+  void start() {
+  timer = 0;
+}
   void mousePressed() {
     goTo(home);
   }

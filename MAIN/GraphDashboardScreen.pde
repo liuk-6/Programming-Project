@@ -81,7 +81,7 @@ class GraphDashboardScreen extends Screen {
     // Draw charts
     if (currentScreen == screen1) {
       pushMatrix();
-      translate(width/2 - 265, height/2 - 150);
+      translate(300, 200);
     
        if (activeBarView.equals("Destination")) {
         destChart.draw();
@@ -106,9 +106,9 @@ class GraphDashboardScreen extends Screen {
     }
   
     // Draw title
-    fill(255);
+    fill(0);
     textSize(20);
-    text("Flight Data Visualisation Dashboard", width/2, 45);
+    text("Flight Data Visualisation Dashboard", width/2, 30);
   
     // Draw airport fact box
     if (activeFact != "") {
@@ -133,6 +133,13 @@ class GraphDashboardScreen extends Screen {
       b.display();
     }
     
+     // Draw dropdown on top of everything else
+    if (currentScreen == screen1) {
+      barDropdown.draw();
+    } else if (currentScreen == screen2) {
+      pieDropdown.draw();
+    }
+  }
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
@@ -453,7 +460,7 @@ class OriginBarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(RY_BG);
+      pg.background(255);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -516,7 +523,7 @@ class OriginBarChart {
       
       textSize(14);
       textAlign(CENTER, BOTTOM);
-      text("Most popular origin airports", pg.width/2, pg.height + 25);
+      text("Most popular origin airports", pg.width/2, pg.height + 5);
     }
    String checkClick(float mx, float my) {
       float localX = mx - 300;   // X offset of the origin chart
@@ -594,7 +601,7 @@ class PieChart {
   }
     
     void setup() {
-      pg = createGraphics(400, 350);
+      pg = createGraphics(400, 300);
     
       Table table = loadTable("flights100k.csv", "header");
       int onTime = 0;
@@ -674,7 +681,7 @@ class PieChart {
     }
     void draw(){
       pg.beginDraw();
-      pg.background(RY_BG);
+      pg.background(255);
       pg.noStroke();
     
       float total = 0;
@@ -718,7 +725,7 @@ class PieChart {
         }
       
       pg.fill(0);
-      pg.text("Percentage of On Time flights", pg.width/2 - 75 , 10); 
+      pg.text("Percentage of On Time flights", pg.width/2 , 10); 
     
       // --- Button ---
       pg.fill(200);
@@ -823,7 +830,7 @@ class BarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(RY_BG);
+      pg.background(255);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -886,7 +893,7 @@ class BarChart {
       
       textSize(14);
       textAlign(CENTER, BOTTOM);
-      text("Most popular destination airports", pg.width/2, pg.height + 25);
+      text("Most popular destination airports", pg.width/2, pg.height + 5);
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
