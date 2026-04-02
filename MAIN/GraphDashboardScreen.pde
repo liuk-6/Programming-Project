@@ -96,10 +96,10 @@ class GraphDashboardScreen extends Screen {
       popMatrix();
     }
     if (currentScreen == screen2) {
-      airlinePie.draw(500, 150);
+      airlinePie.draw(650, 150);
      if (currentScreen == screen2) {
       pushMatrix();
-      translate(200, 300);
+      translate(150, 300);
       pieChart.draw();
       popMatrix();
      }
@@ -131,13 +131,10 @@ class GraphDashboardScreen extends Screen {
       fill(255,215,0);
       rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
       b.display();
-    }
     
      // Draw dropdown on top of everything else
     if (currentScreen == screen1) {
       barDropdown.draw();
-    } else if (currentScreen == screen2) {
-      pieDropdown.draw();
     }
   }
   void mousePressed() {
@@ -460,7 +457,7 @@ class OriginBarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -681,7 +678,7 @@ class PieChart {
     }
     void draw(){
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.noStroke();
     
       float total = 0;
@@ -830,7 +827,7 @@ class BarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
