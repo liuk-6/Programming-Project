@@ -50,7 +50,7 @@ final int graphDashboard = 14;
 final int bookingsScreens = 15;
 final int flightsOutputTwoWay = 16;
 final int mapScreen = 17;
-
+final int flightConfirmedScreen = 18;
 //////// STORING CHOICE //////////////////////
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
@@ -143,7 +143,7 @@ FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
 MapScreen flightMapScreen;
-
+FlightConfirmedScreen flightConfirmedScreenObj;
 TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 BookingsScreen bookingsScreen;
 
@@ -171,6 +171,20 @@ ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
+boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+  float selectX = cardX + cardW - 120;
+  float selectY = cardY + 25;
+  float selectW = 100;
+  float selectH = 50;
+
+  return (
+    mouseX > selectX &&
+    mouseX < selectX + selectW &&
+    mouseY > selectY &&
+    mouseY < selectY + selectH
+  );
+}
 void goToWithTransition(Screen s) {
   nextScreen = s;
   transitionAlpha = 0;
@@ -446,8 +460,9 @@ void setup() {
   graphDashboardScreen  = new GraphDashboardScreen();
   flightMapScreen       = new MapScreen();
   bookingsScreen = new BookingsScreen(bookedFlights);
+  flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
-  planeHomeScreen = loadImage("PlaneImg.jpg");
+  planeHomeScreen = loadImage("pictureB.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
@@ -499,6 +514,7 @@ void draw() {
     case graphDashboard: currentScreenObject = graphDashboardScreen; break;
     case bookingsScreens: currentScreenObject = bookingsScreen; break;
     case mapScreen: currentScreenObject = flightMapScreen; break;
+    case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
     default: currentScreenObject = homeScreen; break;
   }
 

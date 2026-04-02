@@ -9,6 +9,8 @@ class GraphDashboardScreen extends Screen {
   String activeFact = "";
   boolean showDestinationChart = true; // default view
   
+  Button destBtn, originBtn;
+  
   GraphDashboardScreen() {
     // for top airlines
     loadAirlineNames();
@@ -27,11 +29,6 @@ class GraphDashboardScreen extends Screen {
   
     screen1 = new graphScreen(color(150, 200, 255));
     screen2 = new graphScreen(color(255, 200, 150));
-  
-    // Screen 1 widgets
-    screen1.addWidget(new Widget(750, 620, 140, 40, "Destination"));
-    screen1.addWidget(new Widget(900, 620, 140, 40, "Origin"));
-    screen1.addWidget(new Widget(1050, 620, 120, 40, "Pie Charts"));
     
     // Screen 2 widgets
     screen2.addWidget(new Widget(1050, 620, 120, 40, "Bar Chart"));
@@ -39,18 +36,48 @@ class GraphDashboardScreen extends Screen {
     currentScreen = screen1;
     
     buttons.add(new Button(30, 22, 80, 30, "BACK", "backPie", 15, false));
+    
+    int btnW = width/3 - 30;
+    int btnH = 30;
+    int space = 10;
+    int y = 75;
+    int xStart = width/2 - btnW - space/2;
+    
+    destBtn = new Button(xStart, y, btnW, btnH, "DESTINATION", "destination", 16, false);
+    originBtn = new Button(xStart + btnW + space, y, btnW, btnH, "ORIGIN", "origin", 16, false);
+    
+    buttons.add(destBtn);
+    buttons.add(originBtn);
   }
   
-  void draw() {
-    background(255);
+  void draw()  {
+    layout.beginPage(title);
+    drawContent();
+    drawImages();
+  }
   
-    // Draw screen background + widgets
-    currentScreen.draw();
+  void drawContent() {
+    
+    for (Button b: buttons)  {
+      if(currentScreen == screen2 && (b == destBtn || b == originBtn)) continue;
+      if (b == destBtn && showDestinationChart) highlightButton(b);
+      else if (b == originBtn && !showDestinationChart) highlightButton(b);
+      else b.display();
+    }
+    
+    float panelW = width - 50;
+    float panelH = 560;
+    float panelX = width/2;
+    float panelY = 120;
+    fill(RY_BG);
+    rectMode(CENTER);
+    rect(panelX, panelY + panelH/2, panelW, panelH, 20);
+    rectMode(CORNER);
   
     // Draw charts
     if (currentScreen == screen1) {
       pushMatrix();
-      translate(300, 200);
+      translate(width/2 - 265, height/2 - 150);
     
       if (showDestinationChart) {
         destChart.draw();
@@ -60,20 +87,20 @@ class GraphDashboardScreen extends Screen {
     
       popMatrix();
     }
+    if(currentScreen == screen2){
+    airlinePie.draw(500, 150);
     if (currentScreen == screen2) {
       pushMatrix();
       translate(200, 300);
       pieChart.draw();
       popMatrix();
-      
-      airlinePie.draw(600, 150);
-      
     }
+   }
   
     // Draw title
-    fill(0);
+    fill(255);
     textSize(20);
-    text("Flight Data Visualisation Dashboard", width/2, 30);
+    text("Flight Data Visualisation Dashboard", width/2, 45);
   
     // Draw airport fact box
     if (activeFact != "") {
@@ -84,14 +111,27 @@ class GraphDashboardScreen extends Screen {
     if (currentScreen == screen2 && pieChart.isShowingTop()) {
       drawTopAirportBox();
     }
-    for(Button b : buttons) b.display();
   }
+  
+  void highlightButton(Button b)  {
+      fill(255,215,0);
+      rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
+      b.display();
+    }
+    
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
         if(b.type.equals("backPie")) {
           goBack();
           return;
+        }
+         if(b.type.equals("destination")) {
+           showDestinationChart = true;
+         }
+         if(b.type.equals("origin")) {
+           showDestinationChart = false;
+
         }
       }
     }
@@ -120,17 +160,7 @@ class GraphDashboardScreen extends Screen {
   
     if (w == null) return;
   
-    if (w.label.equals("Destination")) {
-      showDestinationChart = true;
-    }
-    else if (w.label.equals("Origin")) {
-      showDestinationChart = false;
-    }
-    else if (w.label.equals("Pie Charts")) {
-      currentScreen = screen2;
-      activeFact = "";
-    }
-    else if (w.label.equals("Bar Chart")) {
+    if (w.label.equals("Bar Chart")) {
       currentScreen = screen1;
       activeFact = "";
     }
@@ -392,7 +422,7 @@ class OriginBarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -455,7 +485,7 @@ class OriginBarChart {
       
       textSize(14);
       textAlign(CENTER, BOTTOM);
-      text("Most popular origin airports", pg.width/2, pg.height + 5);
+      text("Most popular origin airports", pg.width/2, pg.height + 25);
     }
    String checkClick(float mx, float my) {
       float localX = mx - 300;   // X offset of the origin chart
@@ -533,7 +563,7 @@ class PieChart {
   }
     
     void setup() {
-      pg = createGraphics(400, 300);
+      pg = createGraphics(400, 350);
     
       Table table = loadTable("flights100k.csv", "header");
       int onTime = 0;
@@ -613,7 +643,7 @@ class PieChart {
     }
     void draw(){
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.noStroke();
     
       float total = 0;
@@ -657,7 +687,7 @@ class PieChart {
         }
       
       pg.fill(0);
-      pg.text("Percentage of On Time flights", pg.width/2 , 10); 
+      pg.text("Percentage of On Time flights", pg.width/2 - 75 , 10); 
     
       // --- Button ---
       pg.fill(200);
@@ -762,7 +792,7 @@ class BarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -825,7 +855,7 @@ class BarChart {
       
       textSize(14);
       textAlign(CENTER, BOTTOM);
-      text("Most popular destination airports", pg.width/2, pg.height + 5);
+      text("Most popular destination airports", pg.width/2, pg.height + 25);
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
