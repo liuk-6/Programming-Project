@@ -50,12 +50,11 @@ final int graphDashboard = 14;
 final int bookingsScreens = 15;
 final int flightsOutputTwoWay = 16;
 final int mapScreen = 17;
-<<<<<<< HEAD
 final int routeDetails = 18;
 
-=======
+
 final int flightConfirmedScreen = 18;
->>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
+
 //////// STORING CHOICE //////////////////////
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
@@ -148,12 +147,12 @@ FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
 MapScreen flightMapScreen;
-<<<<<<< HEAD
+
 RouteDetailsScreen routeDetailsScreen;
 
-=======
+
 FlightConfirmedScreen flightConfirmedScreenObj;
->>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
+
 TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 BookingsScreen bookingsScreen;
 Route selectedRoute = null;
@@ -551,47 +550,9 @@ void draw() {
   }
 
   switch(currentScreen) {
-<<<<<<< HEAD
-  case home:
-    currentScreenObject = homeScreen;
-    break;
-  case queries:
-    currentScreenObject = queriesScreen;
-    break;
-  case flightsSearch:
-    currentScreenObject = flightsSearchScreen;
-    break;
-  case flightsDate:
-    currentScreenObject = flightDateScreen;
-    break;
-  case flightsTraffic:
-    currentScreenObject = trafficScreen;
-    break;
-  case flightsOutput:
-    currentScreenObject = flightsOutputScreen;
-    break;
-  case flightsOutputTwoWay:
-    currentScreenObject = twoWayFlightsOutputScreen;
-    break;  // <-- added
-  case dashboard:
-    currentScreenObject = dashboardScreen;
-    break;
-  case graphDashboard:
-    currentScreenObject = graphDashboardScreen;
-    break;
-  case bookingsScreens:
-    currentScreenObject = bookingsScreen;
-    break;
-  case mapScreen:
-    currentScreenObject = flightMapScreen;
-    break;
-  case routeDetails:
-    currentScreenObject = routeDetailsScreen;
-    break;
-  default:
-    currentScreenObject = homeScreen;
-    break;
-=======
+
+
+
     case home: currentScreenObject = homeScreen; break;
     case queries: currentScreenObject = queriesScreen; break;
     case flightsSearch: currentScreenObject = flightsSearchScreen; break;
@@ -605,7 +566,7 @@ void draw() {
     case mapScreen: currentScreenObject = flightMapScreen; break;
     case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
     default: currentScreenObject = homeScreen; break;
->>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
+
   }
 
   if (currentScreenObject != null) currentScreenObject.draw();

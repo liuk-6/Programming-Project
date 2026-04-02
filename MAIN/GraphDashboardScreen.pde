@@ -5,15 +5,15 @@ class GraphDashboardScreen extends Screen {
   graphScreen screen1, screen2;
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
-<<<<<<< Updated upstream
 
-  String activeFact = "";
+
+
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
   float ImgX;
   float ImgY;
-=======
->>>>>>> Stashed changes
+
+
   
   // --- New rate charts ---
   AirlineRateChart cancelRateChart;

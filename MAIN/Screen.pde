@@ -1270,12 +1270,12 @@ class TrafficScreen extends Screen {
     backBtn    = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
     buttons.add(backBtn);
 
-<<<<<<< HEAD
+
     int buttonW = width/3 - 30;
-=======
+
     // Zone selection buttons
-    int buttonW = width/3-30;
->>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
+
+
     int buttonH = 30;
     int spacing = 10;
     int y       = 75;
@@ -1314,12 +1314,12 @@ class TrafficScreen extends Screen {
     }
 
     drawRoutesPanel(zoneTitle, currentList);
-<<<<<<< HEAD
+
 
     if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
     else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
     else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
-=======
+
     if (currentZone.equals("East")) {
       eastPie.draw(width - 420, 150);
     } else if (currentZone.equals("Central")) {
@@ -1327,7 +1327,7 @@ class TrafficScreen extends Screen {
     } else if (currentZone.equals("West")) {
       westPie.draw(width - 420, 150);
     }
->>>>>>> e5063c4999cd1466849abdd0bfaea2dffe2129ec
+
   }
 
   void highlightButton(Button b) {
