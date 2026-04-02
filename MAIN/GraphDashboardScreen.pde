@@ -523,7 +523,7 @@ class OriginBarChart {
       text("Most popular origin airports", pg.width/2, pg.height + 5);
     }
    String checkClick(float mx, float my) {
-      float localX = mx - 300;   // X offset of the origin chart
+      float localX = mx - 320;   // X offset of the origin chart
       float localY = my - 200;   // Y offset of the origin chart
     
       for (AirportButton b : buttons) {
@@ -894,7 +894,7 @@ class BarChart {
     }
     String checkClick(float mx, float my) {
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) { 
+        if (b.isInside(mx - (width/2 - 285), my - (height/2 - 150))) { 
           // subtract translation offset (50,50)
           return b.code;
         }
