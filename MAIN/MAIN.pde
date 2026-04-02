@@ -459,7 +459,7 @@ void setup() {
   dashboardScreen       = new DashboardScreen();
   graphDashboardScreen  = new GraphDashboardScreen();
   flightMapScreen       = new MapScreen();
-  bookingsScreen = new BookingsScreen(bookedFlights);
+  bookingsScreen = new BookingsScreen();
   flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
   planeHomeScreen = loadImage("pictureB.jpg");
