@@ -16,6 +16,8 @@ class GraphDashboardScreen extends Screen {
   PImage currentAirportImg;
   float ImgX;
   float ImgY;
+  float w;
+  float h;
 
   Dropdown barDropdown;
   
@@ -80,9 +82,12 @@ class GraphDashboardScreen extends Screen {
   
     // Draw charts
     if (currentScreen == screen1) {
+      
+      float chartX = (width - 530)/2;
+      float chartY = (height - 250) /2;
       pushMatrix();
-      translate(300, 200);
-    
+      translate(chartX, chartY);
+      
        if (activeBarView.equals("Destination")) {
         destChart.draw();
       } else if (activeBarView.equals("Origin")) {
@@ -106,12 +111,12 @@ class GraphDashboardScreen extends Screen {
     }
   
     // Draw title
-    fill(0);
-    textSize(20);
-    text("Flight Data Visualisation Dashboard", width/2, 30);
+    fill(255);
+    textSize(30);
+    text("Flight Data Visualisation Dashboard", width/2, 60);
   
     // Draw airport fact box
-    if (activeFact != "") {
+    if (activeFact != "" && currentScreen == screen1) {
       drawInfoBox(activeFact);
     }
   
@@ -181,10 +186,12 @@ class GraphDashboardScreen extends Screen {
     if (w.label.equals("Pie Charts")) {
       currentScreen = screen2;
       activeFact = "";
+      currentAirportImg = null;
     }
     else if (w.label.equals("Bar Chart")) {
       currentScreen = screen1;
       activeFact = "";
+      currentAirportImg = null;
     }
   }
   
@@ -194,76 +201,100 @@ class GraphDashboardScreen extends Screen {
   
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
-      activeFact = "LAX — \nLos Angeles International Airport. \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n It has an official song.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "LAX — \nLos Angeles International Airport. \n \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n \n It has an official song.";
+      currentAirportImg = loadImage("LAX.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 45;
       
     } else if (code.equals("JFK")) {
-      activeFact = "JFK — \n John F Kennedy International Airport \n There is a pet-only terminal.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "JFK — \n John F Kennedy International Airport \n \n There is a pet-only terminal.";
+      currentAirportImg = loadImage("JFK.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
       
     } else if (code.equals("SEA")) {
-      activeFact = "SEA — \n Seattle-Tacoma International Airport. \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "SEA — \n Seattle-Tacoma International Airport.  \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
+      currentAirportImg = loadImage("SEA.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 60;
+      h = 40;
       
     } else if (code.equals("HON")) {
-      activeFact = "HON — \n Honolulu International Airport. \n The largest airport in Hawaii.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "HON — \n Honolulu International Airport. \n \n The largest airport in Hawaii.";
+      currentAirportImg = loadImage("HON.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
   
     } else if (code.equals("LGA")) {
-      activeFact = "LGA — \n LaGuardia Airport. \n The airport lies partly on reclaimed land, created using landfill .";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "LGA — \n LaGuardia Airport. \n \n The airport lies partly on reclaimed land, created using landfill .";
+      currentAirportImg = loadImage("LGA.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 60;
+      h = 40;
     
     } else if (code.equals("PHX")) {
-      activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n It is Arizona's largest and busiest airport. .";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n \n It is Arizona's largest and busiest airport. .";
+      currentAirportImg = loadImage("PHX.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     }else if (code.equals("MCO")) {
-      activeFact = "MCO — \n Orlando International Airport. \n Has over $41 billion in economic impact.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "MCO — \n Orlando International Airport. \n \n Has over $41 billion in economic impact.";
+      currentAirportImg = loadImage("MCO.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 80;
+      h = 60;
     
     } else if (code.equals("ATL")) {
-      activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
+      activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
       currentAirportImg = loadImage("ATL.jpg");
-      ImgX = 50;
-      ImgY = height - 270;
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     }else if (code.equals("DFW")) {
-      activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n it serves 269 destinations (196 domestic and 73 international).";
+      activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n \n it serves 269 destinations (196 domestic and 73 international).";
       currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
     
     }else if (code.equals("CLT")) {
-      activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolinas GDP.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "CLT — \n Charlotte Douglas International Airport. \n \n Contributes about 5% of North Carolinas GDP.";
+      currentAirportImg = loadImage("CLT.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
     
     }else if (code.equals("DEN")) {
-      activeFact = "DEN — \n Denver International Airport . \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "DEN — \n Denver International Airport . \n \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
+      currentAirportImg = loadImage("DEN.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
     
     } else if (code.equals("ORD")) {
-      activeFact = "ORD — \n Chicago Ohare International Airport. \n  Built in February of 1944.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "ORD — \n Chicago Ohare International Airport. \n \n  Built in February of 1944.";
+      currentAirportImg = loadImage("ORD.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     } else {
       activeFact = code + " — No facts available yet.";
@@ -271,10 +302,10 @@ class GraphDashboardScreen extends Screen {
   }
 
   void drawInfoBox(String msg) {
-    int boxW = 300;
+    int boxW = 250;
     int boxH = 120;
-    int x = 50;
-    int y = height - boxH -150;
+    int x = 700;
+    int y = height - 460;
   
     // background rectangle
     fill(255);
@@ -286,11 +317,11 @@ class GraphDashboardScreen extends Screen {
     fill(0);
     textSize(14);
     textAlign(LEFT, TOP);
-    text(msg, x + 15, y + 15, boxW - 30, boxH - 30);
+    text(msg, x + 20, y + 25, boxW - 30, boxH - 30);
     
     if( currentAirportImg !=null)  {
       imageMode(CENTER);
-      image(currentAirportImg, ImgX, ImgY, 70, 40);
+      image(currentAirportImg, ImgX, ImgY, w, h);
       imageMode(CORNER);
     }
  }
@@ -523,11 +554,11 @@ class OriginBarChart {
       text("Most popular origin airports", pg.width/2, pg.height + 5);
     }
    String checkClick(float mx, float my) {
-      float localX = mx - 320;   // X offset of the origin chart
-      float localY = my - 200;   // Y offset of the origin chart
+      float localX = mx - (width - 530)/2;   // X offset of the origin chart
+      float localY = my - (height - 250)/2;   // Y offset of the origin chart
     
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) {
+        if (b.isInside(localX, localY)) {
           return b.code;
         }
       }
@@ -893,8 +924,10 @@ class BarChart {
       text("Most popular destination airports", pg.width/2, pg.height + 5);
     }
     String checkClick(float mx, float my) {
+      float localX = mx - (width - 530)/2;
+      float localY = my - (height - 250)/2;
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - (width/2 - 285), my - (height/2 - 150))) { 
+        if (b.isInside(localX, localY)) { 
           // subtract translation offset (50,50)
           return b.code;
         }
@@ -1076,17 +1109,14 @@ class AirlineRateChart {
     pg.fill(0);
     pg.textSize(11);
     
-    for (int i = 5; i <= maxPercent; i += 5) {
+    float percent = 5;
+    
+    for (int i = 0; i <= maxPercent; i += percent) {
       float ty = map(i, 0, maxPercent, pg.height - 30, 10);
       pg.line(35, ty, 40, ty);
       pg.text(i + "%", 33, ty);
     }
     
-    if (maxPercentage % 5 != 0) {
-      float ty = map(maxPercentage, 0, maxPercent, pg.height - 30, 10);
-      pg.line(35, ty, 40, ty);
-      pg.text(nf(maxPercentage, 1, 1) + "%", 33, ty);
-    }
     
     float barWidth = (pg.width - 50) / (float)rates.length;
 
