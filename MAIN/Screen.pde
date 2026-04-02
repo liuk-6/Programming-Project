@@ -1759,150 +1759,133 @@ class TwoWayFlightsOutputScreen extends Screen {
   }
 }
 class BookingsScreen extends Screen {
+  float scrollY = 0;
+  float scrollSpeed = 40;
+  float cardHeight = 80; // Slimmer cards for the list
+  float listX = 50;      // Positioned on the left
+  
+  Flight selectedForPass = null; // The flight currently being viewed as a boarding pass
 
-  ArrayList<Flight> bookings;
-  ArrayList<Button> buttons;
-  int selectedBooking = -1;
-
-  float scrollY = 0;           // scroll offset
-  float cardHeight = 110;      // height of each flight card
-  float topMargin = 130;       // space from top before first card
-  float scrollSpeed = 40;      // scroll speed per mouse wheel
-
-  BookingsScreen(ArrayList<Flight> bookings) {
-    this.bookings = bookings;
-
-    buttons = new ArrayList<Button>();
+  BookingsScreen() {
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
   void draw() {
     background(RY_BG);
-
-    // --- Header ---
+    
+    // --- HEADER ---
     fill(RY_BLUE);
-    noStroke();
     rect(0, 0, width, 80);
-
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(24);
-    text("My Bookings", width / 2, 35);
+    text("MY BOOKED FLIGHTS", width/2, 40);
 
-    textSize(14);
-    fill(255, 200);
-    text(bookings.size() + " flights booked", width / 2, 60);
-
-    // --- Draw flight cards ---
+    //  flight list
     pushMatrix();
     translate(0, scrollY);
-
-    float yOffset = topMargin;
-
-    for (int i = 0; i < bookings.size(); i++) {
-      Flight f = bookings.get(i);
-      drawFlightCard(width / 2 - 450, yOffset, f, i == selectedBooking);
-      yOffset += cardHeight;
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      drawFlightTab(listX, 120 + i * (cardHeight + 10), bookedFlights.get(i));
     }
-
     popMatrix();
 
-    // --- Buttons ---
+    //  boarding pass
+    if (selectedForPass != null) {
+      drawBoardingPass(width / 2 + 50, 120, selectedForPass);
+    } else {
+      fill(150);
+      textAlign(CENTER);
+      text("Select a flight to view boarding pass", width * 0.75, height / 2);
+    }
+
     for (Button b : buttons) b.display();
   }
 
-  void drawFlightCard(float x, float y, Flight f, boolean selected) {
-    float w = 900;
-    float h = 100;
-
-    if (selected) fill(255, 220, 220);
-    else fill(255);
-    stroke(220);
-    rect(x, y, w, h, 8);
-
+  // Simple card showing flights
+  void drawFlightTab(float x, float y, Flight f) {
+    boolean isSelected = (f == selectedForPass);
+    
+    fill(isSelected ? RY_GOLD : 255);
+    stroke(RY_BLUE);
+    strokeWeight(isSelected ? 2 : 1);
+    rect(x, y, width/3, cardHeight, 10);
+    
     fill(RY_BLUE);
-    textAlign(LEFT, TOP);
-    textSize(12);
-    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
-
+    textAlign(LEFT, CENTER);
     textSize(18);
-    text(f.origin + " → " + f.destination, x + 20, y + 45);
+    text(f.origin + "  →  " + f.destination, x + 20, y + cardHeight/2);
+    
+    text(">", x + width/3 - 30, y + cardHeight/2);
+  }
 
-    textSize(14);
-    fill(120);
-    text("Departure: " + formatTime(f.scheduledDepartureTime), x + 20, y + 75);
-    text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
-
-    // CANCEL button
-    fill(RY_GOLD);
-    noStroke();
-    rect(x + w - 120, y + 25, 100, 50, 6);
-
+  void drawBoardingPass(float x, float y, Flight f) {
+    float w = 400;
+    float h = 500;
+    
+    fill(255);
+    stroke(200);
+    rect(x, y, w, h, 15);
+    
     fill(RY_BLUE);
-    textAlign(CENTER, CENTER);
-    textSize(16);
-    text("CANCEL", x + w - 70, y + 50);
+    rect(x, y, w, 60, 15, 15, 0, 0);
+    fill(255);
+    textSize(20);
+    textAlign(CENTER);
+    text("BOARDING PASS", x + w/2, y + 35);
+    
+    fill(50);
+    textAlign(LEFT);
+    textSize(14);
+    float textY = y + 100;
+    
+    detailRow(x + 30, textY, "PASSENGER", "VALUED CUSTOMER");
+    detailRow(x + 30, textY + 60, "FLIGHT", f.carrier + " " + f.flightNumber);
+    detailRow(x + 30, textY + 120, "DATE", f.date);
+    detailRow(x + 30, textY + 180, "FROM", f.originCityName + " (" + f.origin + ")");
+    detailRow(x + 30, textY + 240, "TO", f.destinationCityName + " (" + f.destination + ")");
+    detailRow(x + 30, textY + 300, "DEPARTS", formatTime(f.scheduledDepartureTime));
+    
+    // Barcode
+    fill(0);
+    for(int i=0; i<w-60; i+=4) {
+      rect(x + 30 + i, y + h - 60, random(1, 3), 40);
+    }
+  }
+
+  void detailRow(float x, float y, String label, String value) {
+    fill(150);
+    textSize(12);
+    text(label, x, y);
+    fill(RY_BLUE);
+    textSize(18);
+    text(value, x, y + 25);
   }
 
   void mousePressed() {
-    // Buttons
+    // Back Button
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY)) {
-        if (b.type.equals("back")) goBack();
-        if (b.type.equals("cancel") && selectedBooking != -1) {
-          Flight f = bookings.get(selectedBooking);
-          bookedFlights.remove(f);
-          bookings.remove(selectedBooking);
-          selectedBooking = -1;
-        }
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+        goBack();
+        return;
       }
     }
 
-    // Click on cards + cancel buttons
-    for (int i = 0; i < bookings.size(); i++) {
-
-      float cardX = width / 2 - 450;
-      float cardY = topMargin + i * cardHeight + scrollY;
-
-      float w = 900;
-      float h = 100;
-
-      // ---- CANCEL BUTTON AREA ----
-      float cancelX = cardX + w - 120;
-      float cancelY = cardY + 25;
-      float cancelW = 100;
-      float cancelH = 50;
-
-      // If cancel button clicked
-      if (mouseX > cancelX && mouseX < cancelX + cancelW &&
-        mouseY > cancelY && mouseY < cancelY + cancelH) {
-
-        Flight f = bookings.get(i);
-        bookings.remove(i);
-        return; // stop checking after deletion
-      }
-
-      // ---- CARD SELECTION ----
-      if (mouseX > cardX && mouseX < cardX + w &&
-        mouseY > cardY && mouseY < cardY + h) {
-        selectedBooking = i;
+    // List selection logic
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      float cardY = 120 + i * (cardHeight + 10) + scrollY;
+      if (mouseX > listX && mouseX < listX + width/3 &&
+          mouseY > cardY && mouseY < cardY + cardHeight) {
+        selectedForPass = bookedFlights.get(i);
       }
     }
-  }
-
-  void mouseWheel(MouseEvent event) {
-    scrollY += -event.getCount() * scrollSpeed;
-
-    float totalHeight = topMargin + bookings.size() * cardHeight;
-    float minScroll = min(0, height - totalHeight);
-    scrollY = constrain(scrollY, minScroll, 0);
   }
 }
+
 class FlightConfirmedScreen extends Screen {
 
   String message;
-  int timer = 0;         // to track frames (for auto-return)
-  int delayFrames = 360; // e.g., 2 seconds if frameRate = 60
+  int timer = 0;         
+  int delayFrames = 360; 
 
   FlightConfirmedScreen(String msg) {
     this.message = msg;
@@ -1922,12 +1905,11 @@ class FlightConfirmedScreen extends Screen {
 
     timer++;
     if (timer >= delayFrames) {
-      goTo(home); // change back to home automatically
+      goTo(home); 
     }
   }
 
   void mousePressed() {
-    // optional: allow skipping the timer
     goTo(home);
   }
 }
