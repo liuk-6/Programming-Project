@@ -6,14 +6,17 @@ class GraphDashboardScreen extends Screen {
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
   
-
   String activeFact = "";
+  String activeBarView = "Destination";
+  AirlineRateChart cancelRateChart;
+  AirlineRateChart delayRateChart;
+  HashMap<String, AirlineStats> airlineStats;
+  
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
   float ImgX;
   float ImgY;
-  
-  Button destBtn, originBtn;
+
   Dropdown barDropdown;
   
   GraphDashboardScreen() {
@@ -34,40 +37,35 @@ class GraphDashboardScreen extends Screen {
   
     screen1 = new graphScreen(color(150, 200, 255));
     screen2 = new graphScreen(color(255, 200, 150));
-    
-    // Screen 2 widgets
-    screen2.addWidget(new Widget(1050, 620, 120, 40, "Bar Chart"));
+  
+        // --- Rate charts (setup) ---
+    airlineStats = computeAirlineStats();
+    cancelRateChart = new AirlineRateChart();
+    cancelRateChart.mode = "cancel";
+    cancelRateChart.compute(airlineStats);
+    delayRateChart = new AirlineRateChart();
+    delayRateChart.mode = "delay";
+    delayRateChart.compute(airlineStats);
+ 
+    // Screen 1: bar chart dropdown + Pie Charts widget (kept)
+    String[] barOptions = {"Destination", "Origin", "% Cancelled", "% Delayed"};
+    barDropdown = new Dropdown(30, 75, 280, 40, barOptions);
+    screen1.addWidget(new Widget(1050, 620, 120, 40, "Pie Charts"));
+ 
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   
     currentScreen = screen1;
     
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "backPie", 15, false));
-    
-    int btnW = width/3 - 30;
-    int btnH = 30;
-    int space = 10;
-    int y = 75;
-    int xStart = width/2 - btnW - space/2;
-    
-    destBtn = new Button(xStart, y, btnW, btnH, "DESTINATION", "destination", 16, false);
-    originBtn = new Button(xStart + btnW + space, y, btnW, btnH, "ORIGIN", "origin", 16, false);
-    
-    buttons.add(destBtn);
-    buttons.add(originBtn);
-    barDropdown = new Dropdown(xStart, y, btnW, btnH, new String[]{"Destination","Origin"});
   }
   
-  void draw()  {
+  void draw() {
     layout.beginPage(title);
     drawContent();
     drawImages();
   }
-  
   void drawContent() {
     
-    for (Button b: buttons)  {
-      if(b == destBtn || b == originBtn) continue;
-      b.display();
-    }
+     for (Button b: buttons) b.display();
     
     float panelW = width - 50;
     float panelH = 560;
@@ -85,23 +83,27 @@ class GraphDashboardScreen extends Screen {
       pushMatrix();
       translate(width/2 - 265, height/2 - 150);
     
-      if (showDestinationChart) {
+       if (activeBarView.equals("Destination")) {
         destChart.draw();
-      } else {
+      } else if (activeBarView.equals("Origin")) {
         originChart.draw();
+      } else if (activeBarView.equals("% Cancelled")) {
+        cancelRateChart.draw(0, 0);
+      } else if (activeBarView.equals("% Delayed")) {
+        delayRateChart.draw(0, 0);
       }
     
       popMatrix();
     }
-    if(currentScreen == screen2){
-    airlinePie.draw(500, 150);
     if (currentScreen == screen2) {
+      airlinePie.draw(500, 150);
+     if (currentScreen == screen2) {
       pushMatrix();
       translate(200, 300);
       pieChart.draw();
       popMatrix();
+     }
     }
-   }
   
     // Draw title
     fill(255);
@@ -117,9 +119,15 @@ class GraphDashboardScreen extends Screen {
     if (currentScreen == screen2 && pieChart.isShowingTop()) {
       drawTopAirportBox();
     }
+    for(Button b : buttons) b.display();
+    
+     // Draw dropdown on top of everything else
+    if (currentScreen == screen1) {
+      barDropdown.draw();
+    }
   }
   
-  void highlightButton(Button b)  {
+    void highlightButton(Button b)  {
       fill(255,215,0);
       rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
       b.display();
@@ -128,15 +136,9 @@ class GraphDashboardScreen extends Screen {
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
-        if(b.type.equals("backPie")) {
+        if(b.type.equals("back")) {
           goBack();
           return;
-        }
-         if(b.type.equals("destination")) {
-           showDestinationChart = true;
-         }
-         if(b.type.equals("origin")) {
-           showDestinationChart = false;
         }
       }
     }
@@ -145,7 +147,7 @@ class GraphDashboardScreen extends Screen {
     
       String chosen = barDropdown.mousePressed(mouseX, mouseY);
       if(chosen != null)  {
-        showDestinationChart = chosen.equals("Destination");
+        activeBarView = chosen;
         activeFact = "";
         return;
       }
@@ -172,7 +174,11 @@ class GraphDashboardScreen extends Screen {
   
     if (w == null) return;
   
-    if (w.label.equals("Bar Chart")) {
+    if (w.label.equals("Pie Charts")) {
+      currentScreen = screen2;
+      activeFact = "";
+    }
+    else if (w.label.equals("Bar Chart")) {
       currentScreen = screen1;
       activeFact = "";
     }
@@ -932,12 +938,20 @@ class Dropdown {
 
         boolean hov = (mouseX > x && mouseX < x+w && mouseY > iy && mouseY < iy+h);
 
-        fill(hov ? #3D5A80 : (i == selectedIndex ? #2B3F60 : #1C2E4A));
+        fill(i == selectedIndex ? #2B3F60 : #1C2E4A);
         rect(x, iy, w, h, (i == options.length-1) ? 8 : 0);
-
+        if(i == selectedIndex)  {
+          stroke(255,215,0);
+          strokeWeight(2);
+          noFill();
+          rect(x, iy, w, h, ( i == options.length-1) ? 8 : 0);
+          noStroke();
+        }
+          
         fill(255);
         textAlign(LEFT, CENTER);
         text(options[i], x+10, iy+h/2);
+
       }
     }
   }
@@ -961,5 +975,102 @@ class Dropdown {
       }
     }
     return null;
+  }
+}
+
+class AirlineStats {
+  int total = 0;
+  int cancelled = 0;
+  int delayed = 0;
+}
+
+HashMap<String, AirlineStats> computeAirlineStats() {
+  HashMap<String, AirlineStats> stats = new HashMap<>();
+  Table table = loadTable("flights100k.csv", "header");
+
+  for (TableRow row : table.rows()) {
+    String carrier = row.getString("MKT_CARRIER");
+    if (carrier == null || carrier.trim().equals("")) continue;
+
+    AirlineStats s = stats.getOrDefault(carrier, new AirlineStats());
+    s.total++;
+
+    if (row.getInt("CANCELLED") == 1) {
+      s.cancelled++;
+    }
+
+    int dep = row.getInt("DEP_TIME");
+    int crs = row.getInt("CRS_DEP_TIME");
+    int depMin = (dep / 100) * 60 + (dep % 100);
+    int crsMin = (crs / 100) * 60 + (crs % 100);
+    int delay = depMin - crsMin;
+    if (delay > 30) s.delayed++;
+
+    stats.put(carrier, s);
+  }
+  return stats;
+}
+
+class AirlineRateChart {
+  PGraphics pg;
+  String[] airlines;
+  float[] rates;
+  String mode = "cancel";
+
+  AirlineRateChart() {
+    pg = createGraphics(500, 350);
+  }
+
+  void compute(HashMap<String, AirlineStats> stats) {
+    ArrayList<String> keys = new ArrayList<>(stats.keySet());
+
+    keys.sort((a, b) -> {
+      AirlineStats sa = stats.get(a);
+      AirlineStats sb = stats.get(b);
+      float ra = (mode.equals("cancel")) ? (float)sa.cancelled/sa.total : (float)sa.delayed/sa.total;
+      float rb = (mode.equals("cancel")) ? (float)sb.cancelled/sb.total : (float)sb.delayed/sb.total;
+      return Float.compare(rb, ra);
+    });
+
+    int limit = min(10, keys.size());
+    airlines = new String[limit];
+    rates = new float[limit];
+
+    for (int i = 0; i < limit; i++) {
+      airlines[i] = keys.get(i);
+      AirlineStats s = stats.get(airlines[i]);
+      rates[i] = (mode.equals("cancel")) ? (float)s.cancelled/s.total : (float)s.delayed/s.total;
+    }
+  }
+
+  void draw(float x, float y) {
+    pg.beginDraw();
+    pg.background(255);
+
+    pg.textAlign(CENTER, CENTER);
+    pg.textSize(16);
+    pg.fill(0);
+    pg.text((mode.equals("cancel") ? "Cancellation Rate" : "Delay Rate") + " by Airline", pg.width/2, 20);
+
+    float barWidth = (pg.width - 80) / rates.length;
+    float maxVal = 0;
+    for (float r : rates) maxVal = max(maxVal, r);
+
+    for (int i = 0; i < rates.length; i++) {
+      float h = map(rates[i], 0, maxVal, 0, pg.height - 100);
+      float bx = 40 + i * barWidth;
+      float by = pg.height - 40 - h;
+
+      pg.fill(100, 150, 255);
+      pg.rect(bx, by, barWidth - 10, h);
+
+      pg.fill(0);
+      pg.textSize(11);
+      pg.text(airlines[i], bx + (barWidth - 10)/2, pg.height - 25);
+      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 10)/2, by - 10);
+    }
+
+    pg.endDraw();
+    image(pg, x, y);
   }
 }

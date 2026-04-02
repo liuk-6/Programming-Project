@@ -211,19 +211,23 @@ class TopAirlinesPie {
     float otherTotal = 0;
 
     for (int i = 0; i < keys.size(); i++) {
-      String carrier = keys.get(i);
-      int count = counts.get(carrier);
-
-      if (i < limit) {
-        labels[i] = getAirlineName(carrier); // FULL NAME
-        values[i] = count;
-      } else {
-        otherTotal += count;
-      }
+        otherTotal += counts.get(keys.get(i));
     }
 
-    labels[limit] = "Other Airlines";
-    values[limit] = otherTotal;
+    // Only add an "Other" slice when it actually has flights
+    int slices = (otherTotal > 0) ? limit + 1 : limit;
+    labels = new String[slices];
+    values = new float[slices];
+ 
+    for (int i = 0; i < limit; i++) {
+      labels[i] = getAirlineName(keys.get(i));
+      values[i] = counts.get(keys.get(i));
+    }
+ 
+    if (otherTotal > 0) {
+      labels[limit] = "Other Airlines";
+      values[limit] = otherTotal;
+    }
 
     color[] palette = {
       color(#f0c571),
