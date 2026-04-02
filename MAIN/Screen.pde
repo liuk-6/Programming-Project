@@ -85,35 +85,24 @@ class HomeScreen extends Screen {
 
     slides = new PImage[]{
       planeHomeScreen, // your existing image
-      loadImage("PlaneImg.jpg"), // add more as needed
-      loadImage("pictureA.jpg"),
+      //loadImage("pictureA.jpg"),
       loadImage("pictureC.jpg"),
-      loadImage("airportA.jpg"),
       loadImage("pictureD.jpg"),
       loadImage("pictureE.jpg"),
       loadImage("pictureF.jpg"),
-      loadImage("airportB.jpg"),
       loadImage("pictureG.jpg"),
-      loadImage("airplaneA.jpg"),
       loadImage("pictureH.jpg"),
-      loadImage("airportB.jpg")
 
     };
 
     captions = new String[]{
-      "america 1",
-      "america 2",
-      "JFK International Airport, New York, USA",
-      "bla",
-      "blaa",
-      "blaaa",
-      "we",
-      "wee",
-      "weee",
-      "shush",
-      "shuush",
-      "shuuush",
-      "hehehe"
+      "Manhattan, New York City, USA",
+      "Los Angelos, California, USA",
+      "Capital Building, Washington D.C., USA",
+      "Miami Beach, Florida, USA",
+      "Chicago, Illinois, USA",
+      "San Francisco, California, USA",
+      "Seattle, Washington, USA",
     };
 
     arrowY      = height * 0.65;
