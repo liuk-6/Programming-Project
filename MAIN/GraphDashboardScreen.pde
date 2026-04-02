@@ -5,6 +5,7 @@ class GraphDashboardScreen extends Screen {
   graphScreen screen1, screen2;
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
+  
 
   String activeFact = "";
   boolean showDestinationChart = true; // default view
@@ -13,6 +14,7 @@ class GraphDashboardScreen extends Screen {
   float ImgY;
   
   Button destBtn, originBtn;
+  Dropdown barDropdown;
   
   GraphDashboardScreen() {
     // for top airlines
@@ -51,6 +53,7 @@ class GraphDashboardScreen extends Screen {
     
     buttons.add(destBtn);
     buttons.add(originBtn);
+    barDropdown = new Dropdown(xStart, y, btnW, btnH, new String[]{"Destination","Origin"});
   }
   
   void draw()  {
@@ -62,10 +65,8 @@ class GraphDashboardScreen extends Screen {
   void drawContent() {
     
     for (Button b: buttons)  {
-      if(currentScreen == screen2 && (b == destBtn || b == originBtn)) continue;
-      if (b == destBtn && showDestinationChart) highlightButton(b);
-      else if (b == originBtn && !showDestinationChart) highlightButton(b);
-      else b.display();
+      if(b == destBtn || b == originBtn) continue;
+      b.display();
     }
     
     float panelW = width - 50;
@@ -76,6 +77,8 @@ class GraphDashboardScreen extends Screen {
     rectMode(CENTER);
     rect(panelX, panelY + panelH/2, panelW, panelH, 20);
     rectMode(CORNER);
+    
+    if(currentScreen == screen1) barDropdown.draw();
   
     // Draw charts
     if (currentScreen == screen1) {
@@ -134,13 +137,19 @@ class GraphDashboardScreen extends Screen {
          }
          if(b.type.equals("origin")) {
            showDestinationChart = false;
-
         }
       }
     }
     
     if (currentScreen == screen1) {
     
+      String chosen = barDropdown.mousePressed(mouseX, mouseY);
+      if(chosen != null)  {
+        showDestinationChart = chosen.equals("Destination");
+        activeFact = "";
+        return;
+      }
+      
       // Destination chart buttons
       String airport = destChart.checkClick(mouseX, mouseY);
       if (airport != null) {
@@ -572,9 +581,9 @@ class PieChart {
 
   PieChart(){
     colours = new color[] {
-      color(149, 148, 109),   // on-time
-      color(216, 174, 112),    // delayed
-      color(193, 105, 82)    // cancelled
+      color(#4F772D),
+      color(#FCBF49),
+      color(#D62828)
     };
   }
     
@@ -882,4 +891,75 @@ class BarChart {
       }
       return null;
     }
+}
+    // ===== DROPDOWN CLASS =====
+class Dropdown {
+  float x, y, w, h;
+  String[] options;
+  int selectedIndex = 0;
+  boolean openDropDown = false;
+  boolean hovering = false;
+
+  Dropdown(float x, float y, float w, float h, String[] options) {
+    this.x=x; this.y=y; this.w=w; this.h=h; this.options=options;
+  }
+
+  String selected() {
+    return options[selectedIndex];
+  }
+
+  void draw() {
+    // --- MAIN BOX HOVER CHECK ---
+    hovering = (mouseX > x && mouseX < x+w && mouseY > y && mouseY < y+h);
+
+    // --- MAIN BOX ---
+    noStroke();
+    fill(hovering ? #3D5A80 : RY_BLUE);
+    rect(x, y, w, h, 8);
+
+    fill(255);
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    text(options[selectedIndex], x+10, y+h/2);
+
+    textAlign(RIGHT, CENTER);
+    text(openDropDown ? "▲" : "▼", x+w-8, y+h/2);
+
+    // --- OPTIONS LIST ---
+    if (openDropDown) {
+      for (int i=0; i<options.length; i++) {
+        float iy = y + h + i*h;
+
+        boolean hov = (mouseX > x && mouseX < x+w && mouseY > iy && mouseY < iy+h);
+
+        fill(hov ? #3D5A80 : (i == selectedIndex ? #2B3F60 : #1C2E4A));
+        rect(x, iy, w, h, (i == options.length-1) ? 8 : 0);
+
+        fill(255);
+        textAlign(LEFT, CENTER);
+        text(options[i], x+10, iy+h/2);
+      }
+    }
+  }
+
+  String mousePressed(int mx, int my) {
+    if (openDropDown) {
+      for (int i=0; i<options.length; i++) {
+        float iy = y + h + i*h;
+        if (mx>x && mx<x+w && my>iy && my<iy+h) {
+          selectedIndex = i;
+          openDropDown = false;
+          return options[i];
+        }
+      }
+      openDropDown = false;
+      return null;
+    } else {
+      if (mx>x && mx<x+w && my>y && my<y+h) {
+        openDropDown = true;
+        return null;
+      }
+    }
+    return null;
+  }
 }

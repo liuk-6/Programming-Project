@@ -9,9 +9,9 @@ class RegionPieChart {
 
   float[] values;
   color[] colours = {
-    color(40, 200, 40),
-    color(250, 255, 80),
-    color(255, 80, 80)
+    color(#2D9B2B),
+    color(#FFD700),
+    color(#D40000)
   };
 
   PGraphics pg;
@@ -187,7 +187,7 @@ HashMap<String, Integer> countAirlineTraffic() {
 
 
 // =========================================================
-//  TOP‑10‑PLUS‑OTHER PIE CHART CLASS (AIRLINES)
+//  TOP 10 PLUS OTHER PIE CHART CLASS (AIRLINES)
 // =========================================================
 
 class TopAirlinesPie {
@@ -226,18 +226,18 @@ class TopAirlinesPie {
     values[limit] = otherTotal;
 
     color[] palette = {
-      color(#A26360),
-      color(#899689),
-      color(#CAB99E),
-      color(#C6A0D4),
-      color(#EDCC8B),
-      color(#D4A29C),
-      color(#9AACAB),
-      color(#8DD6E2),
-      color(#CAB99E),
-      color(#707F84),
+      color(#f0c571),
+      color(#59a89c),
+      color(#0b81a2),
+      color(#7E4794),
+      color(#9d2c00),
+      color(#e25759),
+      color(#36b700),
+      color(#ff9d3a),
+      color(#003a7d),
+      color(#98c127),
       color(#E8B298),
-      color(#9CA998)
+      color(#c8c8c8)
     };
     // Generate random colours
     colours = new color[labels.length];
