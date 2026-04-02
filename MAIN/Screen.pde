@@ -14,6 +14,7 @@ class Screen {
     //drawContent();
 
     drawImages();
+    drawContent();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
