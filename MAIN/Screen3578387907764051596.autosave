@@ -14,7 +14,6 @@ class Screen {
     //drawContent();
 
     drawImages();
-    drawContent();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
@@ -1358,7 +1357,7 @@ class TrafficScreen extends Screen {
     textSize(13);
     textAlign(LEFT);
     float lx = x - panelWidth/2 + 20;
-    text("RANK                   ROUTE                                                FLIGHTS   CANCEL%   DELAY%   ONTIME%", lx, yStart + 75);
+    text("RANK            ROUTE                                                                FLIGHTS      CANCEL%     DELAY%            ONTIME%", lx, yStart + 75);
 
     stroke(180);
     line(lx, yStart + 85, x + panelWidth/2 - 20, yStart + 85);
