@@ -512,36 +512,16 @@ class DashboardScreen extends Screen {
     title = "Dashboard";
     int buttonW = 180;
     int buttonH = 50;
-    int x = 60;
     int y = 252;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW, buttonH, "HOME", "home", 30, false));
-    buttons.add(new Button(x, y + 80, buttonW, buttonH, "GRAPHS", "graphs", 30, false));
-    buttons.add(new Button(x, y + 160, buttonW, buttonH, "PIE CHARTS", "pieCharts", 30, false));
-    buttons.add(new Button(x, y + 240, buttonW, buttonH, "FLIGHT MAP", "maps", 30, false));
+    int mapW = buttonW + 700;
+    int barW = buttonW + 410;
+    int pieW = buttonW + 90;
+
     textAlign(CORNER);
-    buttons.add(new Button(x + 525, y + 150, buttonW + 410, buttonH + 220, "Bar Charts", "graphsPage", 30, false));
-    buttons.add(new Button(x + 240, y + 150, buttonW + 90, buttonH + 220, "Pie Charts", "pieChartsPage", 30, false));
-    buttons.add(new Button(x + 240, y - 195, buttonW + 700, buttonH + 253, "Flight Map", "flightMapPage", 30, false));
-  }
-
-
-  void drawContent() {
-    drawSidebar();
-  }
-
-  void drawSidebar() {
-    fill(240, 231, 213);
-    noStroke();
-    rect(40, 40, 220, 640, 20);
-    fill(255);
-    ellipse(150, 120, 80, 80);
-    image(logo, 110, 80, 90, 90);
-
-    fill(0);
-    textAlign(CENTER);
-    textSize(18);
-    text("FLIGHT SCANNER", 150, 180);
+    buttons.add(new Button(width/2 - barW/2 + pieW/2 + 10, y + 150, buttonW + 410, buttonH + 220, "Bar Charts", "graphsPage", 30, false));
+    buttons.add(new Button(width/2 - barW/2 - pieW/2 - 10, y + 150, buttonW + 90, buttonH + 220, "Pie Charts", "pieChartsPage", 30, false));
+    buttons.add(new Button(width/2 - mapW/2, y - 195, buttonW + 700, buttonH + 253, "Flight Map", "flightMapPage", 30, false));
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
   void drawImages() {
@@ -554,7 +534,7 @@ class DashboardScreen extends Screen {
       if (b.type.equals("flightMapPage")) map = b;
     }
 
-    float x = 290;
+    float x = 160;
     float y = 430;
     float w = 270;
     float h = 270;
@@ -569,7 +549,7 @@ class DashboardScreen extends Screen {
       popMatrix();
     }
 
-    float bx = 690;
+    float bx = 560;
     float by = 455;
     float bw = 390;
     float bh = 200;
@@ -583,7 +563,7 @@ class DashboardScreen extends Screen {
       popMatrix();
     }
 
-    float mx = 390;
+    float mx = 260;
     float my = 80;
     float mw = 670;
     float mh = 270;
@@ -615,6 +595,7 @@ class DashboardScreen extends Screen {
         }
         if  (b.type.equals("maps")) goTo(mapScreen);
         if  (b.type.equals("flightMapPage")) goTo(mapScreen);
+        if (b.type.equals("back")) goBack();
       }
     }
   }
