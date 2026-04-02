@@ -460,7 +460,7 @@ class OriginBarChart {
       pg.stroke(0);
       pg.line(40, 10, 40, pg.height - 30);  // x1,y1,x2,y2
     
-      // --- Y‑axis ticks + labels ---
+      // --- Y axis ticks + labels ---
       int ticks = 5;
       float maxVal = 0;
       for (float v : values) maxVal = max(maxVal, v);
@@ -1017,8 +1017,22 @@ class AirlineRateChart {
   float[] rates;
   String mode = "cancel";
 
+  HashMap<String, Integer> airlineColours = new HashMap<String, Integer>();
+
   AirlineRateChart() {
-    pg = createGraphics(500, 350);
+    pg = createGraphics(530, 400);
+    airlineColours.put("AA", color(78, 96, 129));
+    airlineColours.put("DL", color(65, 74, 90));
+    airlineColours.put("UA", color(51));
+    airlineColours.put("WN", color(101, 110, 93));
+    airlineColours.put("AS", color(151, 168, 135));
+    airlineColours.put("B6", color(203, 208, 181));
+    airlineColours.put("NK", color(255, 247, 227));
+    airlineColours.put("F9", color(187, 159, 136));
+    airlineColours.put("G4", color(153, 115, 90));
+    airlineColours.put("HA", color(142, 89, 99));
+    airlineColours.put("PHX", color(103, 71, 44));
+    airlineColours.put("LGA", color(236, 174, 164));
   }
 
   void compute(HashMap<String, AirlineStats> stats) {
@@ -1045,32 +1059,73 @@ class AirlineRateChart {
 
   void draw(float x, float y) {
     pg.beginDraw();
-    pg.background(255);
-
-    pg.textAlign(CENTER, CENTER);
-    pg.textSize(16);
+    pg.background(RY_BG);
+    pg.stroke(0);
+    
+    pg.line(40, 10, 40, pg.height-30);
+    
+    float maxPercentage = 0;
+    for(float r: rates) maxPercentage = max(maxPercentage, r * 100);
+    float maxPercent = ceil(maxPercentage / 5) * 5;
+    
+    pg.textAlign(RIGHT, CENTER);
     pg.fill(0);
-    pg.text((mode.equals("cancel") ? "Cancellation Rate" : "Delay Rate") + " by Airline", pg.width/2, 20);
-
-    float barWidth = (pg.width - 80) / rates.length;
-    float maxVal = 0;
-    for (float r : rates) maxVal = max(maxVal, r);
+    pg.textSize(11);
+    
+    for (int i = 5; i <= maxPercent; i += 5) {
+      float ty = map(i, 0, maxPercent, pg.height - 30, 10);
+      pg.line(35, ty, 40, ty);
+      pg.text(i + "%", 33, ty);
+    }
+    
+    if (maxPercentage % 5 != 0) {
+      float ty = map(maxPercentage, 0, maxPercent, pg.height - 30, 10);
+      pg.line(35, ty, 40, ty);
+      pg.text(nf(maxPercentage, 1, 1) + "%", 33, ty);
+    }
+    
+    float barWidth = (pg.width - 50) / (float)rates.length;
 
     for (int i = 0; i < rates.length; i++) {
-      float h = map(rates[i], 0, maxVal, 0, pg.height - 100);
+      float h = map(rates[i] * 100, 0, maxPercent, 0, pg.height - 40);
       float bx = 40 + i * barWidth;
-      float by = pg.height - 40 - h;
+      float by = pg.height - 30 - h;
 
-      pg.fill(100, 150, 255);
-      pg.rect(bx, by, barWidth - 10, h);
-
+      if  (airlineColours.containsKey(airlines[i]))  {
+        pg.fill((int)airlineColours.get(airlines[i]));
+      } else{
+        pg.fill(RY_BLUE);
+      }
+      pg.rect(bx, by, barWidth -5, h);
+      
       pg.fill(0);
+      pg.textAlign(CENTER, BOTTOM);
       pg.textSize(11);
-      pg.text(airlines[i], bx + (barWidth - 10)/2, pg.height - 25);
-      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 10)/2, by - 10);
+      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 5)/2, by-2);
+      
+      pg.fill(0);
+      pg.textAlign(CENTER, TOP);
+      pg.text(airlines[i], bx + (barWidth - 5)/2, pg.height - 25);
     }
 
     pg.endDraw();
     image(pg, x, y);
+    pushMatrix();
+    translate(-15, pg.height/2);
+    rotate(-HALF_PI);
+    textAlign(CENTER, CENTER);
+    fill(0);
+    text("Rate (%)", 0, 0);
+    popMatrix();
+  
+    // Title
+    fill(0);
+    textAlign(CENTER, TOP);
+    textSize(20);
+    text((mode.equals("cancel") ? "Cancellation" : "Delay") + " Rate by Airline", pg.width/2, -50);
+  
+    textSize(14);
+    textAlign(CENTER, BOTTOM);
+    text("Airlines", pg.width/2, pg.height + 25);
   }
 }
