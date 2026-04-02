@@ -837,3 +837,107 @@ class BarChart {
       return null;
     }
 }
+
+/////////// AIRLINE CANCELLATION FLIGHTS ////////////////////////////////////////
+class AirlineStats {
+  int total = 0;
+  int cancelled = 0;
+  int delayed = 0;
+}
+
+HashMap<String, AirlineStats> computeAirlineStats() {
+  HashMap<String, AirlineStats> stats = new HashMap<>();
+  Table table = loadTable("flights100k.csv", "header");
+
+  for (TableRow row : table.rows()) {
+    String carrier = row.getString("MKT_CARRIER");
+    if (carrier == null || carrier.trim().equals("")) continue;
+
+    AirlineStats s = stats.getOrDefault(carrier, new AirlineStats());
+    s.total++;
+
+    if (row.getInt("CANCELLED") == 1) {
+      s.cancelled++;
+    }
+
+    // delayed if ARR_DELAY > 15
+    if (row.getInt("ARR_DELAY") > 15) {
+      s.delayed++;
+    }
+
+    stats.put(carrier, s);
+  }
+
+  return stats;
+}
+class AirlineRateChart {
+  PGraphics pg;
+  String[] airlines;
+  float[] rates;
+  String mode = "cancel";  // "cancel" or "delay"
+
+  AirlineRateChart() {
+    pg = createGraphics(500, 350);
+  }
+
+  void compute(HashMap<String, AirlineStats> stats) {
+    ArrayList<String> keys = new ArrayList<>(stats.keySet());
+
+    keys.sort((a, b) -> {
+      AirlineStats sa = stats.get(a);
+      AirlineStats sb = stats.get(b);
+
+      float ra = (mode.equals("cancel")) ? (float)sa.cancelled/sa.total
+                                         : (float)sa.delayed/sa.total;
+
+      float rb = (mode.equals("cancel")) ? (float)sb.cancelled/sb.total
+                                         : (float)sb.delayed/sb.total;
+
+      return Float.compare(rb, ra);
+    });
+
+    int limit = min(10, keys.size());
+    airlines = new String[limit];
+    rates = new float[limit];
+
+    for (int i = 0; i < limit; i++) {
+      airlines[i] = keys.get(i);
+      AirlineStats s = stats.get(airlines[i]);
+
+      rates[i] = (mode.equals("cancel")) ? (float)s.cancelled / s.total
+                                         : (float)s.delayed / s.total;
+    }
+  }
+
+  void draw(float x, float y) {
+    pg.beginDraw();
+    pg.background(255);
+
+    pg.textAlign(CENTER, CENTER);
+    pg.textSize(16);
+    pg.fill(0);
+
+    pg.text((mode.equals("cancel") ? "Cancellation Rate" : "Delay Rate") +
+            " by Airline", pg.width/2, 20);
+
+    float barWidth = (pg.width - 80) / rates.length;
+    float maxVal = 0;
+    for (float r : rates) maxVal = max(maxVal, r);
+
+    for (int i = 0; i < rates.length; i++) {
+      float h = map(rates[i], 0, maxVal, 0, pg.height - 100);
+      float bx = 40 + i * barWidth;
+      float by = pg.height - 40 - h;
+
+      pg.fill(100, 150, 255);
+      pg.rect(bx, by, barWidth - 10, h);
+
+      pg.fill(0);
+      pg.text(airlines[i], bx + (barWidth - 10)/2, pg.height - 25);
+      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 10)/2, by - 10);
+    }
+
+    pg.endDraw();
+    image(pg, x, y);
+  }
+}
