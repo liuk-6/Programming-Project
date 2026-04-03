@@ -17,7 +17,7 @@ class RegionPieChart {
   PGraphics pg;
 
   RegionPieChart(String[] regionAirports) {
-    pg = createGraphics(350, 260);
+    pg = createGraphics(450, 260);
     compute(regionAirports);
   }
 
@@ -89,8 +89,8 @@ class RegionPieChart {
     String[] labels = {"On Time", "Delayed", "Cancelled"};
     int lx = 10, ly = 10, box = 12;
 
-    pg.textAlign(LEFT, CENTER);
-    pg.textSize(12);
+    pg.textAlign(CENTER,CENTER);
+    pg.textSize(15);
 
     for (int i = 0; i < labels.length; i++) {
       pg.fill(colours[i]);
@@ -98,8 +98,9 @@ class RegionPieChart {
       pg.fill(0);
       pg.text(labels[i], lx + box + 8, ly + i * 20 + box/2);
     }
+    pg.fill(0);
     pg.text("Percentage of On Time flights", pg.width/2 , 10); 
-    
+
     pg.endDraw();
     image(pg, x, y);
   }
@@ -196,7 +197,7 @@ class TopAirlinesPie {
   PGraphics pg;
 
   TopAirlinesPie(HashMap<String, Integer> counts) {
-    pg = createGraphics(450, 350);
+    pg = createGraphics(550, 350);
 
     // Sort airlines by flight count
     ArrayList<String> keys = new ArrayList<String>(counts.keySet());
@@ -260,7 +261,7 @@ class TopAirlinesPie {
     for (float v : values) total += v;
 
     float start = 0;
-    float cx = pg.width/2;
+    float cx = pg.width/2 - 80;
     float cy = pg.height/2;
     float diameter = 250;
 
@@ -275,8 +276,8 @@ class TopAirlinesPie {
     pg.textAlign(LEFT, CENTER);
     pg.textSize(12);
 
-    int lx = 10;
-    int ly = 10;
+    int lx = 350;
+    int ly = 60;
     int box = 12;
 
     for (int i = 0; i < labels.length; i++) {
@@ -286,8 +287,11 @@ class TopAirlinesPie {
       pg.fill(0);
       pg.text(labels[i] + " (" + int(values[i]) + ")", lx + box + 8, ly + i * 20 + box/2);
     }
+    pg.textSize(15);
+    pg.fill(0);
+    pg.text("Percentage of Flights per Airline ", pg.width/2 - 180 , 20);
 
     pg.endDraw();
-    image(pg, x, y);
+    image(pg, x - 50, y);
   }
 }
