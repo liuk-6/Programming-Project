@@ -1,4 +1,4 @@
- //<>//
+ //<>// //<>//
 // A flight that has been matched to geographic coordinates
 // and had its status (ON_TIME / DELAYED / CANCELLED) computed
 class FlightLocation {
@@ -228,7 +228,7 @@ class InteractionManager {
   }
 }
 
-class Legend { //<>//
+class Legend {
   // Position and size of the legend box
   float legendX, legendY;
   float legendW = 200;
@@ -349,8 +349,8 @@ class WorldMap {
   }
 
   // Convert geographic (lat, lon) to screen (px, py)
- PVector geoToScreen(float lat, float lon,
-                      float x, float y, float w, float h) {
+  PVector geoToScreen(float lat, float lon,
+    float x, float y, float w, float h) {
     // Mercator projection — matches MapSVG's rendering
     float toRad    = PI / 180.0;
     float mercLat  = log(tan(PI / 4 + lat    * toRad / 2));
@@ -358,7 +358,7 @@ class WorldMap {
     float mercMax  = log(tan(PI / 4 + maxLat * toRad / 2));
 
     // Map into SVG coordinate space
-    float px = map(lon,     minLon, maxLon, svgMinX, svgMinX + svgWidth);
+    float px = map(lon, minLon, maxLon, svgMinX, svgMinX + svgWidth);
     float py = map(mercLat, mercMax, mercMin, svgMinY, svgMinY + svgHeight);
 
     float scale   = min(w / svgWidth, h / svgHeight);
@@ -368,6 +368,302 @@ class WorldMap {
     return new PVector(
       offsetX + (px - svgMinX) * scale,
       offsetY + (py - svgMinY) * scale
-    );
+      );
+  }
+}
+
+class AirportSearch {
+
+  // ── Layout ───────────────────────────────────────────────────
+  float fieldX, fieldY, fieldW = 220, fieldH = 30;
+  float btnW = 70, btnH = 30;
+  float dropMaxH = 180;   // max height of the dropdown list
+  int scrollOffset = 0;        // first visible row index
+  int visibleRows  = 6;        // how many rows show at once
+  float rowH       = 28;
+
+  // ── State ────────────────────────────────────────────────────
+  String query        = "";          // what the user has typed
+  boolean focused     = false;       // is the text field active?
+  boolean dropOpen    = false;       // is the dropdown visible?
+  int     hoverIndex  = -1;          // which dropdown row the mouse is over
+
+  ArrayList<String> allCodes     = new ArrayList<String>();  // every code from CSV
+  ArrayList<String> filtered     = new ArrayList<String>();  // codes matching query
+
+  // ── Initialise from LocationManager ─────────────────────────
+  void load(Table table, LocationManager loc) {
+    allCodes.clear();
+    HashSet<String> seen = new HashSet<String>();
+
+    for (int i = 0; i < table.getRowCount(); i++) {
+      // Use the same column names your Flight class reads from
+      String origin = table.getString(i, "ORIGIN").trim().toUpperCase();
+      String dest   = table.getString(i, "DEST").trim().toUpperCase();
+
+      // Only add codes that actually have coordinates in airports.csv
+      // so searching them does something useful on the map
+      if (origin.length() >= 2 && !seen.contains(origin) && loc.hasLocation(origin)) {
+        seen.add(origin);
+        allCodes.add(origin);
+      }
+      if (dest.length() >= 2 && !seen.contains(dest) && loc.hasLocation(dest)) {
+        seen.add(dest);
+        allCodes.add(dest);
+      }
+    }
+
+    java.util.Collections.sort(allCodes);
+    filtered = new ArrayList<String>(allCodes);
+  }
+
+  // ── Call once per draw() ─────────────────────────────────────
+  void display(float headerH) {
+    // Position: right-aligned in the header, leaving room for the button
+    fieldX = width - fieldW - btnW - 30;
+    fieldY = headerH + 8;
+
+    // ── Text field ───────────────────────────────────────────
+    // Background
+    fill(focused ? color(255) : color(230));
+    stroke(focused ? color(0, 120, 255) : color(180));
+    strokeWeight(focused ? 2 : 1);
+    rect(fieldX, fieldY, fieldW, fieldH, 5);
+
+    // Placeholder or typed text
+    fill(query.length() == 0 && !focused ? color(160) : color(30));
+    noStroke();
+    textSize(13);
+    textAlign(LEFT, CENTER);
+    String display = query.length() == 0 && !focused ? "Search airport code…" : query;
+    // Clip text inside field
+    text(display, fieldX + 8, fieldY + fieldH / 2);
+
+    // Blinking cursor when focused
+    if (focused && (frameCount / 30) % 2 == 0) {
+      float cursorX = fieldX + 8 + textWidth(query);
+      stroke(30);
+      strokeWeight(1.5);
+      line(cursorX, fieldY + 6, cursorX, fieldY + fieldH - 6);
+    }
+
+    // ── Search button ────────────────────────────────────────
+    float btnX = fieldX + fieldW + 5;
+    boolean overBtn = mouseX > btnX && mouseX < btnX + btnW &&
+      mouseY > fieldY && mouseY < fieldY + fieldH;
+    fill(overBtn ? color(0, 90, 200) : color(0, 120, 255));
+    noStroke();
+    rect(btnX, fieldY, btnW, btnH, 5);
+    fill(255);
+    textSize(13);
+    textAlign(CENTER, CENTER);
+    text("Search", btnX + btnW / 2, fieldY + fieldH / 2);
+
+    // ── Dropdown ─────────────────────────────────────────────
+    if (dropOpen && filtered.size() > 0) {
+      drawDropdown();
+    }
+  }
+
+  void drawDropdown() {
+    float dropH = visibleRows * rowH;
+    float dropX = fieldX;
+    float dropY = fieldY + fieldH + 3;
+    float scrollBarW = 8;
+
+    // Clamp scrollOffset
+    int maxScroll = max(0, filtered.size() - visibleRows);
+    scrollOffset  = constrain(scrollOffset, 0, maxScroll);
+
+    // Shadow
+    fill(0, 40);
+    noStroke();
+    rect(dropX + 3, dropY + 3, fieldW, dropH, 5);
+
+    // Background
+    fill(255);
+    stroke(180);
+    strokeWeight(1);
+    rect(dropX, dropY, fieldW, dropH, 5);
+
+    hoverIndex = -1;
+    noStroke();
+    textAlign(LEFT, CENTER);
+    textSize(13);
+
+    // Draw visible rows
+    for (int i = 0; i < visibleRows; i++) {
+      int dataIndex = i + scrollOffset;
+      if (dataIndex >= filtered.size()) break;
+
+      float rowY = dropY + i * rowH;
+      boolean over = mouseX > dropX && mouseX < dropX + fieldW - scrollBarW &&
+        mouseY > rowY  && mouseY < rowY + rowH;
+      if (over) hoverIndex = dataIndex;   // hoverIndex is now absolute, not relative
+
+      fill(over ? color(0, 120, 255) : (i % 2 == 0 ? color(248) : color(255)));
+      rect(dropX, rowY, fieldW - scrollBarW, rowH);
+
+      fill(over ? color(255) : color(30));
+      text(filtered.get(dataIndex), dropX + 10, rowY + rowH / 2);
+    }
+
+    // ── Scrollbar ───────────────────────────────────────────────
+    if (filtered.size() > visibleRows) {
+      float trackX = dropX + fieldW - scrollBarW;
+      float trackH = dropH;
+
+      // Track
+      fill(220);
+      noStroke();
+      rect(trackX, dropY, scrollBarW, trackH, 3);
+
+      // Thumb
+      float thumbH    = max(20, trackH * (visibleRows / (float) filtered.size()));
+      float thumbY    = dropY + (trackH - thumbH) *
+        (scrollOffset / (float) max(1, maxScroll));
+      fill(160);
+      rect(trackX + 1, thumbY, scrollBarW - 2, thumbH, 3);
+    }
+
+    // Border on top of rows
+    noFill();
+    stroke(180);
+    strokeWeight(1);
+    rect(dropX, dropY, fieldW, dropH, 5);
+  }
+
+  void handleScroll(float mx, float my, int delta) {
+    if (!dropOpen) return;
+
+    float dropX = fieldX;
+    float dropY = fieldY + fieldH + 3;
+    float dropH = visibleRows * rowH;
+
+    // Only scroll if mouse is over the dropdown
+    if (mx > dropX && mx < dropX + fieldW &&
+      my > dropY && my < dropY + dropH) {
+      scrollOffset = constrain(scrollOffset + delta, 0,
+        max(0, filtered.size() - visibleRows));
+    }
+  }
+  // ── Key input — call from keyPressed() ───────────────────────
+  // Returns the selected airport code if Enter was pressed, else null
+  String handleKey(char k, int keyCode) {
+    if (!focused) return null;
+
+    if (keyCode == BACKSPACE) {
+      if (query.length() > 0) {
+        query = query.substring(0, query.length() - 1);
+        updateFilter();
+        dropOpen = focused && filtered.size() > 0;
+      }
+    } else if (keyCode == ENTER || keyCode == RETURN) {
+      return confirmSelection();
+    } else if (k != CODED && isPrintable(k)) {
+      query += Character.toUpperCase(k);
+      updateFilter();
+      dropOpen = filtered.size() > 0;
+    }
+    return null;
+  }
+
+  // ── Mouse press — call from mousePressed() ───────────────────
+  // Returns selected airport code if a result was clicked or Search pressed, else null
+  String handleClick(float mx, float my) {
+    float btnX = fieldX + fieldW + 5;
+    float btnY = fieldY;
+
+    // Click on the Search button
+    if (mx > btnX && mx < btnX + btnW &&
+      my > btnY && my < btnY + btnH) {
+      focused  = true;
+      dropOpen = filtered.size() > 0;
+      return confirmSelection();
+    }
+
+    // Click inside the text field
+    if (mx > fieldX && mx < fieldX + fieldW &&
+      my > fieldY && my < fieldY + fieldH) {
+      focused  = true;
+      dropOpen = filtered.size() > 0;
+      return null;
+    }
+
+    // Click on a dropdown row
+    if (dropOpen && filtered.size() > 0 && hoverIndex >= 0) {
+      String chosen = filtered.get(hoverIndex);
+      selectCode(chosen);
+      return chosen;
+    }
+
+    // Click anywhere else — close everything
+    focused  = false;
+    dropOpen = false;
+    return null;
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────
+
+  void updateFilter() {
+    filtered.clear();
+    scrollOffset = 0;
+    String q = query.toUpperCase().trim();
+    if (q.length() == 0) {
+      filtered = new ArrayList<String>(allCodes);
+    } else {
+      for (String c : allCodes) {
+        if (c.startsWith(q)) filtered.add(c);   // prefix matches first
+      }
+      // Then add contains-matches that aren't already in
+      for (String c : allCodes) {
+        if (c.contains(q) && !filtered.contains(c)) filtered.add(c);
+      }
+    }
+    dropOpen = filtered.size() > 0 && focused;
+  }
+
+  String confirmSelection() {
+    if (filtered.size() == 1) {
+      selectCode(filtered.get(0));
+      return filtered.get(0);
+    }
+    // Exact match even if multiple results
+    for (String c : filtered) {
+      if (c.equals(query.toUpperCase().trim())) {
+        selectCode(c);
+        return c;
+      }
+    }
+    // If there's at least one result, pick the top one
+    if (filtered.size() > 0) {
+      String top = filtered.get(0);
+      selectCode(top);
+      return top;
+    }
+    return null;
+  }
+
+  void selectCode(String code) {
+    query    = code;
+    focused  = false;
+    dropOpen = false;
+    filtered.clear();
+    filtered.add(code);
+  }
+
+  void clear() {
+    query    = "";
+    focused  = false;
+    dropOpen = false;
+    updateFilter();
+  }
+
+  boolean isPrintable(char c) {
+    return c >= 32 && c < 127;
+  }
+
+  char toUpperCase(char c) {
+    return Character.toUpperCase(c);
   }
 }
