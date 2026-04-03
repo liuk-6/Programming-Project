@@ -162,6 +162,7 @@ class GraphDashboardScreen extends Screen {
       }
       
       // Destination chart buttons
+      if(activeBarView.equals("Destination"))  {
       String airport = destChart.checkClick(mouseX, mouseY);
       if (airport != null) {
         showAirportFacts(airport);
@@ -169,10 +170,13 @@ class GraphDashboardScreen extends Screen {
       }
     
       // Origin chart buttons
-      airport = originChart.checkClick(mouseX, mouseY);
+     }else if (activeBarView.equals("Origin"))  {
+      String airport = originChart.checkClick(mouseX, mouseY);
       if (airport != null) {
         showAirportFacts(airport);
         return;
+      }
+
       }
     }
     if (currentScreen == screen2) {
@@ -269,8 +273,8 @@ class GraphDashboardScreen extends Screen {
       currentAirportImg = loadImage("Dallas.png");
       ImgX = 950;
       ImgY = height - 460;
-      w = 70;
-      h = 40;
+      w = 60;
+      h = 60;
     
     }else if (code.equals("CLT")) {
       activeFact = "CLT — \n Charlotte Douglas International Airport. \n \n Contributes about 5% of North Carolinas GDP.";
@@ -281,7 +285,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
     
     }else if (code.equals("DEN")) {
-      activeFact = "DEN — \n Denver International Airport . \n \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
+      activeFact = "DEN — \n Denver International Airport . \n \n Legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
       currentAirportImg = loadImage("DEN.jpg");
       ImgX = 950;
       ImgY = height - 460;
@@ -322,6 +326,12 @@ class GraphDashboardScreen extends Screen {
     if( currentAirportImg !=null)  {
       imageMode(CENTER);
       image(currentAirportImg, ImgX, ImgY, w, h);
+      stroke(0);
+      strokeWeight(2);
+      noFill();
+      rectMode(CENTER);
+      rect(ImgX, ImgY, w, h);
+      rectMode(CORNER);
       imageMode(CORNER);
     }
  }
@@ -332,8 +342,8 @@ class GraphDashboardScreen extends Screen {
   
     int boxW = 260;
     int boxH = 120;
-    int x = width - boxW - 40;   // right side of screen
-    int y = 120;                 // adjust as needed
+    int x = 500;   // right side of screen
+    int y = 500;                 // adjust as needed
   
     // Background
     fill(255);
@@ -342,12 +352,28 @@ class GraphDashboardScreen extends Screen {
     rect(x, y, boxW, boxH, 12);
   
     // Text
-    fill(0);
+    color[] textColours = {
+      color(34, 139, 34),
+      color(255, 140, 0),
+      color(200, 0, 0)
+    };
+    
     textAlign(LEFT, TOP);
-    textSize(14);
   
     for (int i = 0; i < lines.length; i++) {
-      text(lines[i], x + 15, y + 15 + i * 25);
+      fill(textColours[i]);
+      
+      String[] parts = lines[i].split(":");
+      
+      textSize(15);
+      text(parts[0] + ":", x + 15, y + 30 + i * 25);
+      
+      textSize(13);
+      fill(0);
+      float labelW = textWidth(parts[0] + ":");
+      if(parts.length > 1) {
+        text(parts[1], x + 35 + labelW, y + 32 + i * 25);
+      }
     }
      popMatrix();
      popStyle();
@@ -476,9 +502,9 @@ class OriginBarChart {
     
       for (int i = 0; i < values.length; i++) {
         float x = 40 + i * barWidth;
-        float bx = x + (barWidth - 5)/2 - 30;
+        float bx = x;
         float by = pg.height - 25;
-        float bw = 60;
+        float bw = barWidth - 5;
         float bh = 20;
     
         buttons.add(new AirportButton(bx, by, bw, bh, airports[i]));
