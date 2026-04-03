@@ -193,7 +193,7 @@ boolean clickedSelectButton(float cardX, float cardY, float cardW) {
     mouseX < selectX + selectW &&
     mouseY > selectY &&
     mouseY < selectY + selectH
-  );
+    );
 }
 void goToWithTransition(Screen s) {
   nextScreen = s;
@@ -553,21 +553,48 @@ void draw() {
 
 
 
-    case home: currentScreenObject = homeScreen; break;
-    case queries: currentScreenObject = queriesScreen; break;
-    case flightsSearch: currentScreenObject = flightsSearchScreen; break;
-    case flightsDate: currentScreenObject = flightDateScreen; break;
-    case flightsTraffic: currentScreenObject = trafficScreen; break;
-    case flightsOutput: currentScreenObject = flightsOutputScreen; break;
-    case flightsOutputTwoWay: currentScreenObject = twoWayFlightsOutputScreen; break;  // <-- added
-    case dashboard: currentScreenObject = dashboardScreen; break;
-    case graphDashboard: currentScreenObject = graphDashboardScreen; break;
-    case bookingsScreens: currentScreenObject = bookingsScreen; break;
-    case mapScreen: currentScreenObject = flightMapScreen; break;
-    case routeDetails: currentScreenObject = routeDetailsScreen; break;
-    case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
-    default: currentScreenObject = homeScreen; break;
-
+  case home:
+    currentScreenObject = homeScreen;
+    break;
+  case queries:
+    currentScreenObject = queriesScreen;
+    break;
+  case flightsSearch:
+    currentScreenObject = flightsSearchScreen;
+    break;
+  case flightsDate:
+    currentScreenObject = flightDateScreen;
+    break;
+  case flightsTraffic:
+    currentScreenObject = trafficScreen;
+    break;
+  case flightsOutput:
+    currentScreenObject = flightsOutputScreen;
+    break;
+  case flightsOutputTwoWay:
+    currentScreenObject = twoWayFlightsOutputScreen;
+    break;  // <-- added
+  case dashboard:
+    currentScreenObject = dashboardScreen;
+    break;
+  case graphDashboard:
+    currentScreenObject = graphDashboardScreen;
+    break;
+  case bookingsScreens:
+    currentScreenObject = bookingsScreen;
+    break;
+  case mapScreen:
+    currentScreenObject = flightMapScreen;
+    break;
+  case routeDetails:
+    currentScreenObject = routeDetailsScreen;
+    break;
+  case flightConfirmedScreen:
+    currentScreenObject = flightConfirmedScreenObj;
+    break;
+  default:
+    currentScreenObject = homeScreen;
+    break;
   }
 
   if (currentScreenObject != null) currentScreenObject.draw();
@@ -657,5 +684,9 @@ void mouseWheel(MouseEvent event) {
     } else if (currentScreenObject instanceof TwoWayFlightsOutputScreen) {
       ((TwoWayFlightsOutputScreen)currentScreenObject).mouseWheel(event);
     }
+  }
+
+  if (currentScreenObject instanceof MapScreen) {
+    ((MapScreen) currentScreenObject).mouseWheel(event);
   }
 }
