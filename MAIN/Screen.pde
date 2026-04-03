@@ -35,6 +35,15 @@ class Screen {
 
   void keyPressed(char k) {
   }
+  String getAvailabilityMessage(boolean dep, boolean ret) {
+    if (!dep && !ret)
+      return "No round-trip flights available.";
+    if (!dep)
+      return "No departure flights available.";
+    if (!ret)
+      return "No return flights available.";
+    return "";
+  }
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
 class HomeScreen extends Screen {
