@@ -12,7 +12,33 @@ class GraphDashboardScreen extends Screen {
   AirlineRateChart delayRateChart;
   HashMap<String, AirlineStats> airlineStats;
   
-   String activePieView = "Overall Flights";
+  String activePieView = "Overall Flights";
+    // --- NEW: Airport search pie chart fields ---
+  String airportSearchInput = "";        // what the user has typed
+  boolean airportInputActive = false;    // is the text box focused?
+  String airportSearchCode = "";         // last successfully searched code
+  String airportSearchError = "";        // error message if not found
+  boolean airportSearchHasResult = false;
+  ArrayList<String> airportSuggestions = new ArrayList<String>();
+  
+  // Results from airport search
+  int airportOnTime = 0;
+  int airportDelayed = 0;
+  int airportCancelled = 0;
+  int airportTotal = 0;
+  
+  // Text input box bounds (screen coords, set once)
+  float searchBoxX, searchBoxY, searchBoxW = 200, searchBoxH = 38;
+  // Search button bounds
+  float searchBtnX, searchBtnY, searchBtnW = 100, searchBtnH = 38;
+  
+  // Pie chart PGraphics for airport result
+  PGraphics airportPg;
+  color[] airportColours = {
+     color(#4F772D),
+      color(#FCBF49),
+      color(#D62828)
+  }; 
   
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
@@ -55,9 +81,17 @@ class GraphDashboardScreen extends Screen {
     // Screen 1: bar chart dropdown + Pie Charts widget (kept)
     String[] barOptions = {"Destination", "Origin", "% Cancelled", "% Delayed"};
     barDropdown = new Dropdown(30, 75, 280, 40, barOptions);
-    screen1.addWidget(new Widget(1050, 620, 120, 40, "Pie Charts"));
+    
+    String[] pieOptions = {"Overall Flights", "By Airline", "Search Airport"};
+    pieDropdown = new Dropdown(30, 75, 220, 38, pieOptions);
+    airportPg = createGraphics(400, 300);
  
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    
+    searchBoxX = width/2 - 160;
+    searchBoxY = 160;
+    searchBtnX = searchBoxX + searchBoxW + 15;
+    searchBtnY = searchBoxY;
   
     currentScreen = screen1;
     
@@ -81,7 +115,11 @@ class GraphDashboardScreen extends Screen {
     rect(panelX, panelY + panelH/2, panelW, panelH, 20);
     rectMode(CORNER);
     
-    if(currentScreen == screen1) barDropdown.draw();
+    if (currentScreen == screen1) {
+      barDropdown.draw();
+    } else if (currentScreen == screen2) {
+      pieDropdown.draw();
+    }
   
     // Draw charts
     if (currentScreen == screen1) {
@@ -139,19 +177,56 @@ class GraphDashboardScreen extends Screen {
       }
     }
     if (currentScreen == screen2) {
-      airlinePie.draw(650, 150);
-     if (currentScreen == screen2) {
-      pushMatrix();
-      translate(150, 300);
-      pieChart.draw();
-      popMatrix();
-     }
+     if (activePieView.equals("Overall Flights")) {
+        // Original pie chart — unchanged
+        float pieX = width/2 - 400/2;
+        float pieY = height/2 - 300/2 + 20;  // slight downward offset for the dropdown
+        pushMatrix();
+        translate(pieX, pieY);
+        pieChart.draw();
+        popMatrix();
+        
+      } else if (activePieView.equals("By Airline")) {
+        // Original airline pie — unchanged
+         airlinePie.draw(width/2 - 450/2, height/2 - 350/2 + 20);
+        
+      } else if (activePieView.equals("Search Airport")) {
+        // NEW: draw the airport search UI
+        drawAirportSearchView();
+      }
     }
-  
-    // Draw title
-    fill(255);
-    textSize(30);
-    text("Flight Data Visualisation Dashboard", width/2, 60);
+        if (airportInputActive && airportSuggestions.size() > 0) {
+      float sugH = 30;
+      for (int i = 0; i < airportSuggestions.size(); i++) {
+        float sy = searchBoxY + searchBoxH + i * sugH;
+        boolean sugHov = (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+                          mouseY > sy && mouseY < sy + sugH);
+
+        // Background row — highlight on hover
+        noStroke();
+        fill(sugHov ? color(220, 230, 255) : 255);
+        rect(searchBoxX, sy, searchBoxW, sugH);
+
+        // Border between rows
+        stroke(200);
+        strokeWeight(1);
+        line(searchBoxX, sy + sugH, searchBoxX + searchBoxW, sy + sugH);
+
+        // Text
+        fill(RY_BLUE);
+        textAlign(LEFT, CENTER);
+        textSize(13);
+        noStroke();
+        text(airportSuggestions.get(i), searchBoxX + 8, sy + sugH/2);
+      }
+      // Draw an outer border around the whole list
+      stroke(RY_BLUE);
+      strokeWeight(1);
+      noFill();
+      rect(searchBoxX, searchBoxY + searchBoxH,
+           searchBoxW, airportSuggestions.size() * sugH, 0, 0, 4, 4);
+      noStroke();
+        }
   
     // Draw airport fact box
     if (activeFact != "" && currentScreen == screen1) {
@@ -223,7 +298,65 @@ class GraphDashboardScreen extends Screen {
       }
     }
     if (currentScreen == screen2) {
-      pieChart.mousePressed();
+      String chosen = pieDropdown.mousePressed(mouseX, mouseY);
+      if (chosen != null) {
+        if (chosen.equals("Bar Charts")) {
+          currentScreen = screen1;
+          activeFact = "";
+        } else {
+          // NEW: update which pie view is showing
+          activePieView = chosen;
+          // Reset search state when switching away from Search Airport
+          if (!chosen.equals("Search Airport")) {
+            airportInputActive = false;
+          }
+        }
+        return;
+      }
+    }
+        if (currentScreen == screen2) {
+      if (activePieView.equals("Overall Flights")) {
+        pieChart.mousePressed();
+      } else if (activePieView.equals("Search Airport")) {
+        // NEW: handle clicks on the text box and search button
+        // Text box click — activate it
+                if (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+            mouseY > searchBoxY && mouseY < searchBoxY + searchBoxH) {
+          airportInputActive = true;
+          if (airportSearchInput.equals("e.g. ATL")) airportSearchInput = "";
+
+        // Check if a suggestion was clicked
+        } else if (airportSuggestions.size() > 0 && airportInputActive) {
+          float sugH = 30;
+          boolean clickedSuggestion = false;
+          for (int i = 0; i < airportSuggestions.size(); i++) {
+            float sy = searchBoxY + searchBoxH + i * sugH;
+            if (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+                mouseY > sy && mouseY < sy + sugH) {
+              // Extract just the IATA code (the part before " - ")
+              String picked = airportSuggestions.get(i).split(" - ")[0].trim();
+              airportSearchInput = picked;
+              airportSuggestions.clear();
+              airportInputActive = false;
+              runAirportSearch();  // auto-search when suggestion selected
+              clickedSuggestion = true;
+              break;
+            }
+          }
+          if (!clickedSuggestion) {
+            airportInputActive = false;
+            airportSuggestions.clear();
+          }
+        } else {
+          airportInputActive = false;
+          airportSuggestions.clear();
+        }
+        // Search button click
+        if (mouseX > searchBtnX && mouseX < searchBtnX + searchBtnW &&
+            mouseY > searchBtnY && mouseY < searchBtnY + searchBtnH) {
+          runAirportSearch();
+        }
+      }
     }
   
     Widget w = currentScreen.getEvent(mouseX, mouseY);
@@ -244,6 +377,22 @@ class GraphDashboardScreen extends Screen {
   
   void mouseMoved() {
     currentScreen.updateHover(mouseX, mouseY);
+  }
+  void keyPressed(char k) {
+    // NEW: route keyboard input to airport search box when it's active
+    if (currentScreen == screen2 && activePieView.equals("Search Airport") && airportInputActive) {
+      if (k == BACKSPACE) {
+        if (airportSearchInput.length() > 0) {
+          airportSearchInput = airportSearchInput.substring(0, airportSearchInput.length() - 1);
+          updateAirportSuggestions(airportSearchInput); 
+        }
+      } else if (k == ENTER || k == RETURN) {
+        runAirportSearch();
+      }  else if (k != CODED && k != TAB && airportSearchInput.length() < 4) {
+        airportSearchInput += Character.toUpperCase(k);
+        updateAirportSuggestions(airportSearchInput);  // rebuild suggestions after each keystroke
+      }
+    }
   }
   
   void showAirportFacts(String code) {
@@ -385,7 +534,7 @@ class GraphDashboardScreen extends Screen {
   
     int boxW = 260;
     int boxH = 120;
-    int x = 500;   // right side of screen
+    int x = width/2 +200;                 // right side of screen
     int y = 500;                 // adjust as needed
   
     // Background
@@ -421,7 +570,194 @@ class GraphDashboardScreen extends Screen {
      popMatrix();
      popStyle();
   }
-  
+    // NEW: draws the entire "Search Airport" view on screen2
+  // Follows the same layout pattern as other views — white card panel, dropdown on top
+  void drawAirportSearchView() {
+    pushStyle();
+        
+    // ---- text input box ---- (styled to match TextEntryButton in Button.pde)
+    boolean inputHovered = (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+                            mouseY > searchBoxY && mouseY < searchBoxY + searchBoxH);
+    stroke(RY_BLUE);
+    strokeWeight(airportInputActive ? 2 : 1);
+    fill(255);
+    rect(searchBoxX, searchBoxY, searchBoxW, searchBoxH, 5);
+    
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(16);
+    String displayText = airportSearchInput.length() == 0 ? "e.g. ATL" : airportSearchInput;
+    // Blink cursor when active — same frameCount trick as TextEntryButton
+    if (airportInputActive && (frameCount / 25) % 2 == 0) displayText += "|";
+    text(displayText, searchBoxX + 10, searchBoxY + searchBoxH/2);
+    
+    // ---- search button ---- (styled like "flightsOutput" button type in Button.pde)
+    boolean btnHovered = (mouseX > searchBtnX && mouseX < searchBtnX + searchBtnW &&
+                          mouseY > searchBtnY && mouseY < searchBtnY + searchBtnH);
+    noStroke();
+    fill(btnHovered ? color(255, 215, 0) : RY_YELLOW);
+    rect(searchBtnX, searchBtnY, searchBtnW, searchBtnH, 8);
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(15);
+    text("Search", searchBtnX + searchBtnW/2, searchBtnY + searchBtnH/2);
+    
+    // ---- error message ----
+    if (!airportSearchError.equals("")) {
+      fill(color(180, 50, 50));
+      textAlign(CENTER, TOP);
+      textSize(14);
+      text(airportSearchError, width/2, searchBoxY + searchBoxH + 15);
+    }
+    
+    // ---- result pie chart ----
+    if (airportSearchHasResult) {
+      // Stamp the pre-rendered pg (same as PieChart.draw())
+      pushMatrix();
+      translate(width/2 - airportPg.width/2, 230);
+      image(airportPg, 0, 0);
+      popMatrix();
+      
+      // Title below the chart
+      fill(0);
+      textAlign(CENTER, TOP);
+      textSize(18);
+      text("Flight status for airport: " + airportSearchCode, width/2, 230 + airportPg.height + 10);
+    }
+    
+    popStyle();
+  }
+  void updateAirportSuggestions(String input) {
+    airportSuggestions.clear();
+    if (input.length() < 1) return;
+    input = input.toLowerCase();
+
+    // Use flightsList (global from MAIN.pde) — same source as QueriesFlights
+    for (Flight f : flightsList) {
+      String code     = f.origin.toLowerCase();
+      String cityName = f.originCityName != null ? f.originCityName.toLowerCase() : "";
+
+      if (code.startsWith(input) || cityName.contains(input)) {
+        // Format: "ATL - Atlanta, GA"  matching QueriesFlights style
+        String suggestion = f.origin + " - " + f.originCityName;
+        if (!airportSuggestions.contains(suggestion)) {
+          airportSuggestions.add(suggestion);
+        }
+        if (airportSuggestions.size() >= 6) break;
+      }
+    }
+  }
+  // NEW: compute results and render into airportPg
+  // Logic mirrors PieChart.setup() exactly — same CSV, same delay threshold
+  void runAirportSearch() {
+    String code = airportSearchInput.trim().toUpperCase();
+    if (code.equals("") || code.equals("E.G. ATL")) {
+      airportSearchError = "Please enter an airport code.";
+      airportSearchHasResult = false;
+      return;
+    }
+    
+    // Reset counts
+    airportOnTime = 0;
+    airportDelayed = 0;
+    airportCancelled = 0;
+    airportTotal = 0;
+    airportSearchError = "";
+    airportSearchHasResult = false;
+    
+    Table table = loadTable("flights100k.csv", "header");
+    
+    for (TableRow row : table.rows()) {
+      String origin = row.getString("ORIGIN");
+      if (origin == null || !origin.trim().equalsIgnoreCase(code)) continue;
+      
+      airportTotal++;
+      
+      if (row.getInt("CANCELLED") == 1) {
+        airportCancelled++;
+        continue;
+      }
+      
+      // Same missing-time guard as PieChart.setup()
+      String depStr = row.getString("DEP_TIME");
+      String crsStr = row.getString("CRS_DEP_TIME");
+      if (depStr == null || depStr.equals("") || crsStr == null || crsStr.equals("")) {
+        airportCancelled++;
+        continue;
+      }
+      
+      int dep = row.getInt("DEP_TIME");
+      int crs = row.getInt("CRS_DEP_TIME");
+      int depMin = (dep / 100) * 60 + (dep % 100);
+      int crsMin = (crs / 100) * 60 + (crs % 100);
+      int delay = depMin - crsMin;
+      
+      if (delay > 30) {
+        airportDelayed++;
+      } else {
+        airportOnTime++;
+      }
+    }
+    if (airportTotal == 0) {
+      airportSearchError = "No flights found for code: " + code +
+                           ". Try a 3-letter IATA code like ATL, LAX or ORD.";
+      return;
+    }
+    
+    airportSearchCode = code;
+    airportSearchHasResult = true;
+    
+    // Render the result into airportPg — same structure as PieChart.draw()
+    float onTimePct  = round((float(airportOnTime)  / airportTotal) * 100);
+    float delayedPct = round((float(airportDelayed) / airportTotal) * 100);
+    float cancelPct  = round((float(airportCancelled) / airportTotal) * 100);
+    float[] vals = { airportOnTime, airportDelayed, airportCancelled };
+    
+    airportPg.beginDraw();
+    airportPg.background(255);
+    airportPg.noStroke();
+    
+    float total = airportOnTime + airportDelayed + airportCancelled;
+    float start = 0;
+    float cx = airportPg.width/2;
+    float cy = airportPg.height/2;
+    float diameter = 220;
+    
+    for (int i = 0; i < vals.length; i++) {
+      float angle = TWO_PI * (vals[i] / total);
+      airportPg.fill(airportColours[i]);
+      airportPg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
+      start += angle;
+    }
+    
+    // Percentage labels — same positions as PieChart
+    airportPg.fill(0);
+    airportPg.textAlign(CENTER, CENTER);
+    airportPg.textSize(13);
+    airportPg.text(int(onTimePct)  + "%", cx - diameter/8, cy + diameter/8);
+    airportPg.text(int(delayedPct) + "%", cx,               cy - diameter/8);
+    airportPg.text(int(cancelPct)  + "%", cx + diameter/4,  cy - diameter/25);
+    
+    // Legend — same style as PieChart
+    String[] labels = { "On Time", "Delayed > 30min", "Cancelled" };
+    int lx = 10, ly = 10, box = 15;
+    airportPg.textAlign(LEFT, CENTER);
+    airportPg.textSize(12);
+    for (int i = 0; i < labels.length; i++) {
+      airportPg.fill(airportColours[i]);
+      airportPg.rect(lx, ly + i * 25, box, box);
+      airportPg.fill(0);
+      airportPg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
+    }
+    
+    // Total flight count below the pie
+    airportPg.fill(80);
+    airportPg.textAlign(CENTER, BOTTOM);
+    airportPg.textSize(12);
+    airportPg.text("Based on " + airportTotal + " flights", cx, airportPg.height - 5);
+    
+    airportPg.endDraw();
+  }
   void goToPieCharts()  {
     currentScreen = screen2;
   }
@@ -821,9 +1157,7 @@ class PieChart {
           pg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
         }
       
-      pg.fill(0);
-      pg.text("Percentage of On Time flights", pg.width/2 , 10); 
-    
+     
       // --- Button ---
       pg.fill(200);
       pg.rect(btnX, btnY, btnW, btnH, 5);
@@ -837,8 +1171,10 @@ class PieChart {
     }
     void mousePressed() {
       // Adjust for translate(200, 300)
-      int mx = mouseX - 200;
-      int my = mouseY - 300;
+      float pieX = width/2 - 400/2;
+      float pieY = height/2 - 300/2 + 20;
+      int mx = (int)(mouseX - pieX);
+      int my = (int)(mouseY - pieY);
     
       if (mx > btnX && mx < btnX + btnW &&
           my > btnY && my < btnY + btnH) {
