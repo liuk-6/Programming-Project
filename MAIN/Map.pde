@@ -1,4 +1,4 @@
-
+ //<>//
 // A flight that has been matched to geographic coordinates
 // and had its status (ON_TIME / DELAYED / CANCELLED) computed
 class FlightLocation {
@@ -11,14 +11,16 @@ class FlightLocation {
   String status; // "ON_TIME", "DELAYED", or "CANCELLED"
 
   FlightLocation(String o, String d,
-                 float olat, float olon,
-                 float dlat, float dlon,
-                 String dep, String arr,
-                 float dist, String date, String status) {
+    float olat, float olon,
+    float dlat, float dlon,
+    String dep, String arr,
+    float dist, String date, String status) {
     origin      = o;
     destination = d;
-    oLat = olat; oLon = olon;
-    dLat = dlat; dLon = dlon;
+    oLat = olat;
+    oLon = olon;
+    dLat = dlat;
+    dLon = dlon;
     depTime  = dep;
     arrTime  = arr;
     distance = dist;
@@ -46,12 +48,11 @@ class FlightLocation {
       stroke(0, 100, 255, 255);
       strokeWeight(4);
       drawCurve(p1, p2, cx, cy);
-
     } else {
       // Colour by status
-      if      (status.equals("CANCELLED")) stroke(255, 0,   0,   180);
-      else if (status.equals("DELAYED"))   stroke(255, 165, 0,   140);
-      else                                 stroke(0,   200, 0,   120);
+      if      (status.equals("CANCELLED")) stroke(255, 0, 0, 180);
+      else if (status.equals("DELAYED"))   stroke(255, 165, 0, 140);
+      else                                 stroke(0, 200, 0, 120);
 
       // Slightly thicker lines when an airport is selected
       // so the filtered set is easier to see
@@ -83,8 +84,8 @@ class FlightManager {
     allFlights.clear();
 
     // Define the airports we want to show
-    String[] airports = { "DFW","ATL","CLT","ORD","DEN",
-                          "LAX","PHX","SEA","LGA","MCO" };
+    String[] airports = { "DFW", "ATL", "CLT", "ORD", "DEN",
+      "LAX", "PHX", "SEA", "LGA", "MCO" };
     for (String a : airports) allowedAirports.add(a);
 
     for (int row = 0; row < table.getRowCount(); row++) {
@@ -103,8 +104,9 @@ class FlightManager {
 
       // Restrict to continental US latitude band
       float oLat = origin.x, oLon = origin.y;
-      float dLat = dest.x,   dLon = dest.y;
-      if (oLat < 24 || oLat > 50 || dLat < 24 || dLat > 50) continue;
+      float dLat = dest.x, dLon = dest.y;
+      if (oLat < 24.336 || oLat > 50.668 || dLat < 24.336 || dLat > 50.668) continue;
+      if (oLon < -127.553 || oLon > -64.549 || dLon < -127.553 || dLon > -64.549) continue;
 
       // Compute status
       String status;
@@ -112,7 +114,7 @@ class FlightManager {
         status = "CANCELLED";
       } else {
         int delay = timeToMinutes(raw.actualDepartureTime)
-                  - timeToMinutes(raw.scheduledDepartureTime);
+          - timeToMinutes(raw.scheduledDepartureTime);
         status = (delay > DELAY_THRESHOLD) ? "DELAYED" : "ON_TIME";
       }
 
@@ -122,7 +124,7 @@ class FlightManager {
         str(raw.scheduledDepartureTime),
         str(raw.scheduledArrivalTime),
         raw.distance, raw.date, status
-      ));
+        ));
     }
 
     // Start with all flights visible
@@ -171,12 +173,12 @@ class InfoPanel {
     fill(255);
     textSize(14);
     textAlign(LEFT, TOP);
-    text("From:      " + currentFlight.origin,      30, 80);
-    text("To:        " + currentFlight.destination,  30, 100);
-    text("Departure: " + currentFlight.depTime,      30, 120);
-    text("Arrival:   " + currentFlight.arrTime,      30, 140);
+    text("From:      " + currentFlight.origin, 30, 80);
+    text("To:        " + currentFlight.destination, 30, 100);
+    text("Departure: " + currentFlight.depTime, 30, 120);
+    text("Arrival:   " + currentFlight.arrTime, 30, 140);
     text("Distance:  " + currentFlight.distance + " mi", 30, 160);
-    text("Status:    " + currentFlight.status,       30, 180);
+    text("Status:    " + currentFlight.status, 30, 180);
   }
 }
 
@@ -184,7 +186,7 @@ class InteractionManager {
 
   // Returns the flight arc closest to (mx, my), or null if none is close enough
   FlightLocation checkClick(ArrayList<FlightLocation> flights,
-                            float mx, float my, WorldMap map) {
+    float mx, float my, WorldMap map) {
     FlightLocation closest     = null;
     float          closestDist = 9999;
 
@@ -200,7 +202,7 @@ class InteractionManager {
 
   // Same logic used for hover detection in draw()
   FlightLocation checkHover(ArrayList<FlightLocation> flights,
-                            float mx, float my, WorldMap map) {
+    float mx, float my, WorldMap map) {
     return checkClick(flights, mx, my, map);
   }
 
@@ -226,7 +228,7 @@ class InteractionManager {
   }
 }
 
-class Legend { //<>// //<>//
+class Legend { //<>//
   // Position and size of the legend box
   float legendX, legendY;
   float legendW = 200;
@@ -246,10 +248,10 @@ class Legend { //<>// //<>//
     text("Flight Status", legendX + 15, legendY + 18);
 
     // Each entry highlights if it is the active filter
-    drawEntry(legendX, legendY + 38, color(0, 200, 0),   "On Time",   "ON_TIME");
-    drawEntry(legendX, legendY + 63, color(255, 165, 0),  "Delayed",   "DELAYED");
-    drawEntry(legendX, legendY + 88, color(255, 0, 0),    "Cancelled", "CANCELLED");
-    drawEntry(legendX, legendY + 113, color(200, 200, 200),"All",      "ALL");
+    drawEntry(legendX, legendY + 38, color(0, 200, 0), "On Time", "ON_TIME");
+    drawEntry(legendX, legendY + 63, color(255, 165, 0), "Delayed", "DELAYED");
+    drawEntry(legendX, legendY + 88, color(255, 0, 0), "Cancelled", "CANCELLED");
+    drawEntry(legendX, legendY + 113, color(200, 200, 200), "All", "ALL");
   }
 
   // Draw one coloured line + label; bolder when this filter is active
@@ -267,9 +269,9 @@ class Legend { //<>// //<>//
     legendX = width  - legendW - 20;
     legendY = height - legendH - footerH - 10;
 
-    if (over(mx, my, legendX, legendY + 26,  legendW, 24)) return "ON_TIME";
-    if (over(mx, my, legendX, legendY + 51,  legendW, 24)) return "DELAYED";
-    if (over(mx, my, legendX, legendY + 76,  legendW, 24)) return "CANCELLED";
+    if (over(mx, my, legendX, legendY + 26, legendW, 24)) return "ON_TIME";
+    if (over(mx, my, legendX, legendY + 51, legendW, 24)) return "DELAYED";
+    if (over(mx, my, legendX, legendY + 76, legendW, 24)) return "CANCELLED";
     if (over(mx, my, legendX, legendY + 101, legendW, 24)) return "ALL";
     return null;
   }
@@ -303,28 +305,36 @@ class LocationManager {
         float  lat  = Float.valueOf(trim(parts[1]));
         float  lon  = Float.valueOf(trim(parts[2]));
         locations.put(code, new PVector(lat, lon));
-      } catch (Exception e) {
+      }
+      catch (Exception e) {
         //println("LocationManager: skipping bad line:", line);
       }
     }
   }
 
-  PVector getCoords(String code)    { return locations.get(code); }
-  boolean hasLocation(String code)  { return locations.containsKey(code); }
+  PVector getCoords(String code) {
+    return locations.get(code);
+  }
+  boolean hasLocation(String code) {
+    return locations.containsKey(code);
+  }
 }
 
 class WorldMap {
   PShape mapShape;
 
   // SVG viewBox origin and size (from the usa.svg file)
-  float svgMinX  =  11.1;
-  float svgMinY  =  -2.5;
-  float svgWidth = 937.81;
-  float svgHeight = 545.0;
+  float svgMinX   = 477.0;
+  float svgMinY   = 421.0;
+  float svgWidth  = 593.378;
+  float svgHeight = 318.287;
 
-  // Geographic bounds of the continental US
-  float minLon = -125, maxLon = -66;
-  float minLat =   24, maxLat =  50;
+  // Geographic bounds — taken directly from mapsvg:geoViewBox
+  // Format: left, top, right, bottom
+  float minLon = -127.55273;
+  float maxLon =  -64.54921;
+  float maxLat =   50.66829;   // top
+  float minLat =   24.33587;   // bottom
 
   WorldMap(String filename) {
     mapShape = loadShape(filename);
@@ -339,11 +349,17 @@ class WorldMap {
   }
 
   // Convert geographic (lat, lon) to screen (px, py)
-  PVector geoToScreen(float lat, float lon,
+ PVector geoToScreen(float lat, float lon,
                       float x, float y, float w, float h) {
-    // Map lon → SVG x, lat → SVG y (note: lat is flipped)
-    float px = map(lon, minLon, maxLon, svgMinX, svgMinX + svgWidth);
-    float py = map(lat, maxLat, minLat, svgMinY, svgMinY + svgHeight);
+    // Mercator projection — matches MapSVG's rendering
+    float toRad    = PI / 180.0;
+    float mercLat  = log(tan(PI / 4 + lat    * toRad / 2));
+    float mercMin  = log(tan(PI / 4 + minLat * toRad / 2));
+    float mercMax  = log(tan(PI / 4 + maxLat * toRad / 2));
+
+    // Map into SVG coordinate space
+    float px = map(lon,     minLon, maxLon, svgMinX, svgMinX + svgWidth);
+    float py = map(mercLat, mercMax, mercMin, svgMinY, svgMinY + svgHeight);
 
     float scale   = min(w / svgWidth, h / svgHeight);
     float offsetX = x + (w - svgWidth  * scale) / 2;
