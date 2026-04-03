@@ -94,16 +94,16 @@ class MapScreen extends Screen {
         // Highlight ring for the searched airport
         if (isSearched) {
           noFill();
-          stroke(255, 220, 0);
+          stroke(133, 80, 199);
           strokeWeight(2.5);
           ellipse(screen.x, screen.y, 20, 20);  // outer glow ring
-          stroke(255, 220, 0, 120);
+          stroke(133, 80, 199, 120);
           strokeWeight(6);
           ellipse(screen.x, screen.y, 26, 26);  // soft outer ring
         }
 
         // The dot itself
-        fill(isSearched ? color(255, 220, 0) : color(255, 0, 0));
+        fill(color(133, 80, 199));
         noStroke();
         ellipse(screen.x, screen.y, isSearched ? 10 : 8, isSearched ? 10 : 8);
 
@@ -158,18 +158,24 @@ class MapScreen extends Screen {
     if (selectedAirport == null) return;
 
     float x = 20;
-    float y = height - footerH - 70;
+    float y = height - footerH - 80;
+
+    String cityName = getCityName(selectedAirport);
 
     fill(0, 180);
     noStroke();
-    rect(x, y, 220, 50, 10);
+    rect(x, y, 220, 62, 10);
 
     fill(255);
     textSize(14);
     textAlign(LEFT, CENTER);
-    text("Selected Airport:", x + 10, y + 15);
+    text("Selected Airport:", x + 10, y + 14);
     textSize(18);
     text(selectedAirport, x + 10, y + 34);
+
+    fill(180);
+    textSize(11);
+    text(cityName, x + 10, y + 52);
 
     // ── Clear button ─────────────────────────────────────────────
     float btnX = x + 175;
@@ -189,11 +195,19 @@ class MapScreen extends Screen {
     text("X", btnX + btnW / 2, btnY + btnH / 2);
   }
 
+  String getCityName(String code) {
+    for (FlightLocation f : manager.allFlights) {
+      if (f.origin.equals(code))      return f.originCity;
+      if (f.destination.equals(code)) return f.destCity;
+    }
+    return "";
+  }
+
   // Add this helper method to MapScreen:
   boolean checkClearButtonClick(float mx, float my) {
     if (selectedAirport == null) return false;
     float x    = 20;
-    float y    = height - footerH - 70;
+    float y    = height - footerH - 80;
     float btnX = x + 175;
     float btnY = y + 8;
     float btnW = 35;

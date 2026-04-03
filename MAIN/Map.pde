@@ -3,6 +3,7 @@
 // and had its status (ON_TIME / DELAYED / CANCELLED) computed
 class FlightLocation {
   String origin, destination;
+  String originCity, destCity;
   float  oLat, oLon;   // origin lat/lon
   float  dLat, dLon;   // destination lat/lon
   String depTime, arrTime;
@@ -11,12 +12,15 @@ class FlightLocation {
   String status; // "ON_TIME", "DELAYED", or "CANCELLED"
 
   FlightLocation(String o, String d,
+    String oc, String dc,
     float olat, float olon,
     float dlat, float dlon,
     String dep, String arr,
     float dist, String date, String status) {
     origin      = o;
     destination = d;
+    originCity  = oc;
+    destCity    = dc;
     oLat = olat;
     oLon = olon;
     dLat = dlat;
@@ -50,9 +54,9 @@ class FlightLocation {
       drawCurve(p1, p2, cx, cy);
     } else {
       // Colour by status
-      if      (status.equals("CANCELLED")) stroke(255, 0, 0, 180);
-      else if (status.equals("DELAYED"))   stroke(255, 165, 0, 140);
-      else                                 stroke(0, 200, 0, 120);
+      if      (status.equals("CANCELLED")) stroke(214, 32, 32, 200);
+      else if (status.equals("DELAYED"))   stroke(242, 165, 24, 160);
+      else                                 stroke(36, 191, 36,   140);
 
       // Slightly thicker lines when an airport is selected
       // so the filtered set is easier to see
@@ -94,6 +98,14 @@ class FlightManager {
       String originCode = raw.origin.trim().toUpperCase();
       String destCode   = raw.destination.trim().toUpperCase();
 
+      // Read city names from the CSV columns
+      String originCity = table.getString(row, "ORIGIN_CITY_NAME");
+      String destCity   = table.getString(row, "DEST_CITY_NAME");
+
+      // Strip quotes Processing sometimes leaves in
+      originCity = originCity.replace("\"", "").trim();
+      destCity   = destCity.replace("\"", "").trim();
+
       // Skip if either airport has no coordinates
       PVector origin = loc.getCoords(originCode);
       PVector dest   = loc.getCoords(destCode);
@@ -120,15 +132,22 @@ class FlightManager {
 
       allFlights.add(new FlightLocation(
         originCode, destCode,
+        originCity, destCity,
         oLat, oLon, dLat, dLon,
-        str(raw.scheduledDepartureTime),
-        str(raw.scheduledArrivalTime),
+        formatTime(raw.scheduledDepartureTime),
+        formatTime(raw.scheduledArrivalTime),
         raw.distance, raw.date, status
         ));
     }
 
+
     // Start with all flights visible
     filteredFlights = new ArrayList<FlightLocation>(allFlights);
+  }
+  String formatTime(int t) {
+    int hours   = (t / 100) % 24;
+    int minutes = t % 100;
+    return nf(hours, 2) + ":" + nf(minutes, 2);
   }
 
   // Optional: filter to a single date
@@ -168,17 +187,29 @@ class InfoPanel {
     // Semi-transparent dark background box
     fill(0, 180);
     noStroke();
-    rect(20, 65, 240, 170, 10);
+    rect(20, 65, 260, 200, 10);
 
     fill(255);
-    textSize(14);
+    textSize(13);
     textAlign(LEFT, TOP);
     text("From:      " + currentFlight.origin, 30, 80);
-    text("To:        " + currentFlight.destination, 30, 100);
-    text("Departure: " + currentFlight.depTime, 30, 120);
-    text("Arrival:   " + currentFlight.arrTime, 30, 140);
-    text("Distance:  " + currentFlight.distance + " mi", 30, 160);
-    text("Status:    " + currentFlight.status, 30, 180);
+    fill(180);
+    textSize(11);
+    text("           " + currentFlight.originCity, 30, 96);
+
+    fill(255);
+    textSize(13);
+    text("To:        " + currentFlight.destination, 30, 114);
+    fill(180);
+    textSize(11);
+    text("           " + currentFlight.destCity, 30, 130);
+
+    fill(255);
+    textSize(13);
+    text("Departure: " + currentFlight.depTime, 30, 148);
+    text("Arrival:   " + currentFlight.arrTime, 30, 166);
+    text("Distance:  " + currentFlight.distance + " mi", 30, 184);
+    text("Status:    " + currentFlight.status, 30, 202);
   }
 }
 
