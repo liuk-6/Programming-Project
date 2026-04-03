@@ -89,8 +89,8 @@ class RegionPieChart {
     String[] labels = {"On Time", "Delayed", "Cancelled"};
     int lx = 10, ly = 10, box = 12;
 
-    pg.textAlign(CENTER,CENTER);
-    pg.textSize(15);
+    pg.textAlign(LEFT,CENTER);
+    pg.textSize(12);
 
     for (int i = 0; i < labels.length; i++) {
       pg.fill(colours[i]);
