@@ -12,6 +12,8 @@ class GraphDashboardScreen extends Screen {
   AirlineRateChart delayRateChart;
   HashMap<String, AirlineStats> airlineStats;
   
+   String activePieView = "Overall Flights";
+  
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
   float ImgX;
@@ -20,6 +22,7 @@ class GraphDashboardScreen extends Screen {
   float h;
 
   Dropdown barDropdown;
+  Dropdown pieDropdown;
   
   GraphDashboardScreen() {
     // for top airlines
@@ -93,12 +96,47 @@ class GraphDashboardScreen extends Screen {
       } else if (activeBarView.equals("Origin")) {
         originChart.draw();
       } else if (activeBarView.equals("% Cancelled")) {
+        cancelRateChart.drawnAtX = chartX;  // ADD: save position for click detection
+        cancelRateChart.drawnAtY = chartY;
         cancelRateChart.draw(0, 0);
       } else if (activeBarView.equals("% Delayed")) {
+         delayRateChart.drawnAtX = chartX;   // ADD: save position for click detection
+        delayRateChart.drawnAtY = chartY;
         delayRateChart.draw(0, 0);
       }
     
       popMatrix();
+      
+        if (activeBarView.equals("% Cancelled") || activeBarView.equals("% Delayed")) {
+        AirlineRateChart chart = activeBarView.equals("% Cancelled") ? cancelRateChart : delayRateChart;
+        
+        // Y-axis label (rotated) — now in screen coords
+        pushMatrix();
+        translate(chartX - 15, chartY + chart.pg.height/2);
+        rotate(-HALF_PI);
+        textAlign(CENTER, CENTER);
+        fill(0);
+        textSize(13);
+        text("Rate (%)", 0, 0);
+        popMatrix();
+        
+        // Chart title
+        fill(0);
+        textAlign(CENTER, TOP);
+        textSize(20);
+        text((chart.mode.equals("cancel") ? "Cancellation" : "Delay") + " Rate by Airline",
+             chartX + chart.pg.width/2, chartY - 50);
+        
+        // X-axis label
+        textSize(14);
+        textAlign(CENTER, BOTTOM);
+        text("Airlines", chartX + chart.pg.width/2, chartY + chart.pg.height + 25);
+        
+        // Legend panel — now in screen coords, no translate active
+        if (chart.showLegend && chart.airlines != null) {
+          chart.drawLegendPanel();
+        }
+      }
     }
     if (currentScreen == screen2) {
       airlinePie.draw(650, 150);
@@ -172,11 +210,16 @@ class GraphDashboardScreen extends Screen {
       // Origin chart buttons
      }else if (activeBarView.equals("Origin"))  {
       String airport = originChart.checkClick(mouseX, mouseY);
-      if (airport != null) {
-        showAirportFacts(airport);
-        return;
+        if (airport != null) {
+          showAirportFacts(airport);
+          return;
+        }
       }
-
+      if (activeBarView.equals("% Cancelled")) {
+        cancelRateChart.mousePressed();
+      }
+      if (activeBarView.equals("% Delayed")) {
+        delayRateChart.mousePressed();
       }
     }
     if (currentScreen == screen2) {
@@ -1079,6 +1122,10 @@ class AirlineRateChart {
   String[] airlines;
   float[] rates;
   String mode = "cancel";
+  boolean showLegend = false;
+  int btnX = 10, btnY = 310, btnW = 160, btnH = 28;
+  float drawnAtX = 0;
+  float drawnAtY = 0; 
 
   HashMap<String, Integer> airlineColours = new HashMap<String, Integer>();
 
@@ -1167,25 +1214,69 @@ class AirlineRateChart {
       pg.textAlign(CENTER, TOP);
       pg.text(airlines[i], bx + (barWidth - 5)/2, pg.height - 25);
     }
+     pg.fill(200);
+    pg.noStroke();
+    pg.rect(btnX, btnY, btnW, btnH, 5);
+    pg.fill(0);
+    pg.textAlign(CENTER, CENTER);
+    pg.textSize(12);
+    pg.text(showLegend ? "Hide Airline Legend" : "Show Airline Legend",
+            btnX + btnW/2, btnY + btnH/2);
 
     pg.endDraw();
     image(pg, x, y);
-    pushMatrix();
-    translate(-15, pg.height/2);
-    rotate(-HALF_PI);
-    textAlign(CENTER, CENTER);
-    fill(0);
-    text("Rate (%)", 0, 0);
-    popMatrix();
-  
-    // Title
-    fill(0);
-    textAlign(CENTER, TOP);
-    textSize(20);
-    text((mode.equals("cancel") ? "Cancellation" : "Delay") + " Rate by Airline", pg.width/2, -50);
-  
-    textSize(14);
-    textAlign(CENTER, BOTTOM);
-    text("Airlines", pg.width/2, pg.height + 25);
+    
+  }
+    void mousePressed() {
+    float mx = mouseX - drawnAtX;
+    float my = mouseY - drawnAtY;
+    if (mx > btnX && mx < btnX + btnW &&
+        my > btnY && my < btnY + btnH) {
+      showLegend = !showLegend;
+    }
+  }
+
+  // ADD: draws the legend panel in screen coordinates (outside pg)
+  void drawLegendPanel() {
+    pushStyle();
+    int rowH = 22;
+    int boxW = 230;
+    int boxH = 24 + airlines.length * rowH;
+
+    // Right of the chart: translate is (300,200), pg width is 500, so 300+500+10 = 810
+    float bx = drawnAtX + pg.width + 10;
+    float by = drawnAtY;
+
+    fill(255);
+    stroke(180);
+    strokeWeight(1);
+    rect(bx, by, boxW, boxH, 8);
+
+    noStroke();
+    fill(40);
+    textAlign(LEFT, TOP);
+    textSize(13);
+    text("Airline Legend", bx + 12, by + 6);
+
+    textSize(12);
+    for (int i = 0; i < airlines.length; i++) {
+      float rowY = by + 24 + i * rowH;
+      String code = airlines[i];
+
+      // Use the actual colour from airlineColours map, same as the bars
+      if (airlineColours.containsKey(code)) {
+        fill((int) airlineColours.get(code));
+      } else {
+        fill(RY_BLUE);
+      }
+      noStroke();
+      rect(bx + 10, rowY + 3, 14, 14, 3);
+
+      fill(30);
+      textAlign(LEFT, TOP);
+      // Uses getAirlineName() from regionPieCharts.pde — already globally available
+      text(code + "  =  " + getAirlineName(code), bx + 30, rowY + 3);
+    }
+    popStyle();
   }
 }
