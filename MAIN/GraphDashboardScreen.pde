@@ -46,8 +46,6 @@ class GraphDashboardScreen extends Screen {
   float w;
   float h;
 
-  Dropdown barDropdown;
-  Dropdown pieDropdown;
   
   GraphDashboardScreen() {
     // for top airlines
@@ -77,13 +75,6 @@ class GraphDashboardScreen extends Screen {
     delayRateChart.mode = "delay";
     delayRateChart.compute(airlineStats);
  
-    // Screen 1: bar chart dropdown + Pie Charts widget (kept)
-    String[] barOptions = {"Destination", "Origin", "% Cancelled", "% Delayed"};
-    barDropdown = new Dropdown(30, 75, 280, 40, barOptions);
-    
-    String[] pieOptions = {"Overall Flights", "By Airline", "Search Airport"};
-    pieDropdown = new Dropdown(30, 75, 220, 38, pieOptions);
- 
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
     
     searchBoxX = width/2 - 160;
@@ -112,11 +103,10 @@ class GraphDashboardScreen extends Screen {
     rectMode(CENTER);
     rect(panelX, panelY + panelH/2, panelW, panelH, 20);
     rectMode(CORNER);
-    
     if (currentScreen == screen1) {
-      barDropdown.draw();
+      drawBarTabs();
     } else if (currentScreen == screen2) {
-      pieDropdown.draw();
+      drawPieTabs();
     }
   
     // Draw charts
@@ -209,9 +199,9 @@ class GraphDashboardScreen extends Screen {
      // Draw dropdown on top of everything else
     // Draw dropdown on top of everything else
     if (currentScreen == screen1) {
-      barDropdown.draw();
+      drawBarTabs();
     } else if (currentScreen == screen2) {
-      pieDropdown.draw();
+      drawPieTabs();
     }
 
     // Draw airport suggestions last so they appear over all charts and panels
@@ -253,8 +243,89 @@ class GraphDashboardScreen extends Screen {
       b.display();
     
      // Draw dropdown on top of everything else
-    if (currentScreen == screen1) {
-      barDropdown.draw();
+  }
+  void drawPieTabs() {
+    String[] tabs = {"Overall Flights", "By Airline", "Search Airport"};
+    int tabCount = tabs.length;
+    float tabW = 280;
+    float tabH = 40;
+    float gap = 8;
+    float totalW = tabCount * tabW + (tabCount - 1) * gap;
+    float startX = width/2 - totalW/2;
+    float tabY = 75;
+
+    for (int i = 0; i < tabCount; i++) {
+      float tx = startX + i * (tabW + gap);
+      boolean isActive = activePieView.equals(tabs[i]);
+      boolean isHovered = (mouseX > tx && mouseX < tx + tabW &&
+                           mouseY > tabY && mouseY < tabY + tabH);
+
+      // Shadow
+      noStroke();
+      fill(0, 40);
+      rect(tx + 2, tabY + 3, tabW, tabH, 10);
+
+      // Button body
+      noStroke();
+      fill(isActive ? color(30, 50, 90) : (isHovered ? color(61, 90, 128) : RY_BLUE));
+      rect(tx, tabY, tabW, tabH, 10);
+
+      // Gold outline when active — matches the style in your screenshot
+      if (isActive) {
+        noFill();
+        stroke(RY_GOLD);
+        strokeWeight(2.5);
+        rect(tx, tabY, tabW, tabH, 10);
+        noStroke();
+      }
+
+      // Label
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text(tabs[i].toUpperCase(), tx + tabW/2, tabY + tabH/2);
+    }
+  }
+  void drawBarTabs() {
+    String[] tabs = {"Destination", "Origin", "% Cancelled", "% Delayed"};
+    int tabCount = tabs.length;
+    float tabW = 210;
+    float tabH = 40;
+    float gap = 8;
+    float totalW = tabCount * tabW + (tabCount - 1) * gap;
+    float startX = width/2 - totalW/2;
+    float tabY = 75;
+
+    for (int i = 0; i < tabCount; i++) {
+      float tx = startX + i * (tabW + gap);
+      boolean isActive = activeBarView.equals(tabs[i]);
+      boolean isHovered = (mouseX > tx && mouseX < tx + tabW &&
+                           mouseY > tabY && mouseY < tabY + tabH);
+
+      // Shadow
+      noStroke();
+      fill(0, 40);
+      rect(tx + 2, tabY + 3, tabW, tabH, 10);
+
+      // Button body
+      noStroke();
+      fill(isActive ? color(30, 50, 90) : (isHovered ? color(61, 90, 128) : RY_BLUE));
+      rect(tx, tabY, tabW, tabH, 10);
+
+      // Gold outline when active
+      if (isActive) {
+        noFill();
+        stroke(RY_GOLD);
+        strokeWeight(2.5);
+        rect(tx, tabY, tabW, tabH, 10);
+        noStroke();
+      }
+
+      // Label
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text(tabs[i].toUpperCase(), tx + tabW/2, tabY + tabH/2);
     }
   }
   void mousePressed() {
@@ -266,14 +337,25 @@ class GraphDashboardScreen extends Screen {
         }
       }
     }
-    
     if (currentScreen == screen1) {
     
-      String chosen = barDropdown.mousePressed(mouseX, mouseY);
-      if(chosen != null)  {
-        activeBarView = chosen;
-        activeFact = "";
-        return;
+      String[] tabs = {"Destination", "Origin", "% Cancelled", "% Delayed"};
+      int tabCount = tabs.length;
+      float tabW = 210;
+      float tabH = 40;
+      float gap = 8;
+      float totalW = tabCount * tabW + (tabCount - 1) * gap;
+      float startX = width/2 - totalW/2;
+      float tabY = 75;
+
+      for (int i = 0; i < tabCount; i++) {
+        float tx = startX + i * (tabW + gap);
+        if (mouseX > tx && mouseX < tx + tabW &&
+            mouseY > tabY && mouseY < tabY + tabH) {
+          activeBarView = tabs[i];
+          activeFact = "";
+          return;
+        }
       }
       
       // Destination chart buttons
@@ -300,22 +382,34 @@ class GraphDashboardScreen extends Screen {
         delayRateChart.mousePressed();
       }
     }
-    if (currentScreen == screen2) {
-      String chosen = pieDropdown.mousePressed(mouseX, mouseY);
-      if (chosen != null) {
-          // NEW: update which pie view is showing
-          activePieView = chosen;
-          // Reset search state when switching away from Search Airport
-          if (!chosen.equals("Search Airport")) {
+   if (currentScreen == screen2) {
+      String[] tabs = {"Overall Flights", "By Airline", "Search Airport"};
+      int tabCount = tabs.length;
+      float tabW = 280;
+      float tabH = 40;
+      float gap = 8;
+      float totalW = tabCount * tabW + (tabCount - 1) * gap;
+      float startX = width/2 - totalW/2;
+      float tabY = 75;
+
+      for (int i = 0; i < tabCount; i++) {
+        float tx = startX + i * (tabW + gap);
+        if (mouseX > tx && mouseX < tx + tabW &&
+            mouseY > tabY && mouseY < tabY + tabH) {
+          activePieView = tabs[i];
+          if (!tabs[i].equals("Search Airport")) {
             airportInputActive = false;
             airportSuggestions.clear();
           }
-           return;
+          return;
         }
       }
+    }
      if (currentScreen == screen2) {
       if (activePieView.equals("Overall Flights")) {
         pieChart.mousePressed();
+      }else if (activePieView.equals("By Airline")) {
+        airlinePie.mousePressed(width/2 - 450/2, height/2 - 350/2 + 20);
       } else if (activePieView.equals("Search Airport")) {
           // Click inside input box
           if (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
