@@ -94,16 +94,16 @@ class MapScreen extends Screen {
         // Highlight ring for the searched airport
         if (isSearched) {
           noFill();
-          stroke(133, 80, 199);
+          stroke(255);
           strokeWeight(2.5);
           ellipse(screen.x, screen.y, 20, 20);  // outer glow ring
-          stroke(133, 80, 199, 120);
+          stroke(143, 242, 255, 120);
           strokeWeight(6);
           ellipse(screen.x, screen.y, 26, 26);  // soft outer ring
         }
 
         // The dot itself
-        fill(color(133, 80, 199));
+        fill(color(26, 58, 92));
         noStroke();
         ellipse(screen.x, screen.y, isSearched ? 10 : 8, isSearched ? 10 : 8);
 

@@ -1,5 +1,4 @@
- //<>// //<>//
-// A flight that has been matched to geographic coordinates
+// A flight that has been matched to geographic coordinates //<>//
 // and had its status (ON_TIME / DELAYED / CANCELLED) computed
 class FlightLocation {
   String origin, destination;
@@ -269,7 +268,7 @@ class Legend {
     legendX = width  - legendW - 20;
     legendY = height - legendH - footerH - 10;
 
-    fill(0, 180);
+    fill(43, 180);
     noStroke();
     rect(legendX, legendY, legendW, legendH, 10);
 
@@ -482,7 +481,7 @@ class AirportSearch {
     float btnX = fieldX + fieldW + 5;
     boolean overBtn = mouseX > btnX && mouseX < btnX + btnW &&
       mouseY > fieldY && mouseY < fieldY + fieldH;
-    fill(overBtn ? color(0, 90, 200) : color(0, 120, 255));
+    fill(overBtn ? color(45, 89, 135) : color(26, 58, 92));
     noStroke();
     rect(btnX, fieldY, btnW, btnH, 5);
     fill(255);
