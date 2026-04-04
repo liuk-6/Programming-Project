@@ -94,14 +94,16 @@ class HomeScreen extends Screen {
 
 
     slides = new PImage[]{
-      planeHomeScreen, // your existing image
+      loadImage("Manhatten.jpg"),
       loadImage("pictureC.jpg"),
-      loadImage("pictureD.jpg"),
-      loadImage("pictureE.jpg"),
-      loadImage("pictureF.jpg"),
-      loadImage("pictureG.jpg"),
-      loadImage("pictureH.jpg"),
-      loadImage("pictureJ.jpg")
+      loadImage("Washington.jpg"),
+      loadImage("Chicago.png"),
+      loadImage("California.jpg"),
+      loadImage("Seattle.jpg"),
+      loadImage("Atlanta.png"),
+      loadImage("Texas.jpg"),
+      loadImage("Phoneix.jpg"),
+      loadImage("Alaska.jpg")
 
     };
 
@@ -109,10 +111,12 @@ class HomeScreen extends Screen {
       "Manhattan, New York City, USA",
       "Los Angelos, California, USA",
       "Capital Building, Washington D.C., USA",
-      "Miami Beach, Florida, USA",
       "Chicago, Illinois, USA",
       "San Francisco, California, USA",
       "Seattle, Washington, USA",
+      "Atlanta, Georgia, USA",
+      "Dallas, Texas, USA",
+      "Phoneix, Arizona, USA",
       "Anchorage, Alaska, USA"
     };
 

@@ -119,7 +119,6 @@ TableDisplay myTrafficRoutes;
 PImage backgroundImg;
 HomeScreen homeScreen;
 Screen currentScreenObject;
-PImage planeHomeScreen;
 PImage SearchButton;
 PImage arrow;
 PImage logo;
@@ -508,7 +507,6 @@ void setup() {
   bookingsScreen = new BookingsScreen();
   flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
-  planeHomeScreen = loadImage("pictureB.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
