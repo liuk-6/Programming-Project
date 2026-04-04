@@ -1368,7 +1368,7 @@ class TrafficScreen extends Screen {
     int spacing = 10;
     int y       = 75;
     int xStart  = width/2 - buttonW*3/2 - spacing;
-
+     
     eastBtn    = new Button(xStart,                      y, buttonW, buttonH, "EAST-COAST", "east",    16, false);
     centralBtn = new Button(xStart + buttonW + spacing,  y, buttonW, buttonH, "CENTRAL",    "central", 16, false);
     westBtn    = new Button(xStart + (buttonW+spacing)*2,y, buttonW, buttonH, "WEST-COAST", "west",    16, false);
@@ -1403,11 +1403,11 @@ class TrafficScreen extends Screen {
 
     drawRoutesPanel(zoneTitle, currentList);
 
-
+   backBtn.display();
     if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
     else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
     else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
-
+    backBtn.display(); 
     if (currentZone.equals("East")) {
       eastPie.draw(width - 420, 150);
     } else if (currentZone.equals("Central")) {
@@ -1445,7 +1445,7 @@ class TrafficScreen extends Screen {
     textSize(13);
     textAlign(LEFT);
     float lx = x - panelWidth/2 + 20;
-    text("RANK                   ROUTE                                                FLIGHTS   CANCEL%   DELAY%   ONTIME%", lx, yStart + 75);
+    text("RANK           ROUTE                                                                 FLIGHTS      CANCEL%   DELAY%           ONTIME%", lx, yStart + 75);
 
     stroke(180);
     line(lx, yStart + 85, x + panelWidth/2 - 20, yStart + 85);
@@ -1474,11 +1474,11 @@ class TrafficScreen extends Screen {
       textAlign(LEFT);
       text(rank + ".", lx, y + 18);
       text(r.origin + " > " + r.destination, lx + 40, y + 18);
-
+ 
       textAlign(RIGHT);
       fill(50);
       text(r.passengers, lx + 280, y + 18);
-
+      
       fill(r.cancelRate > 10 ? color(220,50,50) :
            r.cancelRate > 5  ? color(255,160,0) : color(40,180,40));
       text(nf(r.cancelRate, 1, 1) + "%", lx + 360, y + 18);
