@@ -90,9 +90,9 @@ class MapScreen extends Screen {
       boolean isSearched  = code.equals(airportSearch.query.toUpperCase().trim())
         && airportSearch.query.length() > 0;
 
-      if (isAllowed || isSearched) {
+      if (isAllowed || isSearched || isSelected) {
         // Highlight ring for the searched airport
-        if (isSearched) {
+        if (isSearched || isSelected) {
           noFill();
           stroke(255);
           strokeWeight(2.5);
@@ -296,6 +296,7 @@ class MapScreen extends Screen {
     if (airport != null) {
       // Toggle: clicking the same airport deselects it
       selectedAirport = airport.equals(selectedAirport) ? null : airport;
+      airportSearch.clear();
       panel.setFlight(null);
       return;
     }

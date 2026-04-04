@@ -87,8 +87,8 @@ class FlightManager {
     allFlights.clear();
 
     // Define the airports we want to show
-    String[] airports = { "DFW", "ATL", "CLT", "ORD", "DEN",
-      "LAX", "PHX", "SEA", "LGA", "MCO" };
+    String[] airports = {"LAS", "HOU", "DAL", "BOS", "FLL",
+      "LAX", "PHX", "SEA", "JFK", "MCO" };
     for (String a : airports) allowedAirports.add(a);
 
     for (int row = 0; row < table.getRowCount(); row++) {
@@ -243,7 +243,7 @@ class InteractionManager {
     PVector p2 = map.geoToScreen(f.dLat, f.dLon, contentX, contentY, contentW, contentH);
 
     float cx = (p1.x + p2.x) / 2;
-    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * 0.2;
+    float cy = (p1.y + p2.y) / 2 - dist(p1.x, p1.y, p2.x, p2.y) * 0.17;
 
     float minDist = 9999;
 
