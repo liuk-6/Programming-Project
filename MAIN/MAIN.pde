@@ -24,7 +24,7 @@ color TEXT_SUB  = #9AA3B2;
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-
+     
 UILayout ui;
 
 /////////// MAIN SCREENS AT START ////////////////
