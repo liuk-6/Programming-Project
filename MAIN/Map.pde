@@ -55,7 +55,7 @@ class FlightLocation {
       // Colour by status
       if      (status.equals("CANCELLED")) stroke(214, 32, 32, 200);
       else if (status.equals("DELAYED"))   stroke(242, 165, 24, 160);
-      else                                 stroke(36, 191, 36,   140);
+      else                                 stroke(36, 191, 36, 140);
 
       // Slightly thicker lines when an airport is selected
       // so the filtered set is easier to see
@@ -186,7 +186,7 @@ class InfoPanel {
     // Semi-transparent dark background box
     fill(0, 180);
     noStroke();
-    rect(20, 65, 260, 200, 10);
+    rect(20, 65, 260, 220, 10);
 
     fill(255);
     textSize(13);
@@ -205,10 +205,18 @@ class InfoPanel {
 
     fill(255);
     textSize(13);
-    text("Departure: " + currentFlight.depTime, 30, 148);
-    text("Arrival:   " + currentFlight.arrTime, 30, 166);
-    text("Distance:  " + currentFlight.distance + " mi", 30, 184);
-    text("Status:    " + currentFlight.status, 30, 202);
+    text("Date:      " + formatDate(currentFlight.date), 30, 148);
+    text("Departure: " + currentFlight.depTime, 30, 166);
+    text("Arrival:   " + currentFlight.arrTime, 30, 184);
+    text("Distance:  " + currentFlight.distance + " mi", 30, 202);
+    text("Status:    " + currentFlight.status, 30, 220);
+  }
+
+  String formatDate(String raw) {
+    // raw is "01/01/2022" (MM/DD/YYYY) — rearrange to DD/MM/YYYY
+    String[] parts = raw.split("/");
+    if (parts.length != 3) return raw;
+    return parts[1] + "/" + parts[0] + "/" + parts[2];
   }
 }
 
