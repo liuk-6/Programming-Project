@@ -190,7 +190,7 @@ class GraphDashboardScreen extends Screen {
       drawInfoBox(activeFact);
     }
   
-    // ⭐ DRAW THE TOP-AIRPORT BOX LAST ⭐
+    // DRAW THE TOP-AIRPORT BOX LAST
     if (currentScreen == screen2 && pieChart.isShowingTop()) {
       drawTopAirportBox();
     }
