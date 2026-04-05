@@ -195,6 +195,8 @@ class TopAirlinesPie {
   float[] values;
   color[] colours;
   PGraphics pg;
+  int selectedSlice = -1;
+  float expandDist = 14;
 
   TopAirlinesPie(HashMap<String, Integer> counts) {
     pg = createGraphics(550, 350);
@@ -253,12 +255,12 @@ class TopAirlinesPie {
   // DRAW PIE CHART
   // ---------------------------------------------------------
   void draw(float x, float y) {
+    float total = 0;
+    for (float v : values) total += v;
+
     pg.beginDraw();
     pg.background(RY_BG);
     pg.noStroke();
-
-    float total = 0;
-    for (float v : values) total += v;
 
     float start = 0;
     float cx = pg.width/2 - 80;
@@ -267,32 +269,79 @@ class TopAirlinesPie {
 
     for (int i = 0; i < values.length; i++) {
       float angle = TWO_PI * (values[i] / total);
+      boolean hov = (selectedSlice == i);
+      float midAngle = start + angle / 2;
+      float ox = hov ? cos(midAngle) * expandDist : 0;
+      float oy = hov ? sin(midAngle) * expandDist : 0;
       pg.fill(colours[i]);
-      pg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
+      pg.arc(cx + ox, cy + oy, diameter, diameter, start, start + angle, PIE);
+
+      // Show percentage label on the selected slice
+      if (hov && angle > 0.05) {
+        float labelX = cx + ox + cos(midAngle) * (diameter * 0.32);
+        float labelY = cy + oy + sin(midAngle) * (diameter * 0.32);
+        pg.fill(0, 180);
+        pg.textAlign(CENTER, CENTER);
+        pg.textSize(14);
+        pg.text(nf((values[i] / total) * 100, 1, 1) + "%", labelX, labelY);
+      }
+
       start += angle;
     }
 
     // Legend
     pg.textAlign(LEFT, CENTER);
-    pg.textSize(12);
-
     int lx = 350;
     int ly = 60;
     int box = 12;
 
     for (int i = 0; i < labels.length; i++) {
+      // Highlight selected row
+      if (i == selectedSlice) {
+        pg.noStroke();
+        pg.fill(230, 240, 255);
+        pg.rect(lx - 4, ly + i * 20 - 3, 190, box + 6, 4);
+      }
       pg.fill(colours[i]);
       pg.rect(lx, ly + i * 20, box, box);
-
-      pg.fill(0);
+      pg.fill(i == selectedSlice ? color(0, 80, 200) : 0);
+      pg.textSize(i == selectedSlice ? 13 : 12);
       pg.text(labels[i] + " (" + int(values[i]) + ")", lx + box + 8, ly + i * 20 + box/2);
     }
+
+    // Hint text
+    pg.fill(120);
+    pg.textSize(10);
+    pg.textAlign(LEFT, TOP);
+    pg.text("Click a label to highlight", lx, ly + labels.length * 20 + 6);
+
+    // Title
     pg.textSize(15);
     pg.fill(0);
-    pg.text("Percentage of Flights per Airline ", pg.width/2 - 180 , 20);
+    pg.textAlign(LEFT, CENTER);
+    pg.text("Percentage of Flights per Airline", pg.width/2 - 180, 20);
 
     pg.endDraw();
     image(pg, x - 50, y);
+  }
+  void mousePressed(float x, float y) {
+    // x - 50 matches image(pg, x - 50, y) in draw()
+    float drawX = x - 50;
+    int lx = 350;
+    int ly = 60;
+    int box = 12;
+    int rowH = 20;
+
+    for (int i = 0; i < labels.length; i++) {
+      float rowY = y + ly + i * rowH;
+      // Hit area covers the full legend row width
+      if (mouseX > drawX + lx - 4 && mouseX < drawX + lx + 194 &&
+          mouseY > rowY - 3       && mouseY < rowY + box + 3) {
+        // Toggle: clicking the same row again deselects it
+        selectedSlice = (selectedSlice == i) ? -1 : i;
+        return;
+      }
+    }
   }
 }
 
@@ -315,6 +364,8 @@ class PieChart {
   String topCancelledAirport = "";
 
   boolean showTopAirports = false;
+   int hoveredSlice = -1;
+   float expandDist = 14;
 
   // Button position
   int btnX = 10, btnY = 260, btnW = 180, btnH = 30;
@@ -406,63 +457,107 @@ class PieChart {
       }
       return best + " (" + max + ")";
     }
-    void draw(){
-      pg.beginDraw();
-      pg.background(RY_BG);
-      pg.noStroke();
-    
-      float total = 0;
-      for (float v : values) total += v;
-    
-      float start = 0;
-      float cx = pg.width/2;
-      float cy = pg.height/2;
-      float diameter = 250;
-    
-      for (int i = 0; i < values.length; i++) {
-        float angle = TWO_PI * (values[i] / total);
-        pg.fill(colours[i]);
-        pg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
-        pg.fill(0);
-        pg.text(int(percentOnTime)+"%", cx-diameter/8, cy+diameter/8);
-        pg.text(int(percentDelayed)+"%", cx, cy-diameter/8);
-        pg.text(int(percentCancelled)+"%", cx+diameter/4, cy-diameter/25);
-        start += angle;
+   void draw() {
+    // Calculate hover BEFORE drawing so expanded slices are correct
+    float[] vals = values;
+    float total = 0;
+    for (float v : vals) total += v;
+
+    // Pie is drawn at centre of pg
+    float cx = pg.width / 2;
+    float cy = pg.height / 2;
+    float radius = 125;
+
+    // Hover detection happens in pg-local coords (mouseX/Y minus the translate applied in drawContent)
+    // We store result in hoveredSlice each frame
+    float pieX = width/2 - 400/2;
+    float pieY = height/2 - 300/2 + 20;
+    float localMX = mouseX - pieX;
+    float localMY = mouseY - pieY;
+    float dx = localMX - cx;
+    float dy = localMY - cy;
+    float dist = sqrt(dx*dx + dy*dy);
+    hoveredSlice = -1;
+    if (dist <= radius + 20 && dist >= 5) {
+      float ang = atan2(dy, dx) + HALF_PI;
+      if (ang < 0)      ang += TWO_PI;
+      if (ang > TWO_PI) ang -= TWO_PI;
+      float cumul = 0;
+      for (int i = 0; i < vals.length; i++) {
+        cumul += TWO_PI * (vals[i] / total);
+        if (ang <= cumul) { hoveredSlice = i; break; }
       }
-      // --- Legend ---
-        int lx = 10;      // legend x-position inside pg
-        int ly = 10;      // legend y-position
-        int box = 15;     // size of colour squares
-        
-        String[] labels = {
-          "On Time",
-          "Delayed > 30min",
-          "Cancelled"
-        };
-        
-        pg.textAlign(LEFT, CENTER);
-        pg.textSize(12);
-        
-        for (int i = 0; i < labels.length; i++) {
-          pg.fill(colours[i]);
-          pg.rect(lx, ly + i * 25, box, box);
-        
-          pg.fill(0);
-          pg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
-        }
-      
-     
-      // --- Button ---
-      pg.fill(200);
-      pg.rect(btnX, btnY, btnW, btnH, 5);
-      pg.fill(0);
-      pg.textAlign(CENTER, CENTER);
-      pg.text("Show Top Airports", btnX + btnW/2, btnY + btnH/2);
- 
-      pg.endDraw();
-    
-      image(pg, 0, 0);
     }
+
+    pg.beginDraw();
+    pg.background(RY_BG);
+    pg.noStroke();
+
+    float start = -HALF_PI;
+    for (int i = 0; i < vals.length; i++) {
+      float angle = TWO_PI * (vals[i] / total);
+      boolean hov = (hoveredSlice == i);
+      float midAngle = start + angle / 2;
+      float ox = hov ? cos(midAngle) * expandDist : 0;
+      float oy = hov ? sin(midAngle) * expandDist : 0;
+
+      pg.fill(colours[i]);
+      pg.arc(cx + ox, cy + oy, radius * 2, radius * 2, start, start + angle, PIE);
+
+      // Percentage label inside slice
+      if (angle > 0.2) {
+        float lx = cx + ox + cos(midAngle) * radius * 0.65;
+        float ly = cy + oy + sin(midAngle) * radius * 0.65;
+        pg.fill(0, 180);
+        pg.textAlign(CENTER, CENTER);
+        pg.textSize(hov ? 15 : 13);
+        float pct = (vals[i] / total) * 100;
+        pg.text(nf(pct, 1, 1) + "%", lx, ly);
+      }
+      start += angle;
+    }
+
+    // Legend
+    int lx = 10, ly = 10, box = 15;
+    String[] labels = { "On Time", "Delayed > 30min", "Cancelled" };
+    pg.textAlign(LEFT, CENTER);
+    pg.textSize(12);
+    for (int i = 0; i < labels.length; i++) {
+      pg.fill(colours[i]);
+      pg.rect(lx, ly + i * 25, box, box);
+      pg.fill(0);
+      pg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
+    }
+
+    // Show Top Airports button
+    pg.fill(200);
+    pg.rect(btnX, btnY, btnW, btnH, 5);
+    pg.fill(0);
+    pg.textAlign(CENTER, CENTER);
+    pg.text("Show Top Airports", btnX + btnW/2, btnY + btnH/2);
+
+    pg.endDraw();
+    image(pg, 0, 0);
+
+    // Tooltip drawn in screen coords (after image stamp, outside pg)
+    if (hoveredSlice >= 0) {
+      String[] tipLabels = { "On Time", "Delayed > 30min", "Cancelled" };
+      float pct = (vals[hoveredSlice] / total) * 100;
+      String tip = tipLabels[hoveredSlice] + "\n" +
+                   int(vals[hoveredSlice]) + " flights (" + nf(pct, 1, 1) + "%)";
+      float pieScreenX = width/2 - 400/2;
+      float pieScreenY = height/2 - 300/2 + 20;
+      float tx = mouseX - pieScreenX + 14;
+      float ty = mouseY - pieScreenY - 10;
+      float tw = 200, th = 48;
+      fill(255); stroke(RY_BLUE); strokeWeight(1);
+      rect(tx, ty, tw, th, 7);
+      noStroke(); fill(RY_BLUE);
+      textAlign(LEFT, TOP);
+      textSize(12);
+      text(tip, tx + 9, ty + 7, tw - 18, th - 14);
+    }
+  }
     void mousePressed() {
       // Adjust for translate(200, 300)
       float pieX = width/2 - 400/2;
@@ -486,4 +581,5 @@ class PieChart {
         "Most Cancelled: " + topCancelledAirport
       };
     }
+    
 }
