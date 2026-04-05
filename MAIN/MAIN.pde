@@ -224,6 +224,9 @@ void drawSearchInfoPanel() {
   text("• Explore flights by travel date", width/2, y + 120);
 }
 void goTo(int nextScreen) {
+  if(nextScreen == mapScreen){
+    flightMapScreen.reset();
+  }
   screenHistory.add(currentScreen);
   currentScreen = nextScreen;
 }

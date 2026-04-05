@@ -42,6 +42,12 @@ class MapScreen extends Screen {
     airportSearch.load(table, locationManager);
   }
 
+  void reset()  {
+    selectedAirport = null;
+    statusFilter = "ALL";
+    panel.setFlight(null);
+    airportSearch.clear();
+  }
   // ── Draw loop ─────────────────────────────────────────────────
   void draw() {
     background(14, 42, 71);

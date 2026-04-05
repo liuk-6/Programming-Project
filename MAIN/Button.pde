@@ -63,7 +63,7 @@ class Button {
       fill(255);
       textAlign(CENTER, CENTER);
       textSize(textSize);
-      text("← " + label, x + w/2, y + h/2 - 2);
+      text("← " + label, x + w/2, y + h/2);
       
       } else if (type.equals("home") || type.equals("graphs") || type.equals("pieCharts") || type.equals("maps")){
       noStroke();

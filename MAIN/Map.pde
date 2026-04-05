@@ -291,13 +291,13 @@ class Legend {
     textSize(13);
     fill(255);
     textAlign(LEFT, CENTER);
-    text("Flight Status", legendX + 15, legendY + 18);
+    text("Flight Status", legendX + 15, legendY + 28);
 
     // Each entry highlights if it is the active filter
-    drawEntry(legendX, legendY + 38, color(0, 200, 0), "On Time", "ON_TIME");
-    drawEntry(legendX, legendY + 63, color(255, 165, 0), "Delayed", "DELAYED");
-    drawEntry(legendX, legendY + 88, color(255, 0, 0), "Cancelled", "CANCELLED");
-    drawEntry(legendX, legendY + 113, color(200, 200, 200), "All", "ALL");
+    drawEntry(legendX, legendY + 55, color(0, 200, 0), "On Time", "ON_TIME");
+    drawEntry(legendX, legendY + 80, color(255, 165, 0), "Delayed", "DELAYED");
+    drawEntry(legendX, legendY + 105, color(255, 0, 0), "Cancelled", "CANCELLED");
+    drawEntry(legendX, legendY + 130, color(200, 200, 200), "All", "ALL");
   }
 
   // Draw one coloured line + label; bolder when this filter is active
@@ -315,10 +315,10 @@ class Legend {
     legendX = width  - legendW - 20;
     legendY = height - legendH - footerH - 10;
 
-    if (over(mx, my, legendX, legendY + 26, legendW, 24)) return "ON_TIME";
-    if (over(mx, my, legendX, legendY + 51, legendW, 24)) return "DELAYED";
-    if (over(mx, my, legendX, legendY + 76, legendW, 24)) return "CANCELLED";
-    if (over(mx, my, legendX, legendY + 101, legendW, 24)) return "ALL";
+    if (over(mx, my, legendX, legendY + 43, legendW, 24)) return "ON_TIME";
+    if (over(mx, my, legendX, legendY + 68, legendW, 24)) return "DELAYED";
+    if (over(mx, my, legendX, legendY + 93, legendW, 24)) return "CANCELLED";
+    if (over(mx, my, legendX, legendY + 118, legendW, 24)) return "ALL";
     return null;
   }
 
