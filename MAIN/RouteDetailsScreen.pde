@@ -17,6 +17,7 @@ class RouteDetailsScreen extends Screen {
     textAlign(CENTER, CENTER);
     textSize(26);
     text("ROUTE DETAILS", width/2, 40);
+    for (Button b : buttons) b.display();
 
     if (selectedRoute == null) return;
 

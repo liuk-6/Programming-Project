@@ -25,7 +25,7 @@ color TEXT_SUB  = #9AA3B2;
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-
+     
 UILayout ui;
 
 /////////// MAIN SCREENS AT START ////////////////
@@ -120,7 +120,6 @@ TableDisplay myTrafficRoutes;
 PImage backgroundImg;
 HomeScreen homeScreen;
 Screen currentScreenObject;
-PImage planeHomeScreen;
 PImage SearchButton;
 PImage arrow;
 PImage logo;
@@ -183,6 +182,21 @@ PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
 
+<<<<<<< HEAD
+  float selectX = cardX + cardW - 120;
+  float selectY = cardY + 25;
+  float selectW = 100;
+  float selectH = 50;
+
+  return (
+    mouseX > selectX &&
+    mouseX < selectX + selectW &&
+    mouseY > selectY &&
+    mouseY < selectY + selectH
+    );
+}
+=======
+>>>>>>> f01303547912594156196de0e97b734afe798e14
 void goToWithTransition(Screen s) {
   nextScreen = s;
   transitionAlpha = 0;
@@ -484,7 +498,6 @@ void setup() {
   getMessage               = new Screen();
   flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
-  planeHomeScreen = loadImage("pictureB.jpg");
   backgroundImg   = loadImage("BackgroundImg.jpg");
   SearchButton    = loadImage("SearchButton.png");
   arrow           = loadImage("Arrow.png");
@@ -529,21 +542,48 @@ void draw() {
 
 
 
-    case home: currentScreenObject = homeScreen; break;
-    case queries: currentScreenObject = queriesScreen; break;
-    case flightsSearch: currentScreenObject = flightsSearchScreen; break;
-    case flightsDate: currentScreenObject = flightDateScreen; break;
-    case flightsTraffic: currentScreenObject = trafficScreen; break;
-    case flightsOutput: currentScreenObject = flightsOutputScreen; break;
-    case flightsOutputTwoWay: currentScreenObject = twoWayFlightsOutputScreen; break;  // <-- added
-    case dashboard: currentScreenObject = dashboardScreen; break;
-    case graphDashboard: currentScreenObject = graphDashboardScreen; break;
-    case bookingsScreens: currentScreenObject = bookingsScreen; break;
-    case mapScreen: currentScreenObject = flightMapScreen; break;
-    case routeDetails: currentScreenObject = routeDetailsScreen; break;
-    case flightConfirmedScreen: currentScreenObject = flightConfirmedScreenObj; break;
-    default: currentScreenObject = homeScreen; break;
-
+  case home:
+    currentScreenObject = homeScreen;
+    break;
+  case queries:
+    currentScreenObject = queriesScreen;
+    break;
+  case flightsSearch:
+    currentScreenObject = flightsSearchScreen;
+    break;
+  case flightsDate:
+    currentScreenObject = flightDateScreen;
+    break;
+  case flightsTraffic:
+    currentScreenObject = trafficScreen;
+    break;
+  case flightsOutput:
+    currentScreenObject = flightsOutputScreen;
+    break;
+  case flightsOutputTwoWay:
+    currentScreenObject = twoWayFlightsOutputScreen;
+    break;  // <-- added
+  case dashboard:
+    currentScreenObject = dashboardScreen;
+    break;
+  case graphDashboard:
+    currentScreenObject = graphDashboardScreen;
+    break;
+  case bookingsScreens:
+    currentScreenObject = bookingsScreen;
+    break;
+  case mapScreen:
+    currentScreenObject = flightMapScreen;
+    break;
+  case routeDetails:
+    currentScreenObject = routeDetailsScreen;
+    break;
+  case flightConfirmedScreen:
+    currentScreenObject = flightConfirmedScreenObj;
+    break;
+  default:
+    currentScreenObject = homeScreen;
+    break;
   }
 
   if (currentScreenObject != null) currentScreenObject.draw();
@@ -633,5 +673,9 @@ void mouseWheel(MouseEvent event) {
     } else if (currentScreenObject instanceof TwoWayFlightsOutputScreen) {
       ((TwoWayFlightsOutputScreen)currentScreenObject).mouseWheel(event);
     }
+  }
+
+  if (currentScreenObject instanceof MapScreen) {
+    ((MapScreen) currentScreenObject).mouseWheel(event);
   }
 }

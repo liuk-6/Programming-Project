@@ -13,7 +13,6 @@ class Screen {
     //drawContent();
 
     drawImages();
-    drawContent();
   }
 
   // ---------- OVERRIDDEN BY SCREENS ----------
@@ -86,7 +85,7 @@ class HomeScreen extends Screen {
   int slideInterval = 7000; // ms between auto-advances
   int lastSlideTime = 0;
 
-  int FADE_DURATION = 1200;  // ms for cross-fade
+  int FADE_DURATION = 1800;  // ms for cross-fade
   int fadeStartTime = 0;
 
   float arrowW = 52;
@@ -94,6 +93,16 @@ class HomeScreen extends Screen {
   float leftArrowX, rightArrowX, arrowY;
   boolean leftHover  = false;
   boolean rightHover = false;
+  boolean leftClicked = false;
+  boolean rightClicked = false;
+  
+  int leftClickTimer =0;
+  int rightClickTimer = 0;
+  
+  float lAlpha = 80;
+  float rAlpha = 80;
+  float leftScale = 1.0;
+  float rightScale = 1.0;
 
   HomeScreen() {
 
@@ -116,14 +125,16 @@ class HomeScreen extends Screen {
 
 
     slides = new PImage[]{
-      planeHomeScreen, // your existing image
+      loadImage("Manhatten.jpg"),
       loadImage("pictureC.jpg"),
-      loadImage("pictureD.jpg"),
-      loadImage("pictureE.jpg"),
-      loadImage("pictureF.jpg"),
-      loadImage("pictureG.jpg"),
-      loadImage("pictureH.jpg"),
-      loadImage("pictureJ.jpg")
+      loadImage("Washington.jpg"),
+      loadImage("Chicago.png"),
+      loadImage("California.jpg"),
+      loadImage("Seattle.jpg"),
+      loadImage("Atlanta.png"),
+      loadImage("Texas.jpg"),
+      loadImage("Phoneix.jpg"),
+      loadImage("Alaska.jpg")
 
     };
 
@@ -131,16 +142,18 @@ class HomeScreen extends Screen {
       "Manhattan, New York City, USA",
       "Los Angelos, California, USA",
       "Capital Building, Washington D.C., USA",
-      "Miami Beach, Florida, USA",
       "Chicago, Illinois, USA",
       "San Francisco, California, USA",
       "Seattle, Washington, USA",
+      "Atlanta, Georgia, USA",
+      "Dallas, Texas, USA",
+      "Phoneix, Arizona, USA",
       "Anchorage, Alaska, USA"
     };
 
     arrowY      = height * 0.65;
-    leftArrowX  = width * 0.1;
-    rightArrowX = width * 0.9;
+    leftArrowX  = width  * 0.1 + 20;
+    rightArrowX = width * 0.9 - 20;
 
     lastSlideTime = millis();
   }
@@ -186,9 +199,7 @@ class HomeScreen extends Screen {
     if (transitioning) {
       float elapsed = now - fadeStartTime;
       float t = constrain(elapsed / (float)FADE_DURATION, 0, 1);
-      float eased = t < 0.5
-        ? 2 * t * t                          // ease-in
-        : -1 + (4 - 2*t) * t;               // ease-out  (combined = smoothstep-ish)
+      float eased = t * t * (3 - 2 * t);
       fadeAlpha = eased * 255;
 
       if (elapsed >= FADE_DURATION) {
@@ -202,12 +213,12 @@ class HomeScreen extends Screen {
     imageMode(CENTER);
     float cx = width / 2;
     float cy = height * 0.65;
-    float iw = width * 0.8;
-    float ih = height * 0.6;
-
-    // Soft glow
-    fill(255, 30);
-    ellipse(cx, cy, width * 0.7, height * 0.5);
+    float iw = width * 0.75;
+    float ih = height * 0.55;
+    
+    noStroke();
+    fill(0, 80);
+    rect(cx - iw/2 + 8, cy - ih/2 + 8, iw, ih);
 
     // Draw current slide (fully opaque)
     tint(255, 255);
@@ -220,6 +231,12 @@ class HomeScreen extends Screen {
     }
 
     noTint();
+    noFill();
+    stroke(255, 30);
+    strokeWeight(3);
+    rect(cx - iw/2, cy - ih/2, iw, ih);
+    noStroke();
+    
     imageMode(CORNER);
     
     // Draw arrow hints
@@ -232,24 +249,46 @@ class HomeScreen extends Screen {
 
   void drawArrowButtons() {
     float half = arrowW / 2;
-
+    
+    leftHover = dist(mouseX, mouseY, leftArrowX, arrowY) < arrowW / 2;
+    rightHover = dist(mouseX, mouseY, rightArrowX, arrowY) < arrowW / 2;
+    
+    if(leftClickTimer > 0) leftClickTimer--;
+    if(rightClickTimer > 0) rightClickTimer--;
+    
+    float leftTarget = leftClickTimer > 0 ? 0.92 : (leftHover ? 1.2 : 1.0);
+    float rightTarget = rightClickTimer > 0 ? 0.92 : (rightHover ? 1.2 : 1.0);
+    
     // Left arrow
-    float lAlpha = leftHover ? 220 : 130;
-    drawArrowButton(leftArrowX, arrowY, half, lAlpha, "◀");
+    lAlpha = lerp(lAlpha, leftHover ? 255 : 60, 0.8);
 
     // Right arrow
-    float rAlpha = rightHover ? 220 : 130;
-    drawArrowButton(rightArrowX, arrowY, half, rAlpha, "▶");
+    rAlpha = lerp(rAlpha, rightHover ? 255 : 60, 0.8);
+    
+    leftScale = lerp(leftScale, leftTarget, 0.9);
+    rightScale = lerp(rightScale, rightTarget, 0.9);
+
+    pushMatrix();
+    translate(leftArrowX, arrowY);
+    scale(leftScale);
+    drawArrowButton(0, 0, half, lAlpha, "◀");
+    popMatrix();
+    
+    pushMatrix();
+    translate(rightArrowX, arrowY);
+    scale(rightScale);
+    drawArrowButton(0, 0, half, rAlpha, "▶");
+    popMatrix();
   }
 
   void drawArrowButton(float cx, float cy, float half, float alpha, String symbol) {
     // Pill background
     noStroke();
-    fill(255, alpha * 0.35);
+    fill(255, alpha * 0.55);
     ellipse(cx, cy, arrowW, arrowH);
 
     // Border ring
-    stroke(255, alpha);
+    stroke(255, alpha * 0.75);
     strokeWeight(1.5);
     noFill();
     ellipse(cx, cy, arrowW, arrowH);
@@ -320,12 +359,15 @@ class HomeScreen extends Screen {
   }
 
   void mousePressed() {
+
     // Arrow buttons
     if (overLeftArrow(mouseX, mouseY)) {
+      leftClickTimer = 2;
       startTransition((currentSlide - 1 + slides.length) % slides.length);
       return;
     }
     if (overRightArrow(mouseX, mouseY)) {
+      rightClickTimer = 2;
       startTransition((currentSlide + 1) % slides.length);
       return;
     }
@@ -2254,7 +2296,7 @@ class TrafficScreen extends Screen {
     int spacing = 10;
     int y       = 75;
     int xStart  = width/2 - buttonW*3/2 - spacing;
-
+     
     eastBtn    = new Button(xStart,                      y, buttonW, buttonH, "EAST-COAST", "east",    16, false);
     centralBtn = new Button(xStart + buttonW + spacing,  y, buttonW, buttonH, "CENTRAL",    "central", 16, false);
     westBtn    = new Button(xStart + (buttonW+spacing)*2,y, buttonW, buttonH, "WEST-COAST", "west",    16, false);
@@ -2289,11 +2331,11 @@ class TrafficScreen extends Screen {
 
     drawRoutesPanel(zoneTitle, currentList);
 
-
+   backBtn.display();
     if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
     else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
     else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
-
+    backBtn.display(); 
     if (currentZone.equals("East")) {
       eastPie.draw(width - 420, 150);
     } else if (currentZone.equals("Central")) {
@@ -2331,7 +2373,7 @@ class TrafficScreen extends Screen {
     textSize(13);
     textAlign(LEFT);
     float lx = x - panelWidth/2 + 20;
-    text("RANK                   ROUTE                                                FLIGHTS   CANCEL%   DELAY%   ONTIME%", lx, yStart + 75);
+    text("RANK           ROUTE                                                                 FLIGHTS      CANCEL%   DELAY%           ONTIME%", lx, yStart + 75);
 
     stroke(180);
     line(lx, yStart + 85, x + panelWidth/2 - 20, yStart + 85);
@@ -2360,11 +2402,11 @@ class TrafficScreen extends Screen {
       textAlign(LEFT);
       text(rank + ".", lx, y + 18);
       text(r.origin + " > " + r.destination, lx + 40, y + 18);
-
+ 
       textAlign(RIGHT);
       fill(50);
       text(r.passengers, lx + 280, y + 18);
-
+      
       fill(r.cancelRate > 10 ? color(220,50,50) :
            r.cancelRate > 5  ? color(255,160,0) : color(40,180,40));
       text(nf(r.cancelRate, 1, 1) + "%", lx + 360, y + 18);
