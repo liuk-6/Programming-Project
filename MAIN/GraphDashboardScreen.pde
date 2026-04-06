@@ -503,7 +503,7 @@ class GraphDashboardScreen extends Screen {
   
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
-      activeFact = "LAX - \nLos Angeles International Airport. \n \nThe eighth-busiest airport in the world serving over 75 million guests in 2023 \n\n It has an official song.";
+      activeFact = "LAX - \nLos Angeles International Airport. \n\nThe eighth-busiest airport in the world serving over 75 million guests in 2023 \n\n It has an official song.";
       currentAirportImg = loadImage("LAX.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -511,7 +511,7 @@ class GraphDashboardScreen extends Screen {
       h = 45;
       
     } else if (code.equals("JFK")) {
-      activeFact = "JFK - \n John F Kennedy International Airport \n \n There is a pet-only terminal.";
+      activeFact = "JFK - \nJohn F Kennedy International Airport \n\nThere is a pet-only terminal.";
       currentAirportImg = loadImage("JFK.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -519,7 +519,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
       
     } else if (code.equals("SEA")) {
-      activeFact = "SEA - \n Seattle-Tacoma International Airport. \n  \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
+      activeFact = "SEA - \nSeattle-Tacoma International Airport. \n\nSEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
       currentAirportImg = loadImage("SEA.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -527,7 +527,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
       
     } else if (code.equals("HON")) {
-      activeFact = "HON - \n Honolulu International Airport. \n \n The largest airport in Hawaii.";
+      activeFact = "HON - \nHonolulu International Airport. \n\nThe largest airport in Hawaii.";
       currentAirportImg = loadImage("HON.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -535,7 +535,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
   
     } else if (code.equals("LGA")) {
-      activeFact = "LGA - \n LaGuardia Airport. \n \n The airport lies partly on reclaimed land, created using landfill .";
+      activeFact = "LGA - \n LaGuardia Airport.\n\nThe airport lies partly on reclaimed land, created using landfill .";
       currentAirportImg = loadImage("LGA.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -543,7 +543,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
     
     } else if (code.equals("PHX")) {
-      activeFact = "PHX - \n Phoenix Sky Harbor International Airport. \n \n Arizona's largest and busiest airport.";
+      activeFact = "PHX - \nPhoenix Sky Harbor International Airport. \n \n Arizona's largest and busiest airport.";
       currentAirportImg = loadImage("PHX.jpg");
       ImgX = 950;
       ImgY = height - 460;
@@ -551,7 +551,7 @@ class GraphDashboardScreen extends Screen {
       h = 50;
     
     }else if (code.equals("MCO")) {
-      activeFact = "MCO - \n Orlando International Airport. \n \n Has over $41 billion in economic impact.";
+      activeFact = "MCO - \nOrlando International Airport. \n \nHas over $41 billion in economic impact.";
       currentAirportImg = loadImage("MCO.jpg");
       ImgX = 950;
       ImgY = height - 460;
@@ -559,7 +559,7 @@ class GraphDashboardScreen extends Screen {
       h = 60;
     
     } else if (code.equals("ATL")) {
-      activeFact = "ATL -  Hartsfield-Jackson Atlanta International Airport. \n\n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
+      activeFact = "ATL -  \nHartsfield-Jackson Atlanta International Airport. \n\nSince 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
       currentAirportImg = loadImage("ATL.jpg");
       ImgX = 950;
       ImgY = height - 460;
@@ -567,7 +567,7 @@ class GraphDashboardScreen extends Screen {
       h = 50;
     
     }else if (code.equals("DFW")) {
-      activeFact = "DFW - \n Dallas/Fort Worth International Airport. \n\n It serves 269 destinations (196 domestic and 73 international).";
+      activeFact = "DFW - \nDallas/Fort Worth International Airport. \n\nIt serves 269 destinations (196 domestic and 73 international).";
       currentAirportImg = loadImage("Dallas.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -575,7 +575,7 @@ class GraphDashboardScreen extends Screen {
       h = 60;
     
     }else if (code.equals("CLT")) {
-      activeFact = "CLT - \n Charlotte Douglas International Airport. \n \n Contributes about 5% of North Carolinas GDP.";
+      activeFact = "CLT - \nCharlotte Douglas International Airport. \n\nContributes about 5% of North Carolinas GDP.";
       currentAirportImg = loadImage("CLT.png");
       ImgX = 950;
       ImgY = height - 460;
@@ -583,7 +583,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
     
     }else if (code.equals("DEN")) {
-      activeFact = "DEN - \n Denver International Airport . \n \n Legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
+      activeFact = "DEN - \nDenver International Airport . \n \nLegend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
       currentAirportImg = loadImage("DEN.jpg");
       ImgX = 950;
       ImgY = height - 460;
@@ -591,7 +591,7 @@ class GraphDashboardScreen extends Screen {
       h = 40;
     
     } else if (code.equals("ORD")) {
-      activeFact = "ORD - \n Chicago Ohare International Airport. \n \n  Built in February of 1944.";
+      activeFact = "ORD - \nChicago Ohare International Airport. \n\nBuilt in February of 1944.";
       currentAirportImg = loadImage("ORD.jpg");
       ImgX = 950;
       ImgY = height - 460;
