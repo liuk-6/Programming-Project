@@ -2299,9 +2299,7 @@ class TrafficScreen extends Screen {
   ArrayList<Route> east;
   ArrayList<Route> central;
   ArrayList<Route> west;
-  RegionPieChart eastPie;
-  RegionPieChart westPie;
-  RegionPieChart centralPie;
+
 
   String currentZone = "East";
 
@@ -2317,9 +2315,6 @@ class TrafficScreen extends Screen {
     this.east = east;
     this.central = central;
     this.west = west;
-    eastPie    = new RegionPieChart(eastCoastAirports);
-    centralPie = new RegionPieChart(centralAirports);
-    westPie    = new RegionPieChart(westCoastAirports);
 
     backBtn    = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
     buttons.add(backBtn);
@@ -2370,17 +2365,6 @@ class TrafficScreen extends Screen {
     drawRoutesPanel(zoneTitle, currentList);
 
    backBtn.display();
-    if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
-    else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
-    else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
-    backBtn.display(); 
-    if (currentZone.equals("East")) {
-      eastPie.draw(width - 420, 150);
-    } else if (currentZone.equals("Central")) {
-      centralPie.draw(width - 420, 150);
-    } else if (currentZone.equals("West")) {
-      westPie.draw(width - 420, 150);
-    }
 
   }
 
@@ -2391,7 +2375,7 @@ class TrafficScreen extends Screen {
   }
 
   void drawRoutesPanel(String title, ArrayList<Route> routes) {
-    float panelWidth  = width - 50;
+    float panelWidth  = width -80;
     float panelHeight = 560;
     float x           = panelWidth/2 + 25;
     float yStart      = 120;

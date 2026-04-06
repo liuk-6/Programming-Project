@@ -33,7 +33,7 @@ class RouteDetailsScreen extends Screen {
 
     // ---- STAT CARDS ----
     drawStatCard(width/2 - 380, 200, "TOTAL FLIGHTS",
-                 str(selectedRoute.passengers), color(60, 120, 200));
+                 str(selectedRoute.passengers), color(40, 180, 40));
 
     drawStatCard(width/2 - 120, 200, "ON TIME",
                  nf(selectedRoute.onTimeRate, 1, 1) + "%", color(40, 180, 40));
@@ -49,7 +49,6 @@ class RouteDetailsScreen extends Screen {
     // ---- PIE CHART ----
     drawPieChart(width/2, 480, 160);
 
-    // ---- LEGEND ----
     drawLegend(width/2 + 200, 420);
   }
 
@@ -58,22 +57,25 @@ class RouteDetailsScreen extends Screen {
     float h = 110;
     float x = cx - w/2;
 
-    // shadow
-    fill(0, 60);
-    rect(x + 4, y + 4, w, h, 12);
+   fill(BG);
+  noStroke();
+  rect(x, y, w, h, 12);
 
-    // card
-    fill(c);
-    noStroke();
-    rect(x, y, w, h, 12);
+  
+  fill(0, 60);
+  rect(x + 4, y + 4, w, h, 12);
 
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(13);
-    text(label, cx, y + 30);
+  fill(c);
+  noStroke();
+  rect(x, y, w, h, 12);
 
-    textSize(30);
-    text(value, cx, y + 75);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(13);
+  text(label, cx, y + 30);
+  textSize(30);
+  text(value, cx, y + 75);
+    
   }
 
   void drawPieChart(float cx, float cy, float diam) {
