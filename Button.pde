@@ -114,44 +114,99 @@ class Button {
 // ===== TEXT ENTRY BUTTON =====
 class TextEntryButton extends Button {
   int maxlen, inputOrder;
+  boolean hasError;
+  int shakeTimer;
+  float shakeOffset;
   
   TextEntryButton(float x, float y, float w, float h, String label, String type, int maxChars, int textSize, boolean hasShadow, int inputOrder){
     super(x, y, w, h, label, type, textSize, hasShadow);
     this.inputOrder = inputOrder;
     this.maxlen = maxChars;
+    hasError = false;
+    shakeTimer = 0;
+    shakeOffset = 0;
+  }
+  
+  void triggerError() {
+    shakeTimer = 20; // frames (~0.3 sec)
   }
 
-  @Override
+  
+  
   void display() {
-    QueriesFlights qf = null;
-    if (currentScreenObject instanceof QueriesFlights) {
-        qf = (QueriesFlights) currentScreenObject;
+  
+   boolean isCurrent = false;
+
+  if (currentScreenObject instanceof QueriesDate) {
+    QueriesDate qd = (QueriesDate) currentScreenObject;
+    isCurrent = (qd.currentInput == this);
+  }
+    
+     // ---------------- SHAKE ANIMATION ----------------
+    if (shakeTimer > 0) {
+      shakeOffset = sin(frameCount * 0.8) * 5;
+      shakeTimer--;
+    } else {
+      shakeOffset = 0;
     }
-    boolean isCurrent = (qf != null && qf.currentInput == this);
-
-    stroke(RY_BLUE);
-    strokeWeight(isCurrent ? 2 : 1);
-
-    // Background
-    if (isCurrent) fill(255);       // White when active
-    else fill(255);                 // White when inactive (instead of RY_BLUE)
-    rect(x, y, w, h, 5);
-
-    // Text
+  
+  
+    // -------------------------------------------------
+    // BORDER LOGIC (NEW)
+    // -------------------------------------------------
+  
+    if (isCurrent) {
+      stroke(RY_BLUE);          // active input
+      strokeWeight(2);
+    }
+    else if (hasError) {
+      stroke(255, 60, 60);        // error highlight
+      strokeWeight(3);
+    }
+    else {
+      stroke(200);               // normal state
+      strokeWeight(1);
+    }
+  
+    // -------------------------------------------------
+    // BACKGROUND
+    // -------------------------------------------------
+  
+    if (hasError && !isCurrent)
+      fill(255, 240, 240);   // light red tint
+    else
+      fill(255);
+  
+    rect(x + shakeOffset, y, w, h, 5);
+  
+    // -------------------------------------------------
+    // TEXT
+    // -------------------------------------------------
+  
     fill(RY_BLUE);
     textAlign(LEFT, CENTER);
     textSize(textSize);
-
+  
     String displayText = label;
-    if (isCurrent && (frameCount / 25) % 2 == 0) displayText += "|";
-    text(displayText, x + 10, y + h/2);
+  
+    // blinking cursor
+    if (isCurrent && (frameCount / 25) % 2 == 0)
+      displayText += "|";
+  
+    text(displayText, x + 10 + shakeOffset, y + h/2);
   }
 
   // Add a character to the text entry
-  void addChar(char s) {
+ void addChar(char s) {
+  
+    hasError = false; // ⭐ remove error when user edits
+    shakeTimer = 0;
+    
     if (s == BACKSPACE) {
-      if (label.length() > 0) label = label.substring(0, label.length() - 1);
-    } else if (s != CODED && s != ENTER && s != TAB && label.length() < maxlen) {
+      if (label.length() > 0)
+        label = label.substring(0, label.length() - 1);
+    }
+    else if (s != CODED && s != ENTER && s != TAB && label.length() < maxlen) {
       label += s;
     }
   }

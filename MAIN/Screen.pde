@@ -7,7 +7,6 @@ class Screen {
 
   void draw() {
     layout.beginPage(title);
-    drawContent();
 
     for (Button b : buttons)
       b.display();
@@ -42,6 +41,29 @@ class Screen {
     if (!ret)
       return "No return flights available.";
     return "";
+  }
+  
+  String getStatusMessage(
+    String origin,
+    String destination,
+    String startDate,
+    String endDate,
+    boolean roundTrip
+  ) {
+  
+    if (origin == null || origin.trim().isEmpty())
+      return "Please enter origin.";
+  
+    if (destination == null || destination.trim().isEmpty())
+      return "Please enter destination.";
+  
+    if (startDate == null || startDate.trim().isEmpty())
+      return "Please enter departure date.";
+  
+    if (roundTrip && (endDate == null || endDate.trim().isEmpty()))
+      return "Please enter return date.";
+  
+    return ""; // everything valid
   }
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
@@ -659,6 +681,8 @@ class QueriesFlights extends Screen {
   int calMonth;
   int calYear;
   float calX, calY;
+  String availabilityMessage;
+  ArrayList<String> alternativeDestinations = new ArrayList<String>(); // for route suggestions
 
   QueriesFlights() {
     title = "Flight Search";
@@ -678,11 +702,14 @@ class QueriesFlights extends Screen {
     int tripBtnY = cardY + 80;       // Trip buttons below title
     int inputY   = tripBtnY + 45;    // Inputs below trip buttons
     int labelOffset = 12;            // Labels above inputs
+    
+    availabilityMessage = "";
     activeInput1 = "";
+    
     // Trip type buttons
     roundTripBtn = new Button(cardX + 10, tripBtnY-20, 140, 30, "Round Trip", "roundTrip", 14, false);
     oneWayBtn    = new Button(cardX + 160, tripBtnY-20, 120, 30, "One Way", "oneWay", 14, false);
-
+    
     buttons.add(roundTripBtn);
     buttons.add(oneWayBtn);
 
@@ -711,23 +738,424 @@ class QueriesFlights extends Screen {
 
     String activeInput = ""; // tracks which input field is currently active
   }
-  void updateSuggestions(String input) {
-    suggestions.clear();
-    if (input.length()<2)return;
-    input= input.toLowerCase();
-    for (Flight f : flightsList) {
-      String origin = f.origin.toLowerCase();
-      String originCity = f.originCityName.toLowerCase();
-      if (origin.contains(input) || originCity.contains(input)) {
-        String suggestion = f.origin + " - "+ f.originCityName;
-        if (!suggestions.contains(suggestion)) {
-          suggestions.add(suggestion);
-        }
-        if (suggestions.size()>=10) break;
+  
+  void searchFlights() {
+  
+      departureFlights.clear();
+      returnFlights.clear();
+      results.clear();
+  
+      DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+  
+      try {
+          LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+          LocalDate end   = selection.dateEnd.isEmpty() ? null : LocalDate.parse(selection.dateEnd, csvFormat);
+  
+          // ---------- DATE VALIDATION ----------
+          if (end != null && end.isBefore(start)) {
+              availabilityMessage = "Return date cannot be earlier than departure date!";
+              return;
+          }
+  
+          // ---------- NORMALIZE USER INPUT ----------
+          String userOrigin = cleanCityName(selection.origin.split(",")[0].trim()).toLowerCase();
+          String userDest   = cleanCityName(selection.destination.split(",")[0].trim()).toLowerCase();
+  
+          // Get canonical city names for messages
+          String originCanonical = getCityNameFromIATA(getIATACodeFromInput(selection.origin));
+          String destCanonical   = getCityNameFromIATA(getIATACodeFromInput(selection.destination));
+  
+          LocalDate earliestDeparture = null;
+          LocalDate latestDeparture   = null;
+          LocalDate earliestReturn    = null;
+          LocalDate latestReturn      = null;
+  
+          boolean routeExists = false;
+          TreeSet<String> possibleDestinations = new TreeSet<String>();
+  
+          // ---------- LOOP THROUGH FLIGHTS ----------
+          for (Flight f : flightsList) {
+              LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+  
+              String flightOriginCode = f.origin.toLowerCase();
+              String flightDestCode   = f.destination.toLowerCase();
+              String flightOriginCity = cleanCityName(f.originCityName).toLowerCase();
+              String flightDestCity   = cleanCityName(f.destinationCityName).toLowerCase();
+  
+              // Track earliest/latest for messages
+              if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
+              if (latestDeparture   == null || flightDate.isAfter(latestDeparture))   latestDeparture   = flightDate;
+  
+              if (end != null) {
+                  if (earliestReturn == null || flightDate.isBefore(earliestReturn)) earliestReturn = flightDate;
+                  if (latestReturn   == null || flightDate.isAfter(latestReturn))   latestReturn   = flightDate;
+              }
+  
+              // ---------- CHECK ROUTE EXISTS ----------
+              if (flightOriginCity.equals(userOrigin)) {
+                  possibleDestinations.add(cleanCityName(f.destinationCityName));
+                  if (flightDestCity.equals(userDest)) {
+                      routeExists = true;
+                  }
+              }
+  
+              // ---------- DEPARTURE MATCH ----------
+              boolean depMatch =
+                  (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
+                  (flightDestCode.equals(userDest) || flightDestCity.contains(userDest)) &&
+                  !flightDate.isBefore(start) &&
+                  (end == null || !flightDate.isAfter(end));
+  
+              if (depMatch) departureFlights.add(f);
+  
+              // ---------- RETURN MATCH ----------
+              if (end != null) {
+                  boolean retMatch =
+                      (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
+                      (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin)) &&
+                      flightDate.equals(end);
+  
+                  if (retMatch) returnFlights.add(f);
+              }
+          }
+  
+          if (!routeExists) {
+            String tripType = roundTrip ? "round-trip" : "one-way";
+            String msg = "Sorry, no " + tripType + " flights exist from " 
+                         + capitalizeWords(originCanonical) + " to " 
+                         + capitalizeWords(destCanonical) + ".\n";
+        
+            // Track first 5 alternative destinations
+            alternativeDestinations.clear();
+            int count = 0;
+            for (String city : possibleDestinations) {
+                alternativeDestinations.add(city);
+                count++;
+                if (count >= 5) break; // only first 5
+            }
+        
+            if (!alternativeDestinations.isEmpty()) {
+                msg += "Here are some valid example destinations from " 
+                       + capitalizeWords(originCanonical) + ":\n";
+            }
+        
+            availabilityMessage = msg;
+            return;
+          }
+  
+          // ---------- SORT ----------
+          Collections.sort(departureFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+          Collections.sort(returnFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+  
+          // ---------- CHECK DATE AVAILABILITY ----------
+          if (departureFlights.isEmpty() || (end != null && returnFlights.isEmpty())) {
+              String msg = "No flights available for the selected dates.\n";
+              if (earliestDeparture != null && latestDeparture != null) {
+                  msg += "Valid departure dates: " + earliestDeparture.format(csvFormat) + " - " + latestDeparture.format(csvFormat) + "\n";
+              }
+              if (end != null && earliestReturn != null && latestReturn != null) {
+                  msg += "Valid return dates: " + earliestReturn.format(csvFormat) + " - " + latestReturn.format(csvFormat) + "\n";
+              }
+              availabilityMessage = msg;
+              return;
+          }
+  
+          // ---------- NAVIGATE TO RESULTS ----------
+          if (end == null) {
+              results.addAll(departureFlights);
+              goTo(flightsOutput);
+          } else {
+              twoWayFlightsOutputScreen.setFlights(departureFlights, returnFlights);
+              goTo(flightsOutputTwoWay);
+          }
+  
+      } catch (Exception e) {
+          println("Search Error: Check date format");
       }
-    }
   }
 
+// Clean city initials (start/end)
+// Remove city initials at start or end, allowing dash or comma separators
+String cleanCityName(String city) {
+    if (city == null) return "";
+    // Split by comma and take the first part (city only)
+    String[] parts = city.split(",");
+    return parts[0].trim();
+}
+// Check if a code is valid as an ORIGIN airport
+boolean isValidOriginAirport(String code) {
+    if (code == null || code.trim().isEmpty()) return false;
+    code = code.trim();
+    for (Flight f : flightsList) {
+        if (f.origin.equalsIgnoreCase(code)) return true;
+    }
+    return false;
+}
+
+// Check if a city is valid as an ORIGIN city
+boolean isValidOriginCity(String city) {
+    if (city == null || city.trim().isEmpty()) return false;
+    city = city.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.originCityName).equalsIgnoreCase(city)) return true;
+    }
+    return false;
+}
+
+boolean isValidDestinationAirport(String code) {
+    if (code == null || code.trim().isEmpty()) return false;
+    code = code.trim();
+    for (Flight f : flightsList) {
+        if (f.destination.equalsIgnoreCase(code)) return true;
+    }
+    return false;
+}
+
+boolean isValidDestinationCity(String city) {
+    if (city == null || city.trim().isEmpty()) return false;
+    city = city.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.destinationCityName).equalsIgnoreCase(city)) return true;
+    }
+    return false;
+}
+
+// ---------------------------
+
+
+
+//////////////////ORIGIN ////////////////////////////////7
+boolean isOriginAirportCode(String value) {
+    return isValidOriginAirport(value);
+}
+
+boolean isOriginCityName(String value) {
+    return isValidOriginCity(value);
+}
+
+boolean originCityMatchesAirport(String city, String airport) {
+    city = city.trim();
+    airport = airport.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.originCityName).equalsIgnoreCase(city) &&
+            f.origin.equalsIgnoreCase(airport)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+boolean isValidOrigin(String input) {
+    if (input == null || input.trim().isEmpty()) return false;
+    String[] parts = input.split(",");
+    
+    if (parts.length == 1) {
+        String value = parts[0].trim();
+        return isValidOriginAirport(value) || isValidOriginCity(value);
+    } else if (parts.length == 2) {
+        String part1 = parts[0].trim();
+        String part2 = parts[1].trim();
+
+        // Case: City, Code
+        if (isValidOriginCity(part1) && isValidOriginAirport(part2)) {
+            return originCityMatchesAirport(part1, part2);
+        }
+        // Case: Code, City
+        if (isValidOriginAirport(part1) && isValidOriginCity(part2)) {
+            return originCityMatchesAirport(part2, part1);
+        }
+
+        // fallback: both valid individually
+        return (isValidOriginCity(part1) || isValidOriginAirport(part1)) &&
+               (isValidOriginCity(part2) || isValidOriginAirport(part2));
+    }
+    return false;
+}
+////////////////// DESTINATION /////////////////////
+boolean isDestinationAirportCode(String value) {
+    return isValidDestinationAirport(value);
+}
+
+boolean isDestinationCityName(String value) {
+    return isValidDestinationCity(value);
+}
+
+boolean destinationCityMatchesAirport(String city, String airport) {
+    city = city.trim();
+    airport = airport.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.destinationCityName).equalsIgnoreCase(city) &&
+            f.destination.equalsIgnoreCase(airport)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+boolean isValidDestination(String input) {
+    if (input == null || input.trim().isEmpty()) return false;
+    String[] parts = input.split(",");
+    
+    if (parts.length == 1) {
+        String value = parts[0].trim();
+        return isValidDestinationAirport(value) || isValidDestinationCity(value);
+    } else if (parts.length == 2) {
+        String part1 = parts[0].trim();
+        String part2 = parts[1].trim();
+
+        // Case: City, Code
+        if (isValidDestinationCity(part1) && isValidDestinationAirport(part2)) {
+            return destinationCityMatchesAirport(part1, part2);
+        }
+        // Case: Code, City
+        if (isValidDestinationAirport(part1) && isValidDestinationCity(part2)) {
+            return destinationCityMatchesAirport(part2, part1);
+        }
+
+        // fallback: both valid individually
+        return (isValidDestinationCity(part1) || isValidDestinationAirport(part1)) &&
+               (isValidDestinationCity(part2) || isValidDestinationAirport(part2));
+    }
+    return false;
+}
+
+String normalize(String city) {
+    if (city == null) return "";
+    return city.replace('\u00A0', ' ').trim();
+}
+
+// Full form validation
+boolean validateSearchInputs() {
+    ArrayList<String> messages = new ArrayList<>();
+
+    // Reset old errors
+    inputFrom.hasError  = false;
+    inputTo.hasError    = false;
+    inputStart.hasError = false;
+    inputEnd.hasError   = false;
+
+    // Normalize inputs
+    String originInput = normalize(inputFrom.label);
+    String destInput   = normalize(inputTo.label);
+    String startDate   = normalize(inputStart.label);
+    String endDate     = normalize(inputEnd.label);
+
+    // ---------- EMPTY CHECKS ----------
+    if (originInput.isEmpty() || originInput.equalsIgnoreCase("Origin")) {
+        messages.add("Please enter origin!");
+        inputFrom.hasError = true;
+        inputFrom.triggerError();
+    }
+
+    if (destInput.isEmpty() || destInput.equalsIgnoreCase("Destination")) {
+        messages.add("Please enter destination!");
+        inputTo.hasError = true;
+        inputTo.triggerError();
+    }
+
+    if (startDate.isEmpty() || startDate.equalsIgnoreCase("MM/DD/YYYY")) {
+        messages.add("Please enter departure date!");
+        inputStart.hasError = true;
+        inputStart.triggerError();
+    }
+
+    if (roundTrip && (endDate.isEmpty() || endDate.equalsIgnoreCase("MM/DD/YYYY"))) {
+        messages.add("Please enter return date!");
+        inputEnd.hasError = true;
+        inputEnd.triggerError();
+    }
+
+    if (!messages.isEmpty()) {
+        availabilityMessage = String.join("\n", messages);
+        return false;
+    }
+
+    // ---------- VALIDATE ORIGIN & DESTINATION ----------
+    if (!isValidOrigin(originInput)) {
+        messages.add("Please enter a valid origin (city, airport code, or both)!");
+        inputFrom.hasError = true;
+        inputFrom.triggerError();
+    }
+
+    if (!isValidDestination(destInput)) {
+        messages.add("Please enter a valid destination (city, airport code, or both)!");
+        inputTo.hasError = true;
+        inputTo.triggerError();
+    }
+
+    if (!messages.isEmpty()) {
+        availabilityMessage = String.join("\n", messages);
+        return false;
+    }
+
+    // ---------- SUCCESS ----------
+    availabilityMessage = "";
+    return true;
+}
+
+// Helper to get city name from IATA code
+String getCityNameFromIATA(String code) {
+    for (Flight f : flightsList) {
+        if (f.origin.equalsIgnoreCase(code)) return f.originCityName;
+        if (f.destination.equalsIgnoreCase(code)) return f.destinationCityName;
+    }
+    return code; // fallback
+}
+  
+ void updateSuggestions(String input) {
+    if (currentInput == null) return;
+    if (!activeInput1.equals("origin") && !activeInput1.equals("destination")) return;
+
+    suggestions.clear();
+    if (input.length() < 2) return;
+
+    String inputLower = input.toLowerCase();
+
+    for (Flight f : flightsList) {
+        String city = activeInput1.equals("origin")
+            ? cleanCityName(f.originCityName)
+            : cleanCityName(f.destinationCityName);
+
+        if (city.toLowerCase().contains(inputLower)) {
+            // Add only clean city name
+            if (!suggestions.contains(city)) {
+                suggestions.add(city);
+            }
+            if (suggestions.size() >= 10) break;
+        }
+    }
+}
+
+// Handle clicking a suggestion
+void handleSuggestionClick(int mouseX, int mouseY) {
+    if (currentInput == null || suggestions.size() == 0) return;
+
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float h = 35;
+
+    for (int i = 0; i < suggestions.size(); i++) {
+        float sy = y + i * h;
+
+        if (mouseX > x && mouseX < x + currentInput.w &&
+            mouseY > sy && mouseY < sy + h) {
+
+            // Only paste the city name
+            String selectedCity = suggestions.get(i);
+
+            currentInput.label = selectedCity;
+
+            if (activeInput1.equals("origin")) selection.origin = selectedCity;
+            else if (activeInput1.equals("destination")) selection.destination = selectedCity;
+
+            suggestions.clear();
+            break;
+        }
+    }
+}
+///////////////////////////////////////////////////////////////////////////////
+////////////////            DRAW METHOD          //////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
   void drawContent() {
     drawTripSelector();
 
@@ -771,6 +1199,41 @@ class QueriesFlights extends Screen {
 
     //DRAW CALENDAR LAST - ensures it visually floats above everything
     drawCalendar();
+    if (!availabilityMessage.equals("")) {
+      fill(255, 0, 0);
+      textAlign(CENTER);
+      textSize(16);
+      textAlign(CENTER, TOP);
+      text(availabilityMessage, width/2, height/3 + 200);
+    }
+    if (alternativeDestinations.size() > 0) {
+        float startY = height/3 + 260; // below message (added 30)
+        float startX = width/2 - 100;  // center
+        float w = 200;
+        float h = 30;
+        textSize(16);
+        textAlign(CENTER, CENTER);
+    
+        for (int i = 0; i < alternativeDestinations.size(); i++) {
+            float y = startY + i * (h + 5);
+            String city = alternativeDestinations.get(i);
+    
+            // Hover effect
+            if (mouseX > startX && mouseX < startX + w &&
+                mouseY > y && mouseY < y + h) {
+                fill(#C0E8FF); // hover color
+            } else {
+                fill(#E0F7FF); // default color
+            }
+    
+            stroke(0);
+            rect(startX, y, w, h, 6);
+    
+            fill(0);
+            noStroke();
+            text(city, startX + w/2, y + h/2);
+        }
+    }
   }
   void drawSuggestions() {
     if (suggestions.size()==0||currentInput == null) return;
@@ -778,7 +1241,8 @@ class QueriesFlights extends Screen {
     float y = currentInput.y + currentInput.h;
     float w = currentInput.w;
     float h = 35;
-
+    if (currentInput == null || suggestions.size() == 0) return;
+    if (currentInput != inputFrom && currentInput != inputTo) return;    
     for (int i = 0; i<suggestions.size(); i++) {
       fill(255);
       stroke(200);
@@ -884,7 +1348,9 @@ class QueriesFlights extends Screen {
 
     return 31;
   }
-
+  
+  
+  
   void mousePressed() {
 
     // =====================================================
@@ -950,37 +1416,34 @@ class QueriesFlights extends Screen {
     }
 
     // =====================================================
-    // ---- SUGGESTIONS DROPDOWN (UNCHANGED)
+    // ---- SUGGESTIONS DROPDOWN ----
     // =====================================================
     if (currentInput != null && suggestions.size() > 0) {
-      float x = currentInput.x;
-      float y = currentInput.y + currentInput.h;
-      float h = 35;
-
-      for (int i = 0; i < suggestions.size(); i++) {
-        float sy = y + i * h;
-        if (mouseX > x && mouseX < x + currentInput.w &&
-          mouseY > sy && mouseY < sy + h) {
-
-          // Split the suggestion into IATA and city name
-          String[] parts = suggestions.get(i).split(" - ");
-          String code = parts[0];
-          String city = parts[1];
-
-          // Update both the selection (airport code) and the input label (city + code)
-          if (activeInput1.equals("origin")) {
-            selection.origin = code;
-            currentInput.label = city;
-          } else if (activeInput1.equals("destination")) {
-            selection.destination = code;
-            currentInput.label = city;
-          }
-
-          // Clear suggestions after click
-          suggestions.clear();
-          break;
+        float x = currentInput.x;
+        float y = currentInput.y + currentInput.h;
+        float h = 35;
+    
+        for (int i = 0; i < suggestions.size(); i++) {
+            float sy = y + i * h;
+    
+            if (mouseX > x && mouseX < x + currentInput.w &&
+                mouseY > sy && mouseY < sy + h) {
+    
+                // Only city name, no split needed
+                String city = suggestions.get(i).trim();
+    
+                // Update input label
+                currentInput.label = city;
+    
+                // Update canonical selection
+                if (activeInput1.equals("origin")) selection.origin = city;
+                else if (activeInput1.equals("destination")) selection.destination = city;
+    
+                // Clear suggestions after click
+                suggestions.clear();
+                break;
+            }
         }
-      }
     }
 
     // =====================================================
@@ -1033,12 +1496,14 @@ class QueriesFlights extends Screen {
         if (b.type.equals("oneWay")) roundTrip = false;
 
         if (b.type.equals("flightsOutput")) {
-          selection.origin      = inputFrom.label;
-          selection.destination = inputTo.label;
-          selection.dateStart   = inputStart.label;
-          selection.dateEnd     = roundTrip ? inputEnd.label : "";
-
-          searchFlights();
+          if (validateSearchInputs()) {
+            selection.origin      = inputFrom.label;
+            selection.destination = inputTo.label;
+            selection.dateStart   = inputStart.label;
+            selection.dateEnd     = roundTrip ? inputEnd.label : "";
+        
+            searchFlights(); // move to next screen
+          }
         }
       }
     }
@@ -1047,12 +1512,51 @@ class QueriesFlights extends Screen {
     // SWAP BUTTON
     // =====================================================
     if (mouseX > swapX && mouseX < swapX + swapW &&
-      mouseY > swapY && mouseY < swapY + swapH) {
-
-      String temp = inputFrom.label;
+        mouseY > swapY && mouseY < swapY + swapH) {
+    
+      // Swap labels (what user sees)
+      String tempLabel = inputFrom.label;
       inputFrom.label = inputTo.label;
-      inputTo.label = temp;
+      inputTo.label = tempLabel;
+    
+      // Swap canonical codes (used for validation)
+      String tempCode = selection.origin;
+      selection.origin = selection.destination;
+      selection.destination = tempCode;
+    
+      // Clear previous errors
+      inputFrom.hasError = false;
+      inputTo.hasError = false;
+      availabilityMessage = "";
+    
+      // Clear suggestions
+      suggestions.clear();
     }
+    
+    if (alternativeDestinations.size() > 0) {
+          float startY = height/3 + 260;
+          float startX = width/2 - 100;
+          float w = 200;
+          float h = 30;
+      
+          for (int i = 0; i < alternativeDestinations.size(); i++) {
+              float y = startY + i * (h + 5);
+      
+              if (mouseX > startX && mouseX < startX + w &&
+                  mouseY > y && mouseY < y + h) {
+      
+                  // Update destination input
+                  inputTo.label = alternativeDestinations.get(i);
+                  selection.destination = alternativeDestinations.get(i);
+      
+                  // Clear message and alternatives
+                  availabilityMessage = "";
+                  alternativeDestinations.clear();
+                  break;
+              }
+          }
+      }
+    
   }
   void drawTripSelector() {
     textAlign(LEFT, CENTER);
@@ -1067,8 +1571,13 @@ class QueriesFlights extends Screen {
   }
 
   void keyPressed(char k) {
-    if (currentInput != null) currentInput.addChar(k);
-    if (currentInput == inputFrom ||currentInput == inputTo) {
+    if(currentInput == inputStart || currentInput == inputEnd) return;
+    if (currentInput != null) {
+      currentInput.addChar(k);
+      availabilityMessage = "";
+    }
+  
+    if (currentInput == inputFrom || currentInput == inputTo) {
       updateSuggestions(currentInput.label);
     }
   }
@@ -1088,9 +1597,11 @@ class QueriesFlights extends Screen {
 class QueriesDate extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
+  TextEntryButton originButton;
   TextEntryButton currentInput;
   TextEntryButton calendarTarget = null;
   boolean showCalendar;
+  boolean showOriginSuggestions;
   int calMonth;
   int calYear;
   // Button bounds for the manual Search button
@@ -1098,43 +1609,104 @@ class QueriesDate extends Screen {
   float leftArrowX, rightArrowX;
   float arrowY;
   float arrowSize;
+  String availabilityMessage;
+  ArrayList<String> suggestions;
+  String activeInput1;
+  ArrayList<String> allCities;
+  float layoutOffsetY = -40;   // negative = move everything UP
+  float adjustedMouseY;
+  boolean originInvalid;
+  int shakeTimer;
   QueriesDate() {
     title = "Date Search";
-    int queryW = 240;
-    int queryH = 50;
 
-    int centerX = width/2;
-    int yq = height/4 +100;
-
-    int spacing = 40;
-
-    int xq  = centerX - queryW - spacing/2;
-    int xq2 = centerX + spacing/2;
+    int inputW = 240;
+    int inputH = 50;
+    int spacingX = 20;            // horizontal spacing between date inputs
+    int spacingYOriginDates = 40; // vertical spacing between origin and dates
+    int spacingYDatesButton = 60; // vertical spacing between dates and search button
+    int centerX = width / 2;
+    int startY = height/4 + 80;   // shifted up from 120 → 80
     showCalendar = false;
-
-
+    availabilityMessage = "";
     calMonth = 1;
     calYear  = 2022;
-    
-
-    
     arrowSize = 25;
+    
+    originInvalid = false;
+    shakeTimer = 0;
 
-    // Standard Back Button
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    allCities = new ArrayList<String>();
+    populateAllCities();
+    suggestions = new ArrayList<String>();
+    activeInput1 = ""; // tracks which input is active (e.g., "origin")
+    showOriginSuggestions = false;
+    // --- Back Button ---
+    buttons.add(new Button(30, 22-layoutOffsetY, 80, 30, "BACK", "back", 15, false));
 
-    // The Search Button
-    buttons.add(new Button(centerX - 100, yq + 90, 200, 50, "Search flights", "dateOutput", 20, false));
-    // Initialize Input Boxes
-    inputButton = new TextEntryButton(xq, yq, queryW, queryH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2, yq, queryW, queryH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
+    // --- Origin Input (width = 2x date + spacing) ---
+    int originW = inputW * 2 + spacingX;
+    originButton = new TextEntryButton(centerX - originW / 2, startY, originW, inputH, "Origin City", "origin", 15, 20, false, 0);
+    buttons.add(originButton);
 
+    // --- Departure Date Input ---
+    inputButton = new TextEntryButton(centerX - inputW - spacingX / 2, startY + inputH + spacingYOriginDates, inputW, inputH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
     buttons.add(inputButton);
+
+    // --- Return Date Input ---
+    inputButton2 = new TextEntryButton(centerX + spacingX / 2, startY + inputH + spacingYOriginDates, inputW, inputH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
     buttons.add(inputButton2);
-  }
+
+    // --- Search Flights Button ---
+    buttons.add(new Button(centerX - 100, startY + inputH + spacingYOriginDates + inputH + spacingYDatesButton-40, 200, 50, "Search flights", "dateOutput", 20, false));
+
+}
   void drawCard() {
-    fill(255);
-    rect(150, 200, width-300, 250, 20);
+  fill(255);
+  // Make it taller to fit all content comfortably
+  rect(150, 180, width-300, 300, 20);
+}
+
+  String capitalize(String s) {
+      if (s == null || s.length() == 0) return s;
+  
+      String[] words = s.split(" ");
+      String result = "";
+  
+      for (int i = 0; i < words.length; i++) {
+          if (words[i].length() > 0) {
+              result += Character.toUpperCase(words[i].charAt(0))
+                        + words[i].substring(1).toLowerCase();
+          }
+          if (i < words.length - 1) result += " ";
+      }
+  
+      return result;
+  }
+// -------------------------------
+// Populate allCities from flightsList
+// -------------------------------
+  void populateAllCities() {
+  
+        HashSet<String> unique = new HashSet<String>();
+    
+        for (Flight f : flightsList) {
+    
+            if (f.originCityName == null) continue;
+    
+            String[] parts = f.originCityName.split(",");
+            String city = parts[0].trim().toLowerCase();
+    
+            unique.add(city);
+        }
+    
+        allCities.clear();
+    
+        for (String c : unique) {
+            allCities.add(capitalize(c));
+        }
+    
+        Collections.sort(allCities);
   }
   int getStartDay(int month, int year) {
     java.util.Calendar cal = java.util.Calendar.getInstance();
@@ -1154,19 +1726,196 @@ class QueriesDate extends Screen {
 
     return 31;
   }
+  //////////////////////// VALIDATION //////////////////////////////////
+  // Remove city initials at start or end, allowing dash or comma separators
+  String cleanCityName(String city) {
+        if (city == null) return "";
+        // Split by comma and take the first part (city only)
+        String[] parts = city.split(",");
+        return parts[0].trim();
+    }
+  // Check if a code is valid as an ORIGIN airport
+  boolean isValidOriginAirport(String code) {
+      if (code == null || code.trim().isEmpty()) return false;
+      code = code.trim();
+      for (Flight f : flightsList) {
+          if (f.origin.equalsIgnoreCase(code)) return true;
+      }
+      return false;
+  }
+  
+  // Check if a city is valid as an ORIGIN city
+  boolean isValidOriginCity(String city) {
+      if (city == null || city.trim().isEmpty()) return false;
+      city = city.trim();
+      for (Flight f : flightsList) {
+          if (cleanCityName(f.originCityName).equalsIgnoreCase(city)) return true;
+      }
+      return false;
+  }
+  String normalize(String city) {
+      if (city == null) return "";
+      return city.replace('\u00A0', ' ').trim();
+  }
+  boolean isOriginAirportCode(String value) {
+      return isValidOriginAirport(value);
+  }
+
+  boolean isOriginCityName(String value) {
+      return isValidOriginCity(value);
+  }
+
+  boolean originCityMatchesAirport(String city, String airport) {
+        city = city.trim();
+        airport = airport.trim();
+        for (Flight f : flightsList) {
+            if (cleanCityName(f.originCityName).equalsIgnoreCase(city) &&
+                f.origin.equalsIgnoreCase(airport)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean isValidOrigin(String input) {
+          if (input == null || input.trim().isEmpty()) return false;
+          String[] parts = input.split(",");
+          
+          if (parts.length == 1) {
+              String value = parts[0].trim();
+              return isValidOriginAirport(value) || isValidOriginCity(value);
+          } else if (parts.length == 2) {
+              String part1 = parts[0].trim();
+              String part2 = parts[1].trim();
+      
+              // Case: City, Code
+              if (isValidOriginCity(part1) && isValidOriginAirport(part2)) {
+                  return originCityMatchesAirport(part1, part2);
+              }
+              // Case: Code, City
+              if (isValidOriginAirport(part1) && isValidOriginCity(part2)) {
+                  return originCityMatchesAirport(part2, part1);
+              }
+      
+              // fallback: both valid individually
+              return (isValidOriginCity(part1) || isValidOriginAirport(part1)) &&
+                     (isValidOriginCity(part2) || isValidOriginAirport(part2));
+          }
+          return false;
+      }
+  ////////////////////////////////////////////////////////////////////////////////////
+  void searchFlightsByDate() {
+    results.clear();
+    DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+    
+    // ---------------- ORIGIN VALIDATION ----------------
+    String originInput = originButton.label.trim();
+    
+    // ignore placeholder text
+    if (originInput.equals("Origin City")) {
+        originInput = "";
+    }
+    
+    // if user entered something -> validate it
+    if (!isValidOrigin(originInput)) {
+
+        availabilityMessage =
+            "Invalid origin. Please enter a valid city or airport code.";
+    
+        originButton.hasError = true;   // 🔴 red border
+        originButton.triggerError();    // 💥 shake
+    
+        return;
+    }
+  
+    try {
+      // Parse dates from inputs
+      LocalDate start = LocalDate.parse(inputButton.label, csvFormat);
+      LocalDate end   = LocalDate.parse(inputButton2.label, csvFormat);
+  
+      // --- Validate input ---
+      if (start.isAfter(end)) {
+        this.availabilityMessage = "Invalid input: 'From' date is after 'To' date.";
+        originInvalid = true;
+        shakeTimer = 20; // frames to shake
+        return;
+      }
+  
+      // --- Search flights in the selected date range ---
+      String originInputLower = originInput.toLowerCase();
+      for (Flight f : flightsList) {
+          LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+      
+          // Check date range
+          if (flightDate.isBefore(start) || flightDate.isAfter(end)) continue;
+      
+          // Check origin (if user typed one)
+          if (!originInputLower.isEmpty()) {
+              String flightOriginCity =
+                  f.originCityName != null ? f.originCityName.toLowerCase() : "";
+          
+              if (!flightOriginCity.contains(originInputLower)) continue;
+          }
+      
+          results.add(f);
+      }
+  
+      // --- Show message if no flights found ---
+      if (results.isEmpty()) {
+        // Find the valid departure range
+        LocalDate minDate = null;
+        LocalDate maxDate = null;
+        for (Flight f : flightsList) {
+          LocalDate fd = LocalDate.parse(f.date, csvFormat);
+          if (minDate == null || fd.isBefore(minDate)) minDate = fd;
+          if (maxDate == null || fd.isAfter(maxDate)) maxDate = fd;
+        }
+        String minStr = minDate != null ? minDate.format(csvFormat) : "N/A";
+        String maxStr = maxDate != null ? maxDate.format(csvFormat) : "N/A";
+  
+        this.availabilityMessage = "No flights found. Valid departure dates: " + minStr + " to " + maxStr;
+        return;
+      }
+  
+      // --- Sort by date and departure time ---
+      Collections.sort(results, (a, b) -> {
+        LocalDate dateA = LocalDate.parse(a.date, csvFormat);
+        LocalDate dateB = LocalDate.parse(b.date, csvFormat);
+        int cmp = dateA.compareTo(dateB);
+        if (cmp != 0) return cmp;
+        return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);
+      });
+  
+      // --- Navigate to output screen ---
+      goTo(flightsOutput);
+  
+    } catch (Exception e) {
+      println("Error: check date format");
+      if(inputButton.label.equals("")||inputButton.label.equals("MM/DD(YYYY")) this.availabilityMessage = "Please enter minimum parameter of date range";
+      else if(inputButton2.label.equals("")||inputButton2.label.equals("MM/DD(YYYY")) this.availabilityMessage = "Please enter maximum parameter of date range";
+      else this.availabilityMessage = "Invalid date format, please use MM/DD/YYYY.";
+    }
+  }
+  
   void drawCalendar() {
+    adjustedMouseY = mouseY - layoutOffsetY;
+    float topOffset = 70;
     if (!showCalendar || calendarTarget == null) return;
 
     float x = calendarTarget.x;
     float y = calendarTarget.y + calendarTarget.h + 10;
-    float cell = 45;
+    float cell = 40;  // smaller size of each day
     int cols = 7;
     int rows = 6;
 
+    // ---------- WHITE CARD (smaller) ----------
+    float rectWidth  = cell * 7;
+    float rectHeight = cell * 6 + 70;
     fill(255);
     stroke(200);
-    rect(x, y, cell*cols, cell*rows + 60, 12);
+    rect(x, y, rectWidth, rectHeight, 12);
 
+    // ---------- HEADER ----------
     String[] months = {
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
@@ -1174,201 +1923,338 @@ class QueriesDate extends Screen {
 
     fill(RY_BLUE);
     textAlign(CENTER, CENTER);
-    textSize(16);
-    
-    float headerY = y + 25;
-    float centerX = x + cell*cols/2;
-    
-    text(months[calMonth-1]+" "+calYear, centerX, headerY);
-    
-    // arrow positions
-    leftArrowX = x + 20;
-    rightArrowX = x + cell*cols - 20;
+    textSize(14);  // smaller text for header
+
+    float headerY = y + 20;
+    float centerX = x + rectWidth / 2;
+    text(months[calMonth - 1] + " " + calYear, centerX, headerY);
+
+    // arrows
+    leftArrowX = x + 15;
+    rightArrowX = x + rectWidth - 15;
     arrowY = headerY;
-    
+
     // LEFT ARROW  (<)
-    triangle(
-      leftArrowX-8, arrowY,
-      leftArrowX+8, arrowY-8,
-      leftArrowX+8, arrowY+8
-    );
-    
+    triangle(leftArrowX - 6, arrowY, leftArrowX + 6, arrowY - 6, leftArrowX + 6, arrowY + 6);
     // RIGHT ARROW (>)
-    triangle(
-      rightArrowX+8, arrowY,
-      rightArrowX-8, arrowY-8,
-      rightArrowX-8, arrowY+8
-    );
+    triangle(rightArrowX + 6, arrowY, rightArrowX - 6, arrowY - 6, rightArrowX - 6, arrowY + 6);
+
+    // ---------- WEEKDAYS ----------
     String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    textSize(12);
+    textSize(10);  // smaller text for weekdays
     fill(100);
+    for (int c = 0; c < 7; c++) {
+        text(weekdays[c], x + c * cell + cell / 2, y + 50);
+    }
 
-    for (int c=0; c<7; c++)
-      text(weekdays[c], x+c*cell+cell/2, y+55);
-
+    // ---------- DAYS ----------
     int days = getDaysInMonth(calMonth, calYear);
     int start = getStartDay(calMonth, calYear);
+    textSize(12);  // smaller numbers for days
 
-    textSize(14);
+    for (int d = 1; d <= days; d++) {
+        int index = (start - 1) + (d - 1);
+        int col = index % 7;
+        int row = index / 7;
 
-    for (int d=1; d<=days; d++) {
+        float dx = x + col * cell;
+        float dy = y + row * cell + topOffset;
+        boolean hovering = mouseX > dx &&
+                           mouseX < dx + cell &&
+                           adjustedMouseY > dy &&
+                           adjustedMouseY < dy + cell;
+        String thisDate = nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
 
-      int index = d + start - 2;
-      int col = index % 7;
-      int row = index / 7;
-    
-      float dx = x + col*cell;
-      float dy = y + row*cell + 70;
-    
-      boolean hovering =
-        mouseX > dx && mouseX < dx+cell &&
-        mouseY > dy && mouseY < dy+cell;
-    
-      String thisDate =
-        nf(calMonth,2)+"/"+nf(d,2)+"/"+calYear;
-    
-      // SELECTED DATE
-      if (calendarTarget.label.equals(thisDate)) {
-        fill(RY_BLUE);
-        ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
-        fill(255);
-      }
-    
-      // HOVER EFFECT
-      else if (hovering) {
-        fill(200,220,255);
-        ellipse(dx+cell/2, dy+cell/2, cell-10, cell-10);
-        fill(0);
-      }
-    
-      // NORMAL DAY
-      else {
-        fill(0);
-      }
-    
-      text(d, dx+cell/2, dy+cell/2);
+        // SELECTED DATE
+        if (calendarTarget.label.equals(thisDate)) {
+            fill(RY_BLUE);
+            ellipse(dx + cell / 2, dy + cell / 2, cell - 8, cell - 8);
+            fill(255);
+        }
+        // HOVER EFFECT
+        else if (hovering) {
+            fill(200, 220, 255);
+            ellipse(dx + cell / 2, dy + cell / 2, cell - 8, cell - 8);
+            fill(0);
+        }
+        // NORMAL DAY
+        else {
+            fill(0);
+        }
+
+        text(d, dx + cell / 2, dy + cell / 2);
     }
-  }
+}
 
 
-  void drawContent() {
+  void draw() {
+    layout.beginPage(title);
+    pushMatrix();
+    translate(0, layoutOffsetY);   
+    adjustedMouseY = mouseY - layoutOffsetY;
+
     drawCard();
-    // Card title
+
     fill(RY_BG);
     textAlign(LEFT);
     textSize(22);
     text("Book your next trip", 150, height/3 - 65);
+    
+    float shakeOffset = 0;
 
-    for (Button b : buttons) {
-      b.display();
+    if (shakeTimer > 0) {
+        shakeOffset = random(-4, 4);
+        shakeTimer--;
     }
+    
+    for (Button b : buttons) {
 
+      pushMatrix();
+  
+      
+  
+      b.display();
+  
+      popMatrix();
+  }
     textSize(18);
     fill(0);
     textAlign(LEFT);
+
+    text("Origin:", originButton.x, originButton.y - 10);
     text("From:", inputButton.x, inputButton.y - 10);
     text("To:", inputButton2.x, inputButton2.y - 10);
+
+
+    if (!availabilityMessage.equals("")) {
+        fill(255, 80, 80);
+        textAlign(CENTER);
+        textSize(18);
+        text(availabilityMessage, width/2, height/2 + 160);
+    }
+    
+    drawSuggestions();
     drawCalendar();
+    popMatrix();
+    
+   
+
+}
+  void updateOriginSuggestions(String typed) {
+    suggestions.clear();
+    if (typed == null || typed.isEmpty()) return;
+  
+    typed = typed.toLowerCase();
+  
+    for (String city : allCities) {
+      if (city.toLowerCase().contains(typed)) {
+        suggestions.add(city); // only the city name
+      }
+      if (suggestions.size() >= 6) break;
+    }
+  }
+  void drawSuggestions() {
+    if (currentInput != originButton ||
+        !showOriginSuggestions ||
+        suggestions.size() == 0) return;
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float h = 35;
+
+    fill(255);
+    stroke(200);
+    rect(x, y, currentInput.w, suggestions.size() * h, 5);
+
+    textSize(20);
+    fill(0);
+    textAlign(LEFT, CENTER);
+
+    for (int i = 0; i < suggestions.size(); i++) {
+        float sy = y + i * h;
+        if (mouseX > x && mouseX < x + currentInput.w &&
+            adjustedMouseY > sy && adjustedMouseY < sy + h) {
+            fill(200, 220, 255); // hover color
+            rect(x, sy, currentInput.w, h);
+            fill(0);
+        }
+        text(suggestions.get(i), x + 5, sy + h/2);
+    }
+}
+  void handleSuggestionClick(int mouseX, int mouseY) {
+      if (currentInput == null || suggestions.size() == 0) return;
+  
+      float x = currentInput.x;
+      float y = currentInput.y + currentInput.h;
+      float h = 35;
+  
+      for (int i = 0; i < suggestions.size(); i++) {
+          float sy = y + i * h;
+  
+          if (mouseX > x && mouseX < x + currentInput.w &&
+              adjustedMouseY > sy && adjustedMouseY < sy + h) {
+  
+              String city = suggestions.get(i).trim(); // just the city
+              currentInput.label = city;
+  
+              if (currentInput == originButton) {
+                  selection.origin = city; // store the origin
+              }
+  
+              suggestions.clear();
+              break;
+          }
+      }
   }
 
   void keyPressed(char k) {
+
     if (currentInput != null) {
       currentInput.addChar(k);
+      availabilityMessage = "";
+    }
+  
+    if (currentInput == originButton) {
+        activeInput1 = "origin";
+        updateOriginSuggestions(currentInput.label);
+        showOriginSuggestions = suggestions.size() > 0;
     }
   }
 
   void mousePressed() {
-    currentInput = null;
-    if (showCalendar && calendarTarget != null) {
-
-      float x = calendarTarget.x;
-      float y = calendarTarget.y + calendarTarget.h + 10;
-      float cell = 45;
-
-      int days = getDaysInMonth(calMonth, calYear);
-      int start = getStartDay(calMonth, calYear);
-      
-      // Month navigation
-      if (showCalendar && calendarTarget != null) {
-      
-        // LEFT
-        if (dist(mouseX, mouseY, leftArrowX, arrowY) < arrowSize) {
-          calMonth--;
-          if (calMonth < 1) {
-            calMonth = 12;
-            calYear--;
-          }
-          return;
-        }
-      
-        // RIGHT
-        if (dist(mouseX, mouseY, rightArrowX, arrowY) < arrowSize) {
-          calMonth++;
-          if (calMonth > 12) {
-            calMonth = 1;
-            calYear++;
-          }
-          return;
-        }
-      }
-      
-      for (int d=1; d<=days; d++) {
-
-        int index = d + start - 2;
-        int col = index % 7;
-        int row = index / 7;
-
-        float dx = x + col*cell;
-        float dy = y + row*cell + 70;
-
-        if (mouseX>dx && mouseX<dx+cell &&
-          mouseY>dy && mouseY<dy+cell) {
-
-          calendarTarget.label =
-            nf(calMonth, 2)+"/"+nf(d, 2)+"/"+calYear;
-
-          showCalendar = false;
-          calendarTarget = null;
-          return;
-        }
-      }
-    }
-    // 1. Handle Input Focus
-    if (inputButton.over(mouseX, mouseY)) {
-      currentInput = inputButton;
-      calendarTarget = inputButton;
-      showCalendar = true;
-
-      if (inputButton.label.equals("MM/DD/YYYY"))
-        inputButton.label = "";
-    }
-    if (inputButton2.over(mouseX, mouseY)) {
-      currentInput = inputButton2;
-      calendarTarget = inputButton2;
-      showCalendar = true;
-
-      if (inputButton2.label.equals("MM/DD/YYYY"))
-        inputButton2.label = "";
-    }
-
-    for (Button b : buttons) {
-      if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-
-        if (b.type.equals("back")) goBack();
-
-
-        if (b.type.equals("dateOutput")) {
-          selection.dateStart = inputButton.label;
-          selection.dateEnd = inputButton2.label;
-
-          searchFlightsDateRange();
-
-          goTo(flightsOutput);
-        }
+  
+  adjustedMouseY = mouseY - layoutOffsetY;
+  
+  // ----------------------------
+  // --- ORIGIN SUGGESTIONS CLICK
+  // ----------------------------
+  if (showOriginSuggestions && suggestions.size() > 0) {
+    float x = originButton.x;
+    float y = originButton.y + originButton.h;
+    float h = 35;
+  
+    for (int i = 0; i < suggestions.size(); i++) {
+      float sy = y + i * h;
+  
+      if (mouseX > x && mouseX < x + originButton.w &&
+          mouseY > sy + layoutOffsetY &&
+          mouseY < sy + h + layoutOffsetY) {
+  
+        String city = suggestions.get(i);
+        originButton.label = city;
+        selection.origin = city;
+  
+        showOriginSuggestions = false;
+        currentInput = null;
+        return;
       }
     }
   }
+
+  // ----------------------------
+  // --- CALENDAR CLICK LOGIC ---
+  // ----------------------------
+  if (showCalendar && calendarTarget != null) {
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 40;
+
+    int days = getDaysInMonth(calMonth, calYear);
+    int start = getStartDay(calMonth, calYear);
+
+    // LEFT ARROW
+    if (dist(mouseX, adjustedMouseY, leftArrowX, arrowY) < arrowSize) {
+      calMonth--;
+      if (calMonth < 1) { calMonth = 12; calYear--; }
+      return;
+    }
+
+    // RIGHT ARROW
+    if (dist(mouseX, adjustedMouseY, rightArrowX, arrowY) < arrowSize) {
+      calMonth++;
+      if (calMonth > 12) { calMonth = 1; calYear++; }
+      return;
+    }
+
+    float topOffset = 70;
+
+    for (int d = 1; d <= days; d++) {
+    
+      int index = (start - 1) + (d - 1);
+      int col = index % 7;
+      int row = index / 7;
+    
+      float dx = x + col * cell;
+      float dy = y + row * cell + topOffset;
+    
+      if (mouseX >= dx && mouseX <= dx + cell &&
+          adjustedMouseY >= dy && adjustedMouseY <= dy + cell) {
+    
+        calendarTarget.label =
+          nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
+    
+        showCalendar = false;
+        calendarTarget = null;
+        return;
+      }
+    }
+  }
+
+  // ----------------------------
+  // --- ORIGIN BUTTON CLICK ----
+  // ----------------------------
+  if (originButton.over(mouseX, adjustedMouseY)) {
+      originButton.hasError = false;
+      currentInput = originButton;
+      activeInput1 = "origin";
+      showOriginSuggestions = true;
+      updateOriginSuggestions(originButton.label);
+
+      // clear placeholder
+      if (originButton.label.equals("Origin City")) {
+          originButton.label = "";
+      }
+      return;
+  }
+
+  // ----------------------------
+  // --- DATE INPUT BUTTONS -----
+  // ----------------------------
+  if (inputButton.over(mouseX, adjustedMouseY)) {
+    showOriginSuggestions = false;
+    currentInput = inputButton;
+    calendarTarget = inputButton;
+    showCalendar = true;
+    if (inputButton.label.equals("MM/DD/YYYY")) inputButton.label = "";
+  } else if (inputButton2.over(mouseX, adjustedMouseY)) {
+    showOriginSuggestions = false;
+    currentInput = inputButton2;
+    calendarTarget = inputButton2;
+    showCalendar = true;
+    if (inputButton2.label.equals("MM/DD/YYYY")) inputButton2.label = "";
+  }
+
+  
+  
+
+  // ----------------------------
+  // --- OTHER BUTTONS ----------
+  // ----------------------------
+  for (Button b : buttons) {
+    if (b.over(mouseX, adjustedMouseY)) {
+      println("Clicked: " + b.type);
+
+      if (b.type.equals("back")) goBack();
+
+      if (b.type.equals("dateOutput")) {
+        selection.origin = originButton.label; // ensure origin is set
+        selection.dateStart = inputButton.label;
+        selection.dateEnd = inputButton2.label;
+
+        searchFlightsByDate(); // your screen method
+      }
+    }
+  }
+}
 }
 class TrafficScreen extends Screen {
 
@@ -1599,10 +2485,13 @@ class FlightsOutputScreen extends Screen {
     textSize(14);
     fill(255, 200);
     text(results.size() + " flights found • " + selection.dateStart + " - " + selection.dateEnd, width/2, 60);
+    
+    for (Button b : buttons) b.display();
 
-    // --- Draw the flights with scrolling ---
+    // --- Draw the flights with scrolling & clipping ---
     pushMatrix();
-    translate(0, scrollY); // move the origin by scroll offset
+    clip(0, 80, width, height - 80); // clip below header (header height = 80)
+    translate(0, scrollY); // scroll
     if (results.size() > 0) {
       for (int i = 0; i < results.size(); i++) {
         drawFlightCard(width/2 - 450, topMargin + i * cardHeight, results.get(i));
@@ -1610,9 +2499,8 @@ class FlightsOutputScreen extends Screen {
     } else {
       drawEmptyState();
     }
-    popMatrix();
+    popMatrix(); // restores matrix and removes clip automatically
 
-    for (Button b : buttons) b.display();
   }
 
   void drawFlightCard(float x, float y, Flight f) {
@@ -1671,46 +2559,58 @@ class FlightsOutputScreen extends Screen {
     textSize(20);
     text("No flights found for this route or date.", width/2, height/2);
   }
+  boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+    float selectX = cardX + cardW - 120;
+    float selectY = cardY + 25;
+    float selectW = 100;
+    float selectH = 50;
+  
+    // ✅ Adjust for scroll offset
+    float adjustedMouseY = mouseY - scrollY;
+  
+    return (
+      mouseX > selectX &&
+      mouseX < selectX + selectW &&
+      adjustedMouseY > selectY &&
+      adjustedMouseY < selectY + selectH
+    );
+  }
 
 
   void mousePressed() {
-    // 1. Check BACK button
-    for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) goBack();
-
-      // 2. Check SELECT buttons for each flight
-      for (int i = 0; i < results.size(); i++) {
-        float cardX = width/2 - 450;
-        float cardY = topMargin + i * cardHeight + scrollY;
-        float cardW = 900;
-        float cardH = 100;
-
-        float selectX = cardX + cardW - 120;
-        float selectY = cardY + 25;
-        float selectW = 100;
-        float selectH = 50;
-
-        if (mouseX > selectX && mouseX < selectX + selectW &&
-          mouseY > selectY && mouseY < selectY + selectH)
-        {
-          Flight selected = results.get(i);
-
-          // This line ensures the code inside ONLY runs if the flight isn't there yet
-          if (!bookedFlights.contains(selected)) {
-            bookedFlights.add(selected);
-            println("Flight added!");
-
-            // Show confirmation screen
-            ArrayList<Flight> justBooked = new ArrayList<Flight>();
-            justBooked.add(selected);
-            flightConfirmedScreenObj.start();
-            goTo(flightConfirmedScreen);
-          } else {
-            println("Already in your list!");
+  
+      // --- BACK button ---
+      for (Button b : buttons) {
+          if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+              goBack();
+              return; // stop further checks if back pressed
           }
-        }
       }
-    }
+  
+      // --- Flight SELECT buttons ---
+      for (int i = 0; i < results.size(); i++) {
+          float cardX = width/2 - 450;
+          float cardY = topMargin + i * cardHeight;
+          float cardW = 900;
+  
+          if (clickedSelectButton(cardX, cardY, cardW)) {
+              Flight selected = results.get(i);
+  
+              if (!bookedFlights.contains(selected)) {
+                  bookedFlights.add(selected);
+                  println("Flight added!");
+  
+                  // Show confirmation screen
+                  ArrayList<Flight> justBooked = new ArrayList<Flight>();
+                  justBooked.add(selected);
+                  flightConfirmedScreenObj.start();
+                  goTo(flightConfirmedScreen);
+              } else {
+                  println("Already in your list!");
+              }
+          }
+      }
   }
 
   // SCROLLING with mouse wheel
@@ -1757,36 +2657,39 @@ class TwoWayFlightsOutputScreen extends Screen {
 
   void drawContent() {
     background(RY_BG);
-
-    // Header
+  
+    // --- FIXED HEADER ---
     fill(RY_BLUE);
     noStroke();
     rect(0, 0, width, 80);
-
+  
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(24);
     String route = selection.origin.toUpperCase() + " → " + selection.destination.toUpperCase();
     text(route, width / 2, 35);
-
+  
     textSize(14);
     fill(255, 200);
     text(outboundFlights.size() + " outbound flights • " + selection.dateStart +
       (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
       width / 2, 60);
+    
+    for (Button b : buttons) b.display();
 
+    // --- SCROLLABLE CONTENT ---
     pushMatrix();
-    translate(0, scrollY);
-
-    float yOffset = topMargin;
-
+    clip(0, 80, width, height - 80); // clip below header
+    translate(0, scrollY + 80); // scroll offset + header
+  
+    float yOffset = 10;
+  
     // Outbound flights title
     fill(0);
     textAlign(LEFT, TOP);
     textSize(18);
     text("Outbound Flights", width / 2 - 450, yOffset - 40);
-
-    // Outbound flights: show only selected if one chosen
+  
     if (selectedOutbound >= 0) {
       drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(selectedOutbound), "outbound", selectedOutbound);
       yOffset += cardHeight;
@@ -1796,23 +2699,20 @@ class TwoWayFlightsOutputScreen extends Screen {
         yOffset += cardHeight;
       }
     }
-
+  
     yOffset += 40; // spacing before return flights
-
-    // Return flights title
+  
     fill(0);
     textSize(18);
     text("Return Flights", width / 2 - 450, yOffset - 40);
-
-    // Return flights: show all return flights (no collapse)
+  
     for (int i = 0; i < returnFlights.size(); i++) {
       drawFlightCard(width / 2 - 450, yOffset, returnFlights.get(i), "return", i);
       yOffset += cardHeight;
     }
-
+  
     popMatrix();
-
-    for (Button b : buttons) b.display();
+  
   }
 
   void drawFlightCard(float x, float y, Flight f, String type, int index) {
@@ -1856,82 +2756,96 @@ class TwoWayFlightsOutputScreen extends Screen {
       text("SELECT", x + w - 70, y + 50);
     }
   }
+  
+  boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+    float selectX = cardX + cardW - 120;
+    float selectY = cardY + 25;
+    float selectW = 100;
+    float selectH = 50;
+  
+    // ✅ Adjust for scroll offset
+    float adjustedMouseY = mouseY - scrollY -80;
+  
+    return (
+      mouseX > selectX &&
+      mouseX < selectX + selectW &&
+      adjustedMouseY > selectY &&
+      adjustedMouseY < selectY + selectH
+    );
+  }
 
   void mousePressed() {
+
     // --- BACK button ---
     for (Button b : buttons) {
-      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
-        goBack();
-        return; // stop further checks if back pressed
-      }
+        if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+            goBack();
+            return; // stop further checks if back pressed
+        }
     }
 
-    float yOffset = topMargin;
+    float yOffset = 10;
 
     // --- OUTBOUND flights ---
     if (selectedOutbound >= 0) {
-      // Only selected outbound is visible
-      float cardX = width / 2 - 450;
-      float cardY = yOffset + scrollY;
-      Flight f = outboundFlights.get(selectedOutbound);
-
-      if (clickedSelectButton(cardX, cardY, 900)) {
-        // toggle selection
-        bookedFlights.remove(f);
-        selectedOutbound = -1;
-        selectedReturn = -1;
-        scrollY = 0;
-        println("Outbound flight unselected!");
-      }
-
-      yOffset += cardHeight;
-    } else {
-      // Show all outbound flights
-      for (int i = 0; i < outboundFlights.size(); i++) {
         float cardX = width / 2 - 450;
-        float cardY = yOffset + scrollY;
-        Flight f = outboundFlights.get(i);
+        float cardY = yOffset;
+        Flight f = outboundFlights.get(selectedOutbound);
 
         if (clickedSelectButton(cardX, cardY, 900)) {
-          if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
-          bookedFlights.add(f);
-          selectedOutbound = i;
-          selectedReturn = -1; // reset return
-          scrollY = 0;
-          println("Outbound flight selected!");
+            bookedFlights.remove(f);
+            selectedOutbound = -1;
+            selectedReturn = -1;
+            scrollY = 0;
+            println("Outbound flight unselected!");
         }
-
         yOffset += cardHeight;
-      }
+    } else {
+        for (int i = 0; i < outboundFlights.size(); i++) {
+            float cardX = width / 2 - 450;
+            float cardY = yOffset;
+            Flight f = outboundFlights.get(i);
+
+            if (clickedSelectButton(cardX, cardY, 900)) {
+                if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
+                bookedFlights.add(f);
+                selectedOutbound = i;
+                selectedReturn = -1;
+                scrollY = 0;
+                println("Outbound flight selected!");
+            }
+            yOffset += cardHeight;
+        }
     }
 
     yOffset += 40; // spacing before return flights
 
     // --- RETURN flights ---
     for (int i = 0; i < returnFlights.size(); i++) {
-      float cardX = width / 2 - 450;
-      float cardY = yOffset + scrollY;
-      Flight f = returnFlights.get(i);
+        float cardX = width / 2 - 450;
+        float cardY = yOffset;
+        Flight f = returnFlights.get(i);
 
-      if (clickedSelectButton(cardX, cardY, 900)) {
-        if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
-        bookedFlights.add(f);
-        selectedReturn = i;
-        println("Return flight selected!");
-      }
+        if (clickedSelectButton(cardX, cardY, 900)) {
+            if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
+            bookedFlights.add(f);
+            selectedReturn = i;
+            println("Return flight selected!");
+        }
 
-      yOffset += cardHeight;
+        yOffset += cardHeight;
     }
 
     // --- Show confirmation if both selected ---
     if (selectedOutbound >= 0 && selectedReturn >= 0) {
-      ArrayList<Flight> justBooked = new ArrayList<Flight>();
-      justBooked.add(outboundFlights.get(selectedOutbound));
-      justBooked.add(returnFlights.get(selectedReturn));
-      flightConfirmedScreenObj.start();
-      goTo(flightConfirmedScreen);
+        ArrayList<Flight> justBooked = new ArrayList<Flight>();
+        justBooked.add(outboundFlights.get(selectedOutbound));
+        justBooked.add(returnFlights.get(selectedReturn));
+        flightConfirmedScreenObj.start();
+        goTo(flightConfirmedScreen);
     }
-  }
+}
 
   void mouseWheel(MouseEvent event) {
     scrollY += -event.getCount() * scrollSpeed;

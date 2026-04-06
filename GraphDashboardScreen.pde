@@ -5,22 +5,47 @@ class GraphDashboardScreen extends Screen {
   graphScreen screen1, screen2;
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
-
+  
   String activeFact = "";
+  String activeBarView = "Destination";
+  AirlineRateChart cancelRateChart;
+  AirlineRateChart delayRateChart;
+  HashMap<String, AirlineStats> airlineStats;
+  
+  String activePieView = "Overall Flights";
+    // --- NEW: Airport search pie chart fields ---
+  String airportSearchInput = "";        // what the user has typed
+  boolean airportInputActive = false;    // is the text box focused?
+  String airportSearchCode = "";         // last successfully searched code
+  String airportSearchError = "";        // error message if not found
+  boolean airportSearchHasResult = false;
+  ArrayList<String> airportSuggestions = new ArrayList<String>();
+  int airportHoveredSlice = -1;
+  
+  // Results from airport search
+  int airportOnTime = 0;
+  int airportDelayed = 0;
+  int airportCancelled = 0;
+  int airportTotal = 0;
+  
+  // Text input box bounds (screen coords, set once)
+  float searchBoxX, searchBoxY, searchBoxW = 200, searchBoxH = 38;
+  // Search button bounds
+  float searchBtnX, searchBtnY, searchBtnW = 100, searchBtnH = 38;
+  
+  color[] airportColours = {
+     color(#4F772D),
+      color(#FCBF49),
+      color(#D62828)
+  }; 
+  
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
   float ImgX;
   float ImgY;
-  
-  // --- New rate charts ---
-  AirlineRateChart cancelRateChart;
-  AirlineRateChart delayRateChart;
-  HashMap<String, AirlineStats> airlineStats;
- 
-  String activeFact = "";
-  String activeBarView = "Destination"; // replaces showDestinationChart
- 
-  // --- Dropdowns ---
+  float w;
+  float h;
+
   Dropdown barDropdown;
   Dropdown pieDropdown;
   
@@ -54,59 +79,124 @@ class GraphDashboardScreen extends Screen {
  
     // Screen 1: bar chart dropdown + Pie Charts widget (kept)
     String[] barOptions = {"Destination", "Origin", "% Cancelled", "% Delayed"};
-    barDropdown = new Dropdown(200, 200, 200, 35, barOptions);
-    screen1.addWidget(new Widget(1050, 620, 120, 40, "Pie Charts"));
+    barDropdown = new Dropdown(30, 75, 280, 40, barOptions);
+    
+    String[] pieOptions = {"Overall Flights", "By Airline", "Search Airport"};
+    pieDropdown = new Dropdown(30, 75, 220, 38, pieOptions);
  
-    // Screen 2: pie dropdown + Bar Chart widget (kept)
-    String[] pieOptions = {"Pie Charts", "Bar Charts"};
-    pieDropdown = new Dropdown(760, 615, 160, 35, pieOptions);
-    screen2.addWidget(new Widget(1050, 620, 120, 40, "Bar Chart"));
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    
+    searchBoxX = width/2 - 160;
+    searchBoxY = 160;
+    searchBtnX = searchBoxX + searchBoxW + 15;
+    searchBtnY = searchBoxY;
   
     currentScreen = screen1;
     
-    buttons.add(new Button(30, 22, 80, 30, "BACK", "backPie", 15, false));
   }
   
   void draw() {
-    background(255);
-  
-    // Draw screen background + widgets
-    currentScreen.draw();
+    layout.beginPage(title);
+    drawContent();
+    drawImages();
+  }
+  void drawContent() {
+    
+     for (Button b: buttons) b.display();
+    
+    float panelW = width - 50;
+    float panelH = 560;
+    float panelX = width/2;
+    float panelY = 120;
+    fill(RY_BG);
+    rectMode(CENTER);
+    rect(panelX, panelY + panelH/2, panelW, panelH, 20);
+    rectMode(CORNER);
+    
+    if (currentScreen == screen1) {
+      barDropdown.draw();
+    } else if (currentScreen == screen2) {
+      pieDropdown.draw();
+    }
   
     // Draw charts
     if (currentScreen == screen1) {
+      
+      float chartX = (width - 530)/2;
+      float chartY = (height - 250) /2;
       pushMatrix();
-      translate(300, 200);
-    
+      translate(chartX, chartY);
+      
        if (activeBarView.equals("Destination")) {
         destChart.draw();
       } else if (activeBarView.equals("Origin")) {
         originChart.draw();
       } else if (activeBarView.equals("% Cancelled")) {
+        cancelRateChart.drawnAtX = chartX;  // ADD: save position for click detection
+        cancelRateChart.drawnAtY = chartY;
         cancelRateChart.draw(0, 0);
       } else if (activeBarView.equals("% Delayed")) {
+         delayRateChart.drawnAtX = chartX;   // ADD: save position for click detection
+        delayRateChart.drawnAtY = chartY;
         delayRateChart.draw(0, 0);
       }
     
       popMatrix();
+      
+        if (activeBarView.equals("% Cancelled") || activeBarView.equals("% Delayed")) {
+        AirlineRateChart chart = activeBarView.equals("% Cancelled") ? cancelRateChart : delayRateChart;
+        
+        // Y-axis label (rotated) — now in screen coords
+        pushMatrix();
+        translate(chartX - 15, chartY + chart.pg.height/2);
+        rotate(-HALF_PI);
+        textAlign(CENTER, CENTER);
+        fill(0);
+        textSize(13);
+        text("Rate (%)", 0, 0);
+        popMatrix();
+        
+        // Chart title
+        fill(0);
+        textAlign(CENTER, TOP);
+        textSize(20);
+        text((chart.mode.equals("cancel") ? "Cancellation" : "Delay") + " Rate by Airline",
+             chartX + chart.pg.width/2, chartY - 50);
+        
+        // X-axis label
+        textSize(14);
+        textAlign(CENTER, BOTTOM);
+        text("Airlines", chartX + chart.pg.width/2, chartY + chart.pg.height + 25);
+        
+        // Legend panel — now in screen coords, no translate active
+        if (chart.showLegend && chart.airlines != null) {
+          chart.drawLegendPanel();
+        }
+      }
     }
     if (currentScreen == screen2) {
-      pushMatrix();
-      translate(200, 300);
-      pieChart.draw();
-      popMatrix();
-      
-      airlinePie.draw(600, 150);
-      
+     if (activePieView.equals("Overall Flights")) {
+        // Original pie chart — unchanged
+        float pieX = width/2 - 400/2;
+        float pieY = height/2 - 300/2 + 20;  // slight downward offset for the dropdown
+        pushMatrix();
+        translate(pieX, pieY);
+        pieChart.draw();
+        popMatrix();
+        
+      } else if (activePieView.equals("By Airline")) {
+        // Original airline pie — unchanged
+         airlinePie.draw(width/2 - 450/2, height/2 - 350/2 + 20);
+        
+      } else if (activePieView.equals("Search Airport")) {
+        // NEW: draw the airport search UI
+        drawAirportSearchView();
+      }
     }
   
-    // Draw title
-    fill(0);
-    textSize(20);
-    text("Flight Data Visualisation Dashboard", width/2, 30);
   
     // Draw airport fact box
-    if (activeFact != "") {
+    if (activeFact != "" && currentScreen == screen1) {
       drawInfoBox(activeFact);
     }
   
@@ -117,60 +207,169 @@ class GraphDashboardScreen extends Screen {
     for(Button b : buttons) b.display();
     
      // Draw dropdown on top of everything else
+    // Draw dropdown on top of everything else
     if (currentScreen == screen1) {
       barDropdown.draw();
     } else if (currentScreen == screen2) {
       pieDropdown.draw();
     }
+
+    // Draw airport suggestions last so they appear over all charts and panels
+    if (currentScreen == screen2 && activePieView.equals("Search Airport") &&
+        airportInputActive && airportSuggestions.size() > 0) {
+      float sugH = 30;
+      for (int i = 0; i < airportSuggestions.size(); i++) {
+        float sy = searchBoxY + searchBoxH + i * sugH;
+        boolean sugHov = (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+                          mouseY > sy && mouseY < sy + sugH);
+
+        noStroke();
+        fill(sugHov ? color(220, 230, 255) : 255);
+        rect(searchBoxX, sy, searchBoxW, sugH);
+
+        stroke(200);
+        strokeWeight(1);
+        line(searchBoxX, sy + sugH, searchBoxX + searchBoxW, sy + sugH);
+
+        fill(RY_BLUE);
+        textAlign(LEFT, CENTER);
+        textSize(13);
+        noStroke();
+        text(airportSuggestions.get(i), searchBoxX + 8, sy + sugH/2);
+      }
+      // Outer border around the whole list
+      stroke(RY_BLUE);
+      strokeWeight(1);
+      noFill();
+      rect(searchBoxX, searchBoxY + searchBoxH,
+           searchBoxW, airportSuggestions.size() * sugH, 0, 0, 4, 4);
+      noStroke();
+    }
+  }
+  
+    void highlightButton(Button b)  {
+      fill(255,215,0);
+      rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
+      b.display();
+    
+     // Draw dropdown on top of everything else
+    if (currentScreen == screen1) {
+      barDropdown.draw();
+    }
   }
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
-        if(b.type.equals("backPie")) {
+        if(b.type.equals("back")) {
           goBack();
           return;
         }
       }
     }
-        // --- Dropdown clicks first, so open list gets priority ---
+    
     if (currentScreen == screen1) {
+    
       String chosen = barDropdown.mousePressed(mouseX, mouseY);
-      if (chosen != null) {
+      if(chosen != null)  {
         activeBarView = chosen;
         activeFact = "";
         return;
+      }
+      
+      // Destination chart buttons
+      if(activeBarView.equals("Destination"))  {
+      String airport = destChart.checkClick(mouseX, mouseY);
+        if (airport != null) {
+          showAirportFacts(airport);
+          return;
+        }
+      }
+    
+      // Origin chart buttons
+     else if (activeBarView.equals("Origin"))  {
+      String airport = originChart.checkClick(mouseX, mouseY);
+        if (airport != null) {
+          showAirportFacts(airport);
+          return;
+        }
+      }
+      else if (activeBarView.equals("% Cancelled")) {
+        cancelRateChart.mousePressed();
+      }
+      else if (activeBarView.equals("% Delayed")) {
+        delayRateChart.mousePressed();
       }
     }
     if (currentScreen == screen2) {
       String chosen = pieDropdown.mousePressed(mouseX, mouseY);
       if (chosen != null) {
-        if (chosen.equals("Bar Charts")) {
-          currentScreen = screen1;
-          activeFact = "";
+          // NEW: update which pie view is showing
+          activePieView = chosen;
+          // Reset search state when switching away from Search Airport
+          if (!chosen.equals("Search Airport")) {
+            airportInputActive = false;
+            airportSuggestions.clear();
+          }
+           return;
         }
-        return;
       }
-    }
-    
-    if (currentScreen == screen1) {
-    
-      // Destination chart buttons
-      String airport = destChart.checkClick(mouseX, mouseY);
-      if (airport != null) {
-        showAirportFacts(airport);
-        return;
+     if (currentScreen == screen2) {
+      if (activePieView.equals("Overall Flights")) {
+        pieChart.mousePressed();
+      } else if (activePieView.equals("Search Airport")) {
+          // Click inside input box
+          if (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+              mouseY > searchBoxY && mouseY < searchBoxY + searchBoxH) {
+          
+              airportInputActive = true;
+          
+              if (airportSearchInput.equals("e.g. ATL")) {
+                airportSearchInput = "";
+            }
+        
+          // ✅ suggestion clicks MUST be inside this block
+          } else if (airportSuggestions.size() > 0 && airportInputActive) {
+        
+            float sugH = 30;
+            boolean clickedSuggestion = false;
+        
+            for (int i = 0; i < airportSuggestions.size(); i++) {
+              float sy = searchBoxY + searchBoxH + i * sugH;
+        
+              if (mouseX > searchBoxX && mouseX < searchBoxX + searchBoxW &&
+                  mouseY > sy && mouseY < sy + sugH) {
+        
+                String[] parts = airportSuggestions.get(i).split(" - ");
+                if (parts.length > 0) {
+                  String picked = parts[0].trim();
+                  airportSearchInput = picked;
+                }
+        
+                airportSuggestions.clear();
+                airportInputActive = false;
+                runAirportSearch();
+                clickedSuggestion = true;
+                break;
+              }
+            }
+        
+            if (!clickedSuggestion) {
+              airportInputActive = false;
+              airportSuggestions.clear();
+            }
+        
+          } else {
+            airportInputActive = false;
+            airportSuggestions.clear();
+          }
+        
+          // Search button
+          if (mouseX > searchBtnX && mouseX < searchBtnX + searchBtnW &&
+              mouseY > searchBtnY && mouseY < searchBtnY + searchBtnH) {
+              runAirportSearch();
+          }
       }
-    
-      // Origin chart buttons
-      airport = originChart.checkClick(mouseX, mouseY);
-      if (airport != null) {
-        showAirportFacts(airport);
-        return;
-      }
-    }
-    if (currentScreen == screen2) {
-      pieChart.mousePressed();
-    }
+     }
   
     Widget w = currentScreen.getEvent(mouseX, mouseY);
   
@@ -179,89 +378,131 @@ class GraphDashboardScreen extends Screen {
     if (w.label.equals("Pie Charts")) {
       currentScreen = screen2;
       activeFact = "";
+      currentAirportImg = null;
     }
     else if (w.label.equals("Bar Chart")) {
       currentScreen = screen1;
       activeFact = "";
+      currentAirportImg = null;
     }
   }
   
   void mouseMoved() {
     currentScreen.updateHover(mouseX, mouseY);
   }
+  void keyPressed(char k) {
+    // NEW: route keyboard input to airport search box when it's active
+    if (currentScreen == screen2 && activePieView.equals("Search Airport") && airportInputActive) {
+      if (k == BACKSPACE) {
+        if (airportSearchInput.length() > 0) {
+          airportSearchInput = airportSearchInput.substring(0, airportSearchInput.length() - 1);
+          updateAirportSuggestions(airportSearchInput); 
+        }
+      } else if (k == ENTER || k == RETURN) {
+        runAirportSearch();
+      }  else if (k != CODED && k != TAB && airportSearchInput.length() < 4) {
+        airportSearchInput += Character.toUpperCase(k);
+        updateAirportSuggestions(airportSearchInput);  // rebuild suggestions after each keystroke
+      }
+    }
+  }
   
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
-      activeFact = "LAX — \nLos Angeles International Airport. \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n It has an official song.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "LAX — \nLos Angeles International Airport. \n \n The eighth-busiest airport in the world serving over 75 million guests in 2023 \n \n It has an official song.";
+      currentAirportImg = loadImage("LAX.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 45;
       
     } else if (code.equals("JFK")) {
-      activeFact = "JFK — \n John F Kennedy International Airport \n There is a pet-only terminal.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "JFK — \n John F Kennedy International Airport \n \n There is a pet-only terminal.";
+      currentAirportImg = loadImage("JFK.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
       
     } else if (code.equals("SEA")) {
-      activeFact = "SEA — \n Seattle-Tacoma International Airport. \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "SEA — \n Seattle-Tacoma International Airport.  \n SEA Airports parking garage is the second largest parking lot (under one roof) in the world.";
+      currentAirportImg = loadImage("SEA.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 60;
+      h = 40;
       
     } else if (code.equals("HON")) {
-      activeFact = "HON — \n Honolulu International Airport. \n The largest airport in Hawaii.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "HON — \n Honolulu International Airport. \n \n The largest airport in Hawaii.";
+      currentAirportImg = loadImage("HON.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
   
     } else if (code.equals("LGA")) {
-      activeFact = "LGA — \n LaGuardia Airport. \n The airport lies partly on reclaimed land, created using landfill .";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "LGA — \n LaGuardia Airport. \n \n The airport lies partly on reclaimed land, created using landfill .";
+      currentAirportImg = loadImage("LGA.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 60;
+      h = 40;
     
     } else if (code.equals("PHX")) {
-      activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n It is Arizona's largest and busiest airport. .";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "PHX — \n Phoenix Sky Harbor International Airport. \n \n It is Arizona's largest and busiest airport. .";
+      currentAirportImg = loadImage("PHX.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     }else if (code.equals("MCO")) {
-      activeFact = "MCO — \n Orlando International Airport. \n Has over $41 billion in economic impact.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "MCO — \n Orlando International Airport. \n \n Has over $41 billion in economic impact.";
+      currentAirportImg = loadImage("MCO.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 80;
+      h = 60;
     
     } else if (code.equals("ATL")) {
-      activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
+      activeFact = "ATL —  Hartsfield-Jackson Atlanta International Airport. \n \n Since 1998, Hartsfield-Jackson has been the busiest airport in the world for 23 out of 24 years.";
       currentAirportImg = loadImage("ATL.jpg");
-      ImgX = 50;
-      ImgY = height - 270;
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     }else if (code.equals("DFW")) {
-      activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n it serves 269 destinations (196 domestic and 73 international).";
+      activeFact = "DFW — \n Dallas/Fort Worth International Airport. \n \n it serves 269 destinations (196 domestic and 73 international).";
       currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 60;
+      h = 60;
     
     }else if (code.equals("CLT")) {
-      activeFact = "CLT — \n Charlotte Douglas International Airport. \n Contributes about 5% of North Carolinas GDP.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "CLT — \n Charlotte Douglas International Airport. \n \n Contributes about 5% of North Carolinas GDP.";
+      currentAirportImg = loadImage("CLT.png");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
     
     }else if (code.equals("DEN")) {
-      activeFact = "DEN — \n Denver International Airport . \n legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "DEN — \n Denver International Airport . \n \n Legend is that there are miles of underground tunnels and layer upon layer of secret buildings and bunkers beneath the airport.";
+      currentAirportImg = loadImage("DEN.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 40;
     
     } else if (code.equals("ORD")) {
-      activeFact = "ORD — \n Chicago Ohare International Airport. \n  Built in February of 1944.";
-      currentAirportImg = loadImage("Dallas.png");
-      ImgX = 50;
-      ImgY = height - 270;
+      activeFact = "ORD — \n Chicago Ohare International Airport. \n \n  Built in February of 1944.";
+      currentAirportImg = loadImage("ORD.jpg");
+      ImgX = 950;
+      ImgY = height - 460;
+      w = 70;
+      h = 50;
     
     } else {
       activeFact = code + " — No facts available yet.";
@@ -269,10 +510,10 @@ class GraphDashboardScreen extends Screen {
   }
 
   void drawInfoBox(String msg) {
-    int boxW = 300;
+    int boxW = 250;
     int boxH = 120;
-    int x = 50;
-    int y = height - boxH -150;
+    int x = 700;
+    int y = height - 460;
   
     // background rectangle
     fill(255);
@@ -284,11 +525,17 @@ class GraphDashboardScreen extends Screen {
     fill(0);
     textSize(14);
     textAlign(LEFT, TOP);
-    text(msg, x + 15, y + 15, boxW - 30, boxH - 30);
+    text(msg, x + 20, y + 25, boxW - 30, boxH - 30);
     
     if( currentAirportImg !=null)  {
       imageMode(CENTER);
-      image(currentAirportImg, ImgX, ImgY, 70, 40);
+      image(currentAirportImg, ImgX, ImgY, w, h);
+      stroke(0);
+      strokeWeight(2);
+      noFill();
+      rectMode(CENTER);
+      rect(ImgX, ImgY, w, h);
+      rectMode(CORNER);
       imageMode(CORNER);
     }
  }
@@ -299,8 +546,8 @@ class GraphDashboardScreen extends Screen {
   
     int boxW = 260;
     int boxH = 120;
-    int x = width - boxW - 40;   // right side of screen
-    int y = 120;                 // adjust as needed
+    int x = width/2 +200;                 // right side of screen
+    int y = 500;                 // adjust as needed
   
     // Background
     fill(255);
@@ -309,22 +556,247 @@ class GraphDashboardScreen extends Screen {
     rect(x, y, boxW, boxH, 12);
   
     // Text
-    fill(0);
+    color[] textColours = {
+      color(34, 139, 34),
+      color(255, 140, 0),
+      color(200, 0, 0)
+    };
+    
     textAlign(LEFT, TOP);
-    textSize(14);
   
     for (int i = 0; i < lines.length; i++) {
-      text(lines[i], x + 15, y + 15 + i * 25);
+      fill(textColours[i]);
+      
+      String[] parts = lines[i].split(":");
+      
+      textSize(15);
+      text(parts[0] + ":", x + 15, y + 30 + i * 25);
+      
+      textSize(13);
+      fill(0);
+      float labelW = textWidth(parts[0] + ":");
+      if(parts.length > 1) {
+        text(parts[1], x + 35 + labelW, y + 32 + i * 25);
+      }
     }
      popMatrix();
      popStyle();
   }
-  
-  void goToPieCharts()  {
+void drawAirportSearchView() {
+    pushStyle();
+
+    
+    // ---- text input box ----
+    stroke(RY_BLUE);
+    strokeWeight(airportInputActive ? 2 : 1);
+    fill(255);
+    rect(searchBoxX, searchBoxY, searchBoxW, searchBoxH, 5);
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(16);
+    String displayText = airportSearchInput.length() == 0 ? "e.g. ATL" : airportSearchInput;
+    if (airportInputActive && (frameCount / 25) % 2 == 0) displayText += "|";
+    noStroke();
+    text(displayText, searchBoxX + 10, searchBoxY + searchBoxH / 2);
+
+    // ---- search button ----
+    boolean btnHovered = (mouseX > searchBtnX && mouseX < searchBtnX + searchBtnW &&
+                          mouseY > searchBtnY && mouseY < searchBtnY + searchBtnH);
+    noStroke();
+    fill(btnHovered ? color(255, 215, 0) : RY_YELLOW);
+    rect(searchBtnX, searchBtnY, searchBtnW, searchBtnH, 8);
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(15);
+    text("Search", searchBtnX + searchBtnW / 2, searchBtnY + searchBtnH / 2);
+
+    // ---- error message ----
+    if (!airportSearchError.equals("")) {
+      fill(color(180, 50, 50));
+      textAlign(CENTER, TOP);
+      textSize(14);
+      text(airportSearchError, width/2, searchBoxY + searchBoxH + 15);
+    }
+
+    // ---- interactive pie chart ----
+    if (airportSearchHasResult) {
+      float[] vals = { airportOnTime, airportDelayed, airportCancelled };
+      float total  = airportOnTime + airportDelayed + airportCancelled;
+
+      float cx     = width / 2;
+      float cy     = 430;
+      float pieR   = 150;
+      float expandDist = 16;
+
+      // Determine hovered slice
+      float dx   = mouseX - cx;
+      float dy   = mouseY - cy;
+      float dist = sqrt(dx * dx + dy * dy);
+      airportHoveredSlice = -1;
+      if (dist <= pieR + 25 && dist >= 5) {
+        float ang = atan2(dy, dx) + HALF_PI;
+        if (ang < 0)       ang += TWO_PI;
+        if (ang > TWO_PI)  ang -= TWO_PI;
+        float cumul = 0;
+        for (int i = 0; i < vals.length; i++) {
+          cumul += TWO_PI * (vals[i] / total);
+          if (ang <= cumul) { airportHoveredSlice = i; break; }
+        }
+      }
+
+      // Draw slices
+      float start = -HALF_PI;
+      String[] labels = { "On Time", "Delayed > 30min", "Cancelled" };
+      for (int i = 0; i < vals.length; i++) {
+        float angle    = TWO_PI * (vals[i] / total);
+        boolean hov    = (airportHoveredSlice == i);
+        float midAngle = start + angle / 2;
+        float ox = hov ? cos(midAngle) * expandDist : 0;
+        float oy = hov ? sin(midAngle) * expandDist : 0;
+
+        fill(airportColours[i]);
+        noStroke();
+        arc(cx + ox, cy + oy, pieR * 2, pieR * 2, start, start + angle, PIE);
+
+        if (angle > 0.2) {
+          float lx = cx + ox + cos(midAngle) * pieR * 0.65;
+          float ly = cy + oy + sin(midAngle) * pieR * 0.65;
+          fill(0, 180);
+          textAlign(CENTER, CENTER);
+          textSize(hov ? 15 : 13);
+          text(nf((vals[i] / total) * 100, 1, 1) + "%", lx, ly);
+        }
+        start += angle;
+      }
+
+      // Donut hole
+      fill(RY_BG);
+      noStroke();
+      ellipse(cx, cy, pieR * 0.65, pieR * 0.65);
+
+      // Centre label
+      fill(0);
+      textAlign(CENTER, CENTER);
+      textSize(11);
+      text("total", cx, cy + 9);
+      textSize(18);
+      text(str(airportTotal), cx, cy - 7);
+
+      // Hover tooltip
+      if (airportHoveredSlice >= 0) {
+        float pct = (vals[airportHoveredSlice] / total) * 100;
+        String tip = labels[airportHoveredSlice] + "\n" +
+                     int(vals[airportHoveredSlice]) + " flights (" +
+                     nf(pct, 1, 1) + "%)";
+        float tx = mouseX + 14;
+        float ty = mouseY - 10;
+        float tw = 195, th = 48;
+        if (tx + tw > width - 10) tx = mouseX - tw - 14;
+        fill(255); stroke(RY_BLUE); strokeWeight(1);
+        rect(tx, ty, tw, th, 7);
+        noStroke();
+        fill(RY_BLUE);
+        textAlign(LEFT, TOP);
+        textSize(12);
+        text(tip, tx + 9, ty + 7, tw - 18, th - 14);
+      }
+
+      // Legend to the right of pie
+      float lx = cx + pieR + 30;
+      float ly = cy - 35;
+      for (int i = 0; i < labels.length; i++) {
+        fill(airportColours[i]); noStroke();
+        rect(lx, ly + i * 28, 14, 14, 3);
+        fill(0);
+        textAlign(LEFT, CENTER);
+        textSize(13);
+        text(labels[i], lx + 22, ly + i * 28 + 7);
+      }
+
+      // Title above pie
+      fill(0);
+      textAlign(CENTER, BOTTOM);
+      textSize(18);
+      text("Flight status for: " + airportSearchCode, cx, cy - pieR - 20);
+    }
+
+    popStyle();
+  }
+  void updateAirportSuggestions(String input) {
+    airportSuggestions.clear();
+    if (input.length() < 1) return;
+    input = input.toLowerCase();
+
+    // Use flightsList (global from MAIN.pde) — same source as QueriesFlights
+    for (Flight f : flightsList) {
+      String code     = f.origin.toLowerCase();
+      String cityName = f.originCityName != null ? f.originCityName.toLowerCase() : "";
+
+      if (code.startsWith(input) || cityName.contains(input)) {
+        // Format: "ATL - Atlanta, GA"  matching QueriesFlights style
+        String suggestion = f.origin + " - " + f.originCityName;
+        if (!airportSuggestions.contains(suggestion)) {
+          airportSuggestions.add(suggestion);
+        }
+        if (airportSuggestions.size() >= 6) break;
+      }
+    }
+  }
+void runAirportSearch() {
+    String code = airportSearchInput.trim().toUpperCase();
+    if (code.equals("") || code.equals("E.G. ATL")) {
+      airportSearchError = "Please enter an airport code.";
+      airportSearchHasResult = false;
+      return;
+    }
+
+    airportOnTime = 0;
+    airportDelayed = 0;
+    airportCancelled = 0;
+    airportTotal = 0;
+    airportSearchError = "";
+    airportSearchHasResult = false;
+
+    Table table = loadTable("flights100k.csv", "header");
+
+    for (TableRow row : table.rows()) {
+      String origin = row.getString("ORIGIN");
+      if (origin == null || !origin.trim().equalsIgnoreCase(code)) continue;
+
+      airportTotal++;
+
+      if (row.getInt("CANCELLED") == 1) { airportCancelled++; continue; }
+
+      String depStr = row.getString("DEP_TIME");
+      String crsStr = row.getString("CRS_DEP_TIME");
+      if (depStr == null || depStr.equals("") || crsStr == null || crsStr.equals("")) {
+        airportCancelled++; continue;
+      }
+
+      int dep = row.getInt("DEP_TIME");
+      int crs = row.getInt("CRS_DEP_TIME");
+      int depMin = (dep / 100) * 60 + (dep % 100);
+      int crsMin = (crs / 100) * 60 + (crs % 100);
+
+      if (depMin - crsMin > 30) airportDelayed++;
+      else airportOnTime++;
+    }
+
+    if (airportTotal == 0) {
+      airportSearchError = "No flights found for: " + code +
+                           ". Try a code like ATL, LAX or ORD.";
+      return;
+    }
+
+    airportSearchCode = code;
+    airportSearchHasResult = true;
+    // No PGraphics render needed — pie draws live each frame
+  }
+    void goToPieCharts() {
     currentScreen = screen2;
   }
   
-  void onEnter()  {
+  void onEnter() {
     currentScreen = screen1;
     activeFact = "";
   }
@@ -443,9 +915,9 @@ class OriginBarChart {
     
       for (int i = 0; i < values.length; i++) {
         float x = 40 + i * barWidth;
-        float bx = x + (barWidth - 5)/2 - 30;
+        float bx = x;
         float by = pg.height - 25;
-        float bw = 60;
+        float bw = barWidth - 5;
         float bh = 20;
     
         buttons.add(new AirportButton(bx, by, bw, bh, airports[i]));
@@ -455,14 +927,14 @@ class OriginBarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
       pg.stroke(0);
       pg.line(40, 10, 40, pg.height - 30);  // x1,y1,x2,y2
     
-      // --- Y‑axis ticks + labels ---
+      // --- Y axis ticks + labels ---
       int ticks = 5;
       float maxVal = 0;
       for (float v : values) maxVal = max(maxVal, v);
@@ -521,11 +993,11 @@ class OriginBarChart {
       text("Most popular origin airports", pg.width/2, pg.height + 5);
     }
    String checkClick(float mx, float my) {
-      float localX = mx - 300;   // X offset of the origin chart
-      float localY = my - 200;   // Y offset of the origin chart
+      float localX = mx - (width - 530)/2;   // X offset of the origin chart
+      float localY = my - (height - 250)/2;   // Y offset of the origin chart
     
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) {
+        if (b.isInside(localX, localY)) {
           return b.code;
         }
       }
@@ -563,198 +1035,6 @@ class graphScreen{
       w.hover = w.isInside(mx, my);
     }
   }
-}
-/////////PIE CHART///////
-class PieChart {
-  float percentOnTime;
-  float percentDelayed;
-  float percentCancelled;
-  String[] airports;   // top 10 airport codes
-  float[] values;      // top 10 counts
-  PGraphics pg;
-  color[] colours;
- 
-  HashMap<String, Integer> onTimeByAirport = new HashMap<String, Integer>();
-  HashMap<String, Integer> delayedByAirport = new HashMap<String, Integer>();
-  HashMap<String, Integer> cancelledByAirport = new HashMap<String, Integer>();
-
-  String topOnTimeAirport = "";
-  String topDelayedAirport = "";
-  String topCancelledAirport = "";
-
-  boolean showTopAirports = false;
-
-  // Button position
-  int btnX = 10, btnY = 260, btnW = 180, btnH = 30;
-
-  PieChart(){
-    colours = new color[] {
-      color(149, 148, 109),   // on-time
-      color(216, 174, 112),    // delayed
-      color(193, 105, 82)    // cancelled
-    };
-  }
-    
-    void setup() {
-      pg = createGraphics(400, 300);
-    
-      Table table = loadTable("flights100k.csv", "header");
-      int onTime = 0;
-      int delayed = 0;
-      int cancelled = 0;
-    
-      for (TableRow row : table.rows()) {
-        String airport = row.getString("ORIGIN");
-
-        int isCancelled = row.getInt("CANCELLED");
-        if (isCancelled == 1) {
-          cancelled++;
-          increment(cancelledByAirport, airport);
-          continue;
-        }
-    
-        // Clean missing times
-        String depStr = row.getString("DEP_TIME");
-        String crsStr = row.getString("CRS_DEP_TIME");
-        if (depStr == null || depStr.equals("") || crsStr == null || crsStr.equals("")) {
-          cancelled++;   // treat missing times as unusable
-          increment(cancelledByAirport, airport);
-
-          continue;
-        }
-    
-        int dep = row.getInt("DEP_TIME");
-        int crs = row.getInt("CRS_DEP_TIME");
-    
-        // Convert HHMM to minutes
-        int depMin = (dep / 100) * 60 + (dep % 100);
-        int crsMin = (crs / 100) * 60 + (crs % 100);
-    
-        int delay = depMin - crsMin;
-    
-        if (delay > 30) {
-          delayed++;
-           increment(delayedByAirport, airport);
-        }
-        else {
-          onTime++;
-          increment(onTimeByAirport, airport);
-        }
-      }
-    
-      values = new float[] { onTime, delayed, cancelled };
-      
-      int total = onTime + cancelled + delayed;
-      percentOnTime = round((float(onTime)/ total)*100);
-      percentDelayed = round((float(delayed)/ total)*100);
-      percentCancelled = round((float(cancelled)/ total)*100);
-      computeTopAirports();
-    }
-    void increment(HashMap<String, Integer> map, String key) {
-      if (!map.containsKey(key)) map.put(key, 1);
-      else map.put(key, map.get(key) + 1);
-    }
-  
-    // Find max airport for each category
-    void computeTopAirports() {
-      topOnTimeAirport = findMax(onTimeByAirport);
-      topDelayedAirport = findMax(delayedByAirport);
-      topCancelledAirport = findMax(cancelledByAirport);
-    }
-  
-    String findMax(HashMap<String, Integer> map) {
-      String best = "";
-      int max = -1;
-      for (String k : map.keySet()) {
-        int v = map.get(k);
-        if (v > max) {
-          max = v;
-          best = k;
-        }
-      }
-      return best + " (" + max + ")";
-    }
-    void draw(){
-      pg.beginDraw();
-      pg.background(255);
-      pg.noStroke();
-    
-      float total = 0;
-      for (float v : values) total += v;
-    
-      float start = 0;
-      float cx = pg.width/2;
-      float cy = pg.height/2;
-      float diameter = 250;
-    
-      for (int i = 0; i < values.length; i++) {
-        float angle = TWO_PI * (values[i] / total);
-        pg.fill(colours[i]);
-        pg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
-        pg.fill(0);
-        pg.text(int(percentOnTime)+"%", cx-diameter/8, cy+diameter/8);
-        pg.text(int(percentDelayed)+"%", cx, cy-diameter/8);
-        pg.text(int(percentCancelled)+"%", cx+diameter/4, cy-diameter/25);
-        start += angle;
-      }
-      // --- Legend ---
-        int lx = 10;      // legend x-position inside pg
-        int ly = 10;      // legend y-position
-        int box = 15;     // size of colour squares
-        
-        String[] labels = {
-          "On Time",
-          "Delayed > 30min",
-          "Cancelled"
-        };
-        
-        pg.textAlign(LEFT, CENTER);
-        pg.textSize(12);
-        
-        for (int i = 0; i < labels.length; i++) {
-          pg.fill(colours[i]);
-          pg.rect(lx, ly + i * 25, box, box);
-        
-          pg.fill(0);
-          pg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
-        }
-      
-      pg.fill(0);
-      pg.text("Percentage of On Time flights", pg.width/2 , 10); 
-    
-      // --- Button ---
-      pg.fill(200);
-      pg.rect(btnX, btnY, btnW, btnH, 5);
-      pg.fill(0);
-      pg.textAlign(CENTER, CENTER);
-      pg.text("Show Top Airports", btnX + btnW/2, btnY + btnH/2);
- 
-      pg.endDraw();
-    
-      image(pg, 0, 0);
-    }
-    void mousePressed() {
-      // Adjust for translate(200, 300)
-      int mx = mouseX - 200;
-      int my = mouseY - 300;
-    
-      if (mx > btnX && mx < btnX + btnW &&
-          my > btnY && my < btnY + btnH) {
-        showTopAirports = !showTopAirports;
-      }
-    }
-  boolean isShowingTop() {
-      return showTopAirports;
-    }
-    
-    String[] getTopAirportInfo() {
-      return new String[] {
-        "Most On-Time: " + topOnTimeAirport,
-        "Most Delayed: " + topDelayedAirport,
-        "Most Cancelled: " + topCancelledAirport
-      };
-    }
-
 }
 
 class BarChart {
@@ -825,7 +1105,7 @@ class BarChart {
     
     void draw() {
       pg.beginDraw();
-      pg.background(255);
+      pg.background(RY_BG);
       pg.stroke(0);
       
       // --- drawing the y-axis ---
@@ -891,8 +1171,10 @@ class BarChart {
       text("Most popular destination airports", pg.width/2, pg.height + 5);
     }
     String checkClick(float mx, float my) {
+      float localX = mx - (width - 530)/2;
+      float localY = my - (height - 250)/2;
       for (AirportButton b : buttons) {
-        if (b.isInside(mx - (width/2 - 265), my - (height/2 - 150))) { 
+        if (b.isInside(localX, localY)) { 
           // subtract translation offset (50,50)
           return b.code;
         }
@@ -900,121 +1182,7 @@ class BarChart {
       return null;
     }
 }
-
-/////////// AIRLINE CANCELLATION FLIGHTS ////////////////////////////////////////
-class AirlineStats {
-  int total = 0;
-  int cancelled = 0;
-  int delayed = 0;
-}
-
-HashMap<String, AirlineStats> computeAirlineStats() {
-  HashMap<String, AirlineStats> stats = new HashMap<>();
-  Table table = loadTable("flights100k.csv", "header");
-
-  for (TableRow row : table.rows()) {
-    String carrier = row.getString("MKT_CARRIER");
-    if (carrier == null || carrier.trim().equals("")) continue;
-
-    AirlineStats s = stats.getOrDefault(carrier, new AirlineStats());
-    s.total++;
-
-    if (row.getInt("CANCELLED") == 1) {
-      s.cancelled++;
-    }
-
-     int dep = row.getInt("DEP_TIME");
-        int crs = row.getInt("CRS_DEP_TIME");
-    
-        // Convert HHMM to minutes
-        int depMin = (dep / 100) * 60 + (dep % 100);
-        int crsMin = (crs / 100) * 60 + (crs % 100);
-    
-        int delay = depMin - crsMin;
-    
-        if (delay > 30) {
-          s.delayed++;
-        }
-          
-
-    stats.put(carrier, s);
-  }
-
-    return stats;
-}
-class AirlineRateChart {
-  PGraphics pg;
-  String[] airlines;
-  float[] rates;
-  String mode = "cancel";  // "cancel" or "delay"
-
-  AirlineRateChart() {
-    pg = createGraphics(500, 350);
-  }
-
-  void compute(HashMap<String, AirlineStats> stats) {
-    ArrayList<String> keys = new ArrayList<>(stats.keySet());
-
-    keys.sort((a, b) -> {
-      AirlineStats sa = stats.get(a);
-      AirlineStats sb = stats.get(b);
-
-      float ra = (mode.equals("cancel")) ? (float)sa.cancelled/sa.total
-                                         : (float)sa.delayed/sa.total;
-
-      float rb = (mode.equals("cancel")) ? (float)sb.cancelled/sb.total
-                                         : (float)sb.delayed/sb.total;
-
-      return Float.compare(rb, ra);
-    });
-
-    int limit = min(10, keys.size());
-    airlines = new String[limit];
-    rates = new float[limit];
-
-    for (int i = 0; i < limit; i++) {
-      airlines[i] = keys.get(i);
-      AirlineStats s = stats.get(airlines[i]);
-
-      rates[i] = (mode.equals("cancel")) ? (float)s.cancelled / s.total
-                                         : (float)s.delayed / s.total;
-    }
-  }
-
-  void draw(float x, float y) {
-    pg.beginDraw();
-    pg.background(255);
-
-    pg.textAlign(CENTER, CENTER);
-    pg.textSize(16);
-    pg.fill(0);
-
-    pg.text((mode.equals("cancel") ? "Cancellation Rate" : "Delay Rate") +
-            " by Airline", pg.width/2, 20);
-
-    float barWidth = (pg.width - 80) / rates.length;
-    float maxVal = 0;
-    for (float r : rates) maxVal = max(maxVal, r);
-
-    for (int i = 0; i < rates.length; i++) {
-      float h = map(rates[i], 0, maxVal, 0, pg.height - 100);
-      float bx = 40 + i * barWidth;
-      float by = pg.height - 40 - h;
-
-      pg.fill(100, 150, 255);
-      pg.rect(bx, by, barWidth - 10, h);
-
-      pg.fill(0);
-      pg.text(airlines[i], bx + (barWidth - 10)/2, pg.height - 25);
-      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 10)/2, by - 10);
-    }
-
-    pg.endDraw();
-    image(pg, x, y);
-  }
-}
-
-// ===== DROPDOWN CLASS =====
+    // ===== DROPDOWN CLASS =====
 class Dropdown {
   float x, y, w, h;
   String[] options;
@@ -1026,8 +1194,8 @@ class Dropdown {
     this.x=x; this.y=y; this.w=w; this.h=h; this.options=options;
   }
 
-  String selected() { 
-    return options[selectedIndex]; 
+  String selected() {
+    return options[selectedIndex];
   }
 
   void draw() {
@@ -1054,12 +1222,20 @@ class Dropdown {
 
         boolean hov = (mouseX > x && mouseX < x+w && mouseY > iy && mouseY < iy+h);
 
-        fill(hov ? #3D5A80 : (i == selectedIndex ? #2B3F60 : #1C2E4A));
+        fill(i == selectedIndex ? #2B3F60 : #1C2E4A);
         rect(x, iy, w, h, (i == options.length-1) ? 8 : 0);
-
+        if(i == selectedIndex)  {
+          stroke(255,215,0);
+          strokeWeight(2);
+          noFill();
+          rect(x, iy, w, h, ( i == options.length-1) ? 8 : 0);
+          noStroke();
+        }
+          
         fill(255);
         textAlign(LEFT, CENTER);
         text(options[i], x+10, iy+h/2);
+
       }
     }
   }
@@ -1083,5 +1259,182 @@ class Dropdown {
       }
     }
     return null;
+  }
+}
+
+class AirlineStats {
+  int total = 0;
+  int cancelled = 0;
+  int delayed = 0;
+}
+
+HashMap<String, AirlineStats> computeAirlineStats() {
+  HashMap<String, AirlineStats> stats = new HashMap<>();
+  Table table = loadTable("flights100k.csv", "header");
+
+  for (TableRow row : table.rows()) {
+    String carrier = row.getString("MKT_CARRIER");
+    if (carrier == null || carrier.trim().equals("")) continue;
+
+    AirlineStats s = stats.getOrDefault(carrier, new AirlineStats());
+    s.total++;
+
+    if (row.getInt("CANCELLED") == 1) {
+      s.cancelled++;
+    }
+
+    int dep = row.getInt("DEP_TIME");
+    int crs = row.getInt("CRS_DEP_TIME");
+    int depMin = (dep / 100) * 60 + (dep % 100);
+    int crsMin = (crs / 100) * 60 + (crs % 100);
+    int delay = depMin - crsMin;
+    if (delay > 30) s.delayed++;
+
+    stats.put(carrier, s);
+  }
+  return stats;
+}
+
+class AirlineRateChart {
+  PGraphics pg;
+  String[] airlines;
+  float[] rates;
+  String mode = "cancel";
+  boolean showLegend = false;
+  int btnX = 10, btnY = 310, btnW = 160, btnH = 28;
+  float drawnAtX = 0;
+  float drawnAtY = 0;
+
+  HashMap<String, Integer> airlineColours = new HashMap<String, Integer>();
+
+  AirlineRateChart() {
+    pg = createGraphics(530, 400);
+    airlineColours.put("AA", color(78, 96, 129));
+    airlineColours.put("DL", color(65, 74, 90));
+    airlineColours.put("UA", color(51));
+    airlineColours.put("WN", color(101, 110, 93));
+    airlineColours.put("AS", color(151, 168, 135));
+    airlineColours.put("B6", color(203, 208, 181));
+    airlineColours.put("NK", color(255, 247, 227));
+    airlineColours.put("F9", color(187, 159, 136));
+    airlineColours.put("G4", color(153, 115, 90));
+    airlineColours.put("HA", color(142, 89, 99));
+    airlineColours.put("PHX", color(103, 71, 44));
+    airlineColours.put("LGA", color(236, 174, 164));
+  }
+
+  void compute(HashMap<String, AirlineStats> stats) {
+    ArrayList<String> keys = new ArrayList<>(stats.keySet());
+    keys.sort((a, b) -> {
+      AirlineStats sa = stats.get(a);
+      AirlineStats sb = stats.get(b);
+      float ra = (mode.equals("cancel")) ? (float)sa.cancelled/sa.total : (float)sa.delayed/sa.total;
+      float rb = (mode.equals("cancel")) ? (float)sb.cancelled/sb.total : (float)sb.delayed/sb.total;
+      return Float.compare(rb, ra);
+    });
+    int limit = min(10, keys.size());
+    airlines = new String[limit];
+    rates = new float[limit];
+    for (int i = 0; i < limit; i++) {
+      airlines[i] = keys.get(i);
+      AirlineStats s = stats.get(airlines[i]);
+      rates[i] = (mode.equals("cancel")) ? (float)s.cancelled/s.total : (float)s.delayed/s.total;
+    }
+  }
+
+  void draw(float x, float y) {
+    pg.beginDraw();
+    pg.background(RY_BG);
+    pg.stroke(0);
+    pg.line(40, 10, 40, pg.height - 30);
+
+    float maxPercentage = 0;
+    for (float r : rates) maxPercentage = max(maxPercentage, r * 100);
+    float maxPercent = ceil(maxPercentage / 5) * 5;
+
+    pg.textAlign(RIGHT, CENTER);
+    pg.fill(0);
+    pg.textSize(11);
+    float percent = 5;
+    for (int i = 0; i <= maxPercent; i += percent) {
+      float ty = map(i, 0, maxPercent, pg.height - 30, 10);
+      pg.line(35, ty, 40, ty);
+      pg.text(i + "%", 33, ty);
+    }
+
+    float barWidth = (pg.width - 50) / (float)rates.length;
+    for (int i = 0; i < rates.length; i++) {
+      float h = map(rates[i] * 100, 0, maxPercent, 0, pg.height - 40);
+      float bx = 40 + i * barWidth;
+      float by = pg.height - 30 - h;
+      if (airlineColours.containsKey(airlines[i])) {
+        pg.fill((int)airlineColours.get(airlines[i]));
+      } else {
+        pg.fill(RY_BLUE);
+      }
+      pg.rect(bx, by, barWidth - 5, h);
+      pg.fill(0);
+      pg.textAlign(CENTER, BOTTOM);
+      pg.textSize(11);
+      pg.text(nf(rates[i] * 100, 1, 1) + "%", bx + (barWidth - 5)/2, by - 2);
+      pg.fill(0);
+      pg.textAlign(CENTER, TOP);
+      pg.text(airlines[i], bx + (barWidth - 5)/2, pg.height - 25);
+    }
+
+    pg.fill(200);
+    pg.noStroke();
+    pg.rect(btnX, btnY, btnW, btnH, 5);
+    pg.fill(0);
+    pg.textAlign(CENTER, CENTER);
+    pg.textSize(12);
+    pg.text(showLegend ? "Hide Airline Legend" : "Show Airline Legend",
+            btnX + btnW/2, btnY + btnH/2);
+
+    pg.endDraw();
+    image(pg, x, y);
+  }
+
+  void mousePressed() {
+    float mx = mouseX - drawnAtX;
+    float my = mouseY - drawnAtY;
+    if (mx > btnX && mx < btnX + btnW &&
+        my > btnY && my < btnY + btnH) {
+      showLegend = !showLegend;
+    }
+  }
+
+  void drawLegendPanel() {
+    pushStyle();
+    int rowH = 22;
+    int boxW = 230;
+    int boxH = 24 + airlines.length * rowH;
+    float bx = drawnAtX + pg.width + 10;
+    float by = drawnAtY;
+    fill(255);
+    stroke(180);
+    strokeWeight(1);
+    rect(bx, by, boxW, boxH, 8);
+    noStroke();
+    fill(40);
+    textAlign(LEFT, TOP);
+    textSize(13);
+    text("Airline Legend", bx + 12, by + 6);
+    textSize(12);
+    for (int i = 0; i < airlines.length; i++) {
+      float rowY = by + 24 + i * rowH;
+      String code = airlines[i];
+      if (airlineColours.containsKey(code)) {
+        fill((int) airlineColours.get(code));
+      } else {
+        fill(RY_BLUE);
+      }
+      noStroke();
+      rect(bx + 10, rowY + 3, 14, 14, 3);
+      fill(30);
+      textAlign(LEFT, TOP);
+      text(code + "  =  " + getAirlineName(code), bx + 30, rowY + 3);
+    }
+    popStyle();
   }
 }

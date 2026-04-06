@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.TreeSet;
 
 ///////////// CONSTANT VALUES ////////////////
 color RY_BLUE = #2B4779;
@@ -146,7 +147,7 @@ FlightsOutputScreen flightsOutputScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
 MapScreen flightMapScreen;
-
+Screen getMessage;
 RouteDetailsScreen routeDetailsScreen;
 
 
@@ -180,8 +181,8 @@ ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
-boolean clickedSelectButton(float cardX, float cardY, float cardW) {
 
+<<<<<<< HEAD
   float selectX = cardX + cardW - 120;
   float selectY = cardY + 25;
   float selectW = 100;
@@ -194,6 +195,8 @@ boolean clickedSelectButton(float cardX, float cardY, float cardW) {
     mouseY < selectY + selectH
     );
 }
+=======
+>>>>>>> f01303547912594156196de0e97b734afe798e14
 void goToWithTransition(Screen s) {
   nextScreen = s;
   transitionAlpha = 0;
@@ -342,29 +345,50 @@ void searchCentral() {
 void searchBusiestRoutes() {
   loadRouteData();
 }
-void searchFlightsDateRange() {
-  searchFlightsByDate();
-}
+
 
 // ---- FLIGHT SEARCH METHODS ----
-void searchFlightsByDate() {
-  results.clear();
-  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
-  try {
-    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
-    LocalDate end   = LocalDate.parse(selection.dateEnd, csvFormat);
-    for (Flight f : flightsList) {
-      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
-      if (!flightDate.isBefore(start) && !flightDate.isAfter(end)) {
-        results.add(f);
-      }
+void checkDepartureDateAvailability(String typedDate) {
+    DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+    LocalDate queryDate = null;
+
+    try {
+        queryDate = LocalDate.parse(typedDate, csvFormat);
+    } catch (Exception e) {
+        flightsSearchScreen.availabilityMessage = "Invalid date format!";
+        return;
     }
-    Collections.sort(results, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-  }
-  catch (Exception e) {
-    println("Error: check date format");
-  }
+
+    LocalDate earliestDeparture = null;
+    LocalDate latestDeparture = null;
+    boolean matchFound = false;
+
+    for (Flight f : flightsList) {
+        LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+
+        // Track earliest and latest departures
+        if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
+        if (latestDeparture == null || flightDate.isAfter(latestDeparture)) latestDeparture = flightDate;
+
+        // Check if any flight matches the typed date
+        if (flightDate.equals(queryDate)) {
+            matchFound = true;
+            break;
+        }
+    }
+
+    if (!matchFound) {
+        String msg = "No flights available for " + typedDate + ".\n";
+        if (earliestDeparture != null && latestDeparture != null) {
+            msg += "Valid departure dates: " + earliestDeparture.format(csvFormat) +
+                   " - " + latestDeparture.format(csvFormat);
+        }
+        flightsSearchScreen.availabilityMessage = msg;
+    } else {
+        flightsSearchScreen.availabilityMessage = ""; // Clear message if flights exist
+    }
 }
+
 
 void generateFlightCards() {
   departureCards.clear();
@@ -381,66 +405,32 @@ void generateFlightCards() {
   }
 }
 
-void searchFlights() {
-  departureFlights.clear();
-  returnFlights.clear();
-  results.clear();
-
-  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
-  try {
-    LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
-    LocalDate end   = selection.dateEnd.isEmpty() ? null : LocalDate.parse(selection.dateEnd, csvFormat);
-
-    String userOrigin = selection.origin.split(" - ")[0].trim().toLowerCase();
-    String userDest   = selection.destination.trim().toLowerCase();
-
-    for (Flight f : flightsList) {
-      LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
-
-      String flightOriginCode = f.origin.toLowerCase();
-      String flightDestCode   = f.destination.toLowerCase();
-      String flightOriginCity = f.originCityName != null ? f.originCityName.toLowerCase() : "";
-      String flightDestCity   = f.destinationCityName != null ? f.destinationCityName.toLowerCase() : "";
-
-      // --- Departure flights ---
-      boolean depMatch =
-        (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
-        (flightDestCode.equals(userDest)   || flightDestCity.contains(userDest)) &&
-        !flightDate.isBefore(start) &&
-        (end == null || !flightDate.isAfter(end));
-
-      if (depMatch) departureFlights.add(f);
-
-      // --- Return flights ---
-      if (end != null) {
-        boolean retMatch =
-          (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
-          (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin)) &&
-          flightDate.equals(end);
-
-        if (retMatch) returnFlights.add(f);
-      }
-    }
-
-    // Sort by departure time
-    Collections.sort(departureFlights, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-    Collections.sort(returnFlights, (a, b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
-
-    // One-way or two-way: choose screen
-    if (end == null) {
-      results.addAll(departureFlights);   // one-way
-      goTo(flightsOutput);
-    } else {
-      // ✅ Update the TwoWay screen dynamically
-      twoWayFlightsOutputScreen.setFlights(departureFlights, returnFlights);
-      goTo(flightsOutputTwoWay);
-    }
-  }
-  catch (Exception e) {
-    println("Search Error: Check date format");
-    e.printStackTrace();
-  }
+// -------------------------
+// CLEAN CITY NAME METHOD
+// -------------------------
+String cleanCityName(String city) {
+    if (city == null) return "";
+    // Remove uppercase initials at start (e.g., "NY - New York")
+    city = city.replaceAll("^[A-Z]{1,3}\\s*-?\\s*", "");
+    // Remove uppercase initials at end (e.g., "New York - NY")
+    city = city.replaceAll("\\s*-?\\s*[A-Z]{1,3}$", "");
+    return city.trim();
 }
+
+  String capitalizeWords(String str) {
+      if (str == null || str.isEmpty()) return "";
+      String[] words = str.trim().toLowerCase().split("\\s+"); // split by spaces
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < words.length; i++) {
+          if (words[i].length() == 0) continue;
+          sb.append(Character.toUpperCase(words[i].charAt(0))); // first letter uppercase
+          if (words[i].length() > 1) sb.append(words[i].substring(1)); // rest lowercase
+          if (i < words.length - 1) sb.append(" "); // add space between words
+      }
+      return sb.toString();
+  }
+
+
 
 // ---- DRAWING METHODS FOR TRAFFIC PANEL ----
 void drawPanel() {
@@ -495,16 +485,17 @@ void setup() {
   results = new ArrayList<Flight>();
 
   //////////////////// Screens ////////////////////
-  currentScreen         = home;
-  queriesScreen         = new QueriesScreen();
-  flightsSearchScreen   = new QueriesFlights();
-  flightDateScreen      = new QueriesDate();
-  trafficScreen         = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
-  flightsOutputScreen   = new FlightsOutputScreen();
-  dashboardScreen       = new DashboardScreen();
-  graphDashboardScreen  = new GraphDashboardScreen();
-  flightMapScreen       = new MapScreen();
-  bookingsScreen = new BookingsScreen();
+  currentScreen            = home;
+  queriesScreen            = new QueriesScreen();
+  flightsSearchScreen      = new QueriesFlights();
+  flightDateScreen         = new QueriesDate();
+  trafficScreen            = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
+  flightsOutputScreen      = new FlightsOutputScreen();
+  dashboardScreen          = new DashboardScreen();
+  graphDashboardScreen     = new GraphDashboardScreen();
+  flightMapScreen          = new MapScreen();
+  bookingsScreen           = new BookingsScreen();
+  getMessage               = new Screen();
   flightConfirmedScreenObj = new FlightConfirmedScreen("You successfully booked your flight!");
 
   backgroundImg   = loadImage("BackgroundImg.jpg");

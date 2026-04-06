@@ -9,15 +9,15 @@ class RegionPieChart {
 
   float[] values;
   color[] colours = {
-    color(40, 200, 40),
-    color(250, 255, 80),
-    color(255, 80, 80)
+    color(#2D9B2B),
+    color(#FFD700),
+    color(#D40000)
   };
 
   PGraphics pg;
 
   RegionPieChart(String[] regionAirports) {
-    pg = createGraphics(350, 260);
+    pg = createGraphics(450, 260);
     compute(regionAirports);
   }
 
@@ -89,7 +89,7 @@ class RegionPieChart {
     String[] labels = {"On Time", "Delayed", "Cancelled"};
     int lx = 10, ly = 10, box = 12;
 
-    pg.textAlign(LEFT, CENTER);
+    pg.textAlign(LEFT,CENTER);
     pg.textSize(12);
 
     for (int i = 0; i < labels.length; i++) {
@@ -98,8 +98,9 @@ class RegionPieChart {
       pg.fill(0);
       pg.text(labels[i], lx + box + 8, ly + i * 20 + box/2);
     }
+    pg.fill(0);
     pg.text("Percentage of On Time flights", pg.width/2 , 10); 
-    
+
     pg.endDraw();
     image(pg, x, y);
   }
@@ -186,7 +187,7 @@ HashMap<String, Integer> countAirlineTraffic() {
 
 
 // =========================================================
-//  TOP‑10‑PLUS‑OTHER PIE CHART CLASS (AIRLINES)
+//  TOP 10 PLUS OTHER PIE CHART CLASS (AIRLINES)
 // =========================================================
 
 class TopAirlinesPie {
@@ -196,7 +197,7 @@ class TopAirlinesPie {
   PGraphics pg;
 
   TopAirlinesPie(HashMap<String, Integer> counts) {
-    pg = createGraphics(450, 350);
+    pg = createGraphics(550, 350);
 
     // Sort airlines by flight count
     ArrayList<String> keys = new ArrayList<String>(counts.keySet());
@@ -206,10 +207,11 @@ class TopAirlinesPie {
 
      // Count "other" first so we know whether to include the slice
     float otherTotal = 0;
-    for (int i = limit; i < keys.size(); i++) {
-      otherTotal += counts.get(keys.get(i));
+
+    for (int i = 0; i < keys.size(); i++) {
+        otherTotal += counts.get(keys.get(i));
     }
- 
+
     // Only add an "Other" slice when it actually has flights
     int slices = (otherTotal > 0) ? limit + 1 : limit;
     labels = new String[slices];
@@ -224,20 +226,20 @@ class TopAirlinesPie {
       labels[limit] = "Other Airlines";
       values[limit] = otherTotal;
     }
-    
+
     color[] palette = {
-      color(#A26360),
-      color(#899689),
-      color(#CAB99E),
-      color(#C6A0D4),
-      color(#EDCC8B),
-      color(#D4A29C),
-      color(#9AACAB),
-      color(#8DD6E2),
-      color(#CAB99E),
-      color(#707F84),
+      color(#f0c571),
+      color(#59a89c),
+      color(#0b81a2),
+      color(#7E4794),
+      color(#9d2c00),
+      color(#e25759),
+      color(#36b700),
+      color(#ff9d3a),
+      color(#003a7d),
+      color(#98c127),
       color(#E8B298),
-      color(#9CA998)
+      color(#c8c8c8)
     };
     // Generate random colours
     colours = new color[labels.length];
@@ -252,14 +254,14 @@ class TopAirlinesPie {
   // ---------------------------------------------------------
   void draw(float x, float y) {
     pg.beginDraw();
-    pg.background(255);
+    pg.background(RY_BG);
     pg.noStroke();
 
     float total = 0;
     for (float v : values) total += v;
 
     float start = 0;
-    float cx = pg.width/2;
+    float cx = pg.width/2 - 80;
     float cy = pg.height/2;
     float diameter = 250;
 
@@ -274,8 +276,8 @@ class TopAirlinesPie {
     pg.textAlign(LEFT, CENTER);
     pg.textSize(12);
 
-    int lx = 10;
-    int ly = 10;
+    int lx = 350;
+    int ly = 60;
     int box = 12;
 
     for (int i = 0; i < labels.length; i++) {
@@ -285,8 +287,203 @@ class TopAirlinesPie {
       pg.fill(0);
       pg.text(labels[i] + " (" + int(values[i]) + ")", lx + box + 8, ly + i * 20 + box/2);
     }
+    pg.textSize(15);
+    pg.fill(0);
+    pg.text("Percentage of Flights per Airline ", pg.width/2 - 180 , 20);
 
     pg.endDraw();
-    image(pg, x, y);
+    image(pg, x - 50, y);
   }
+}
+
+/////////PIE CHART///////
+class PieChart {
+  float percentOnTime;
+  float percentDelayed;
+  float percentCancelled;
+  String[] airports;   // top 10 airport codes
+  float[] values;      // top 10 counts
+  PGraphics pg;
+  color[] colours;
+ 
+  HashMap<String, Integer> onTimeByAirport = new HashMap<String, Integer>();
+  HashMap<String, Integer> delayedByAirport = new HashMap<String, Integer>();
+  HashMap<String, Integer> cancelledByAirport = new HashMap<String, Integer>();
+
+  String topOnTimeAirport = "";
+  String topDelayedAirport = "";
+  String topCancelledAirport = "";
+
+  boolean showTopAirports = false;
+
+  // Button position
+  int btnX = 10, btnY = 260, btnW = 180, btnH = 30;
+
+  PieChart(){
+    colours = new color[] {
+      color(#4F772D),
+      color(#FCBF49),
+      color(#D62828)
+    };
+  }
+    
+    void setup() {
+      pg = createGraphics(400, 300);
+    
+      Table table = loadTable("flights100k.csv", "header");
+      int onTime = 0;
+      int delayed = 0;
+      int cancelled = 0;
+    
+      for (TableRow row : table.rows()) {
+        String airport = row.getString("ORIGIN");
+
+        int isCancelled = row.getInt("CANCELLED");
+        if (isCancelled == 1) {
+          cancelled++;
+          increment(cancelledByAirport, airport);
+          continue;
+        }
+    
+        // Clean missing times
+        String depStr = row.getString("DEP_TIME");
+        String crsStr = row.getString("CRS_DEP_TIME");
+        if (depStr == null || depStr.equals("") || crsStr == null || crsStr.equals("")) {
+          cancelled++;   // treat missing times as unusable
+          increment(cancelledByAirport, airport);
+
+          continue;
+        }
+    
+        int dep = row.getInt("DEP_TIME");
+        int crs = row.getInt("CRS_DEP_TIME");
+    
+        // Convert HHMM to minutes
+        int depMin = (dep / 100) * 60 + (dep % 100);
+        int crsMin = (crs / 100) * 60 + (crs % 100);
+    
+        int delay = depMin - crsMin;
+    
+        if (delay > 30) {
+          delayed++;
+           increment(delayedByAirport, airport);
+        }
+        else {
+          onTime++;
+          increment(onTimeByAirport, airport);
+        }
+      }
+    
+      values = new float[] { onTime, delayed, cancelled };
+      
+      int total = onTime + cancelled + delayed;
+      percentOnTime = round((float(onTime)/ total)*100);
+      percentDelayed = round((float(delayed)/ total)*100);
+      percentCancelled = round((float(cancelled)/ total)*100);
+      computeTopAirports();
+    }
+    void increment(HashMap<String, Integer> map, String key) {
+      if (!map.containsKey(key)) map.put(key, 1);
+      else map.put(key, map.get(key) + 1);
+    }
+  
+    // Find max airport for each category
+    void computeTopAirports() {
+      topOnTimeAirport = findMax(onTimeByAirport);
+      topDelayedAirport = findMax(delayedByAirport);
+      topCancelledAirport = findMax(cancelledByAirport);
+    }
+  
+    String findMax(HashMap<String, Integer> map) {
+      String best = "";
+      int max = -1;
+      for (String k : map.keySet()) {
+        int v = map.get(k);
+        if (v > max) {
+          max = v;
+          best = k;
+        }
+      }
+      return best + " (" + max + ")";
+    }
+    void draw(){
+      pg.beginDraw();
+      pg.background(RY_BG);
+      pg.noStroke();
+    
+      float total = 0;
+      for (float v : values) total += v;
+    
+      float start = 0;
+      float cx = pg.width/2;
+      float cy = pg.height/2;
+      float diameter = 250;
+    
+      for (int i = 0; i < values.length; i++) {
+        float angle = TWO_PI * (values[i] / total);
+        pg.fill(colours[i]);
+        pg.arc(cx, cy, diameter, diameter, start, start + angle, PIE);
+        pg.fill(0);
+        pg.text(int(percentOnTime)+"%", cx-diameter/8, cy+diameter/8);
+        pg.text(int(percentDelayed)+"%", cx, cy-diameter/8);
+        pg.text(int(percentCancelled)+"%", cx+diameter/4, cy-diameter/25);
+        start += angle;
+      }
+      // --- Legend ---
+        int lx = 10;      // legend x-position inside pg
+        int ly = 10;      // legend y-position
+        int box = 15;     // size of colour squares
+        
+        String[] labels = {
+          "On Time",
+          "Delayed > 30min",
+          "Cancelled"
+        };
+        
+        pg.textAlign(LEFT, CENTER);
+        pg.textSize(12);
+        
+        for (int i = 0; i < labels.length; i++) {
+          pg.fill(colours[i]);
+          pg.rect(lx, ly + i * 25, box, box);
+        
+          pg.fill(0);
+          pg.text(labels[i], lx + box + 10, ly + i * 25 + box/2);
+        }
+      
+     
+      // --- Button ---
+      pg.fill(200);
+      pg.rect(btnX, btnY, btnW, btnH, 5);
+      pg.fill(0);
+      pg.textAlign(CENTER, CENTER);
+      pg.text("Show Top Airports", btnX + btnW/2, btnY + btnH/2);
+ 
+      pg.endDraw();
+    
+      image(pg, 0, 0);
+    }
+    void mousePressed() {
+      // Adjust for translate(200, 300)
+      float pieX = width/2 - 400/2;
+      float pieY = height/2 - 300/2 + 20;
+      int mx = (int)(mouseX - pieX);
+      int my = (int)(mouseY - pieY);
+    
+      if (mx > btnX && mx < btnX + btnW &&
+          my > btnY && my < btnY + btnH) {
+        showTopAirports = !showTopAirports;
+      }
+    }
+  boolean isShowingTop() {
+      return showTopAirports;
+    }
+    
+    String[] getTopAirportInfo() {
+      return new String[] {
+        "Most On-Time: " + topOnTimeAirport,
+        "Most Delayed: " + topDelayedAirport,
+        "Most Cancelled: " + topCancelledAirport
+      };
+    }
 }

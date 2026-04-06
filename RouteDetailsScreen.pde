@@ -1,12 +1,12 @@
 class RouteDetailsScreen extends Screen {
 
   RouteDetailsScreen() {
-    super();
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
   void drawContent() {
     background(BG);
+    
 
     // Header
     fill(RY_BLUE);
