@@ -772,6 +772,7 @@ class QueriesFlights extends Screen {
   
           boolean routeExists = false;
           TreeSet<String> possibleDestinations = new TreeSet<String>();
+          boolean returnRouteExists = false;
   
           // ---------- LOOP THROUGH FLIGHTS ----------
           for (Flight f : flightsList) {
@@ -789,12 +790,21 @@ class QueriesFlights extends Screen {
                   (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
                   (flightDestCode.equals(userDest) || flightDestCity.contains(userDest));
               
-              if (sameRouteForward) {
-                  if (earliestDeparture == null || flightDate.isBefore(earliestDeparture))
-                      earliestDeparture = flightDate;
               
-                  if (latestDeparture == null || flightDate.isAfter(latestDeparture))
-                      latestDeparture = flightDate;
+              
+              if (sameRouteForward) {
+
+                  // Only allow departures if:
+                  // - one way search OR
+                  // - a return route exists somewhere
+                  if (end==null || returnRouteExists) {
+              
+                      if (earliestDeparture == null || flightDate.isBefore(earliestDeparture))
+                          earliestDeparture = flightDate;
+              
+                      if (latestDeparture == null || flightDate.isAfter(latestDeparture))
+                          latestDeparture = flightDate;
+                  }
               }
               
               // Reverse route (return dates)
@@ -802,8 +812,12 @@ class QueriesFlights extends Screen {
                   (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
                   (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin));
               
-              if (end != null && sameRouteReturn) {
-                  if (earliestReturn == null || flightDate.isBefore(earliestReturn))
+              if (sameRouteReturn) {
+                    returnRouteExists = true;
+                }
+              
+              if (end != null && sameRouteReturn) {                  
+                if (earliestReturn == null || flightDate.isBefore(earliestReturn))
                       earliestReturn = flightDate;
               
                   if (latestReturn == null || flightDate.isAfter(latestReturn))
@@ -837,7 +851,12 @@ class QueriesFlights extends Screen {
                   if (retMatch) returnFlights.add(f);
               }
           }
-  
+          
+          if (end!=null && !returnRouteExists) {
+              availabilityMessage = "No return flights exist for this route.";
+              return;
+          }
+          
           if (!routeExists) {
             String tripType = roundTrip ? "round-trip" : "one-way";
             String msg = "Sorry, no " + tripType + " flights exist from " 
