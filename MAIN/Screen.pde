@@ -1,712 +1,3015 @@
 class Screen {
+
+  UILayout layout = new UILayout();
   ArrayList<Button> buttons = new ArrayList<Button>();
 
+  String title = "";
+
   void draw() {
-    drawBackground();
-    for (Button b : buttons) {
+    layout.beginPage(title);
+
+    for (Button b : buttons)
       b.display();
-    }
+    //drawContent();
+
+    drawImages();
   }
 
-  void drawBackground() {
-    background(100); // default
+  // ---------- OVERRIDDEN BY SCREENS ----------
+  void drawContent() {
   }
 
+  void drawImages() {
+  }
+
+  // ---------- EVENTS (IMPORTANT) ----------
   void mousePressed() {
     for (Button b : buttons) b.click();
   }
 
   void mouseMoved() {
-    for (Button b : buttons) b.over(mouseX,mouseY);
+    for (Button b : buttons) b.over(mouseX, mouseY);
   }
 
-  void keyPressed(char k) {} //Optional if a feature is to be added
+  void keyPressed(char k) {
+  }
+  String getAvailabilityMessage(boolean dep, boolean ret) {
+    if (!dep && !ret)
+      return "No round-trip flights available.";
+    if (!dep)
+      return "No departure flights available.";
+    if (!ret)
+      return "No return flights available.";
+    return "";
+  }
+  
+  String getStatusMessage(
+    String origin,
+    String destination,
+    String startDate,
+    String endDate,
+    boolean roundTrip
+  ) {
+  
+    if (origin == null || origin.trim().isEmpty())
+      return "Please enter origin.";
+  
+    if (destination == null || destination.trim().isEmpty())
+      return "Please enter destination.";
+  
+    if (startDate == null || startDate.trim().isEmpty())
+      return "Please enter departure date.";
+  
+    if (roundTrip && (endDate == null || endDate.trim().isEmpty()))
+      return "Please enter return date.";
+  
+    return ""; // everything valid
+  }
 }
-///////////////////////MENU SCREEN//////////////////////////////////////
-class HomeScreen extends Screen{
+/////////////////////// MENU SCREEN //////////////////////////////////////
+class HomeScreen extends Screen {
 
-  HomeScreen(){
-  int buttonW = 80*2;
-  int buttonH = 50;
-  int yPos = height/2 - buttonH; // 20 px padding from bottom
-  float x1 = width * 3/8.0 - buttonW/2;  // 1st button
-  float x3 = width * 5/8.0 - buttonW/2;  // 2nd button
-  buttons.add(new Button(x1, yPos + 250, buttonW, buttonH, "QUERIES", "queries",20, true));
-  buttons.add(new Button(x3, yPos + 250, buttonW, buttonH, "GRAPHS", "graphs",20, true));
-  buttons.add(new Button(30, 22, 50, 30, "EXIT", "exit", 20, true));
+  int NAV_HEIGHT = 85;
+
+  color bgTop = color(28, 45, 85);
+  color bgBottom = color(12, 20, 45);
+
+  // --- Slideshow state ---
+  PImage[] slides;
+  String[] captions;
+  int currentSlide = 0;
+  int nextSlide = -1;       // -1 means no transition happening
+  float fadeAlpha = 0;      // 0-255, alpha of the incoming slide
+  boolean transitioning = false;
+
+  int slideInterval = 7000; // ms between auto-advances
+  int lastSlideTime = 0;
+
+  int FADE_DURATION = 1800;  // ms for cross-fade
+  int fadeStartTime = 0;
+
+  float arrowW = 52;
+  float arrowH = 52;
+  float leftArrowX, rightArrowX, arrowY;
+  boolean leftHover  = false;
+  boolean rightHover = false;
+  boolean leftClicked = false;
+  boolean rightClicked = false;
   
+  int leftClickTimer =0;
+  int rightClickTimer = 0;
   
+  float lAlpha = 80;
+  float rAlpha = 80;
+  float leftScale = 1.0;
+  float rightScale = 1.0;
+
+  HomeScreen() {
+
+    int buttonW = 180;
+    int buttonH = 38;
+    int pad = 20;
+
+    // navigation buttons
+    buttons.add(new Button(width-420, pad,
+      buttonW, buttonH, "QUERIES", "queries", 16, true));
+
+    buttons.add(new Button(width-220, pad,
+      buttonW, buttonH, "DASHBOARD", "dashboard", 16, true));
+
+    buttons.add(new Button(width-620, pad,
+      buttonW, buttonH, "BOOKINGS", "myFlights", 16, true));
+
+    buttons.add(new Button(pad, pad,
+      100, buttonH, "EXIT", "exit", 16, true));
+
+
+    slides = new PImage[]{
+      loadImage("Manhatten.jpg"),
+      loadImage("pictureC.jpg"),
+      loadImage("Washington.jpg"),
+      loadImage("Chicago.png"),
+      loadImage("California.jpg"),
+      loadImage("Seattle.jpg"),
+      loadImage("Atlanta.png"),
+      loadImage("Texas.jpg"),
+      loadImage("Phoneix.jpg"),
+      loadImage("Alaska.jpg")
+
+    };
+
+    captions = new String[]{
+      "Manhattan, New York City, USA",
+      "Los Angelos, California, USA",
+      "Capital Building, Washington D.C., USA",
+      "Chicago, Illinois, USA",
+      "San Francisco, California, USA",
+      "Seattle, Washington, USA",
+      "Atlanta, Georgia, USA",
+      "Dallas, Texas, USA",
+      "Phoneix, Arizona, USA",
+      "Anchorage, Alaska, USA"
+    };
+
+    arrowY      = height * 0.65;
+    leftArrowX  = width  * 0.1 + 20;
+    rightArrowX = width * 0.9 - 20;
+
+    lastSlideTime = millis();
   }
-  void draw() {
-  drawBackground();   // draws the plane
-  fill(0);
-  textAlign(CENTER);
-  textSize(60);
-  text("F  L  I  G  H  T   S  C  A  N  N  E  R", width/2, height/5);
-  for (Button b : buttons) b.display();  // draws buttons on top
+
+  void drawContent() {
+    drawHeroPanel();
+    drawSlideshow();
+  }
+
+
+  void drawHeroPanel() {
+
+    float panelW = width * 0.55;
+    float panelH = 180;
+
+    float x = width/2 - panelW/2;
+    float y = NAV_HEIGHT + 70;
+
+    // shadow
+    fill(0, 90);
+    rect(x+8, y+8, panelW, panelH, 20);
+
+    // glass panel
+    fill(255, 25);
+    rect(x, y, panelW, panelH, 20);
+
+    // text
+    textAlign(CENTER);
+
+    fill(255);
+    textSize(56);
+    text("Flight Scanner", width/2, y + 70);
   }
   
-  void planeImage(int x, int y)  {
-    int planeX = x + 150;
-    int planeY = y + 100;
-    int planeW = 600;
-    int planeH = 200;
+  void drawSlideshow() {
+    int now = millis();
+
+    // Auto-advance trigger
+    if (!transitioning && now - lastSlideTime > slideInterval) {
+      startTransition((currentSlide + 1) % slides.length);
+    }
+    // Update fade progress
+    if (transitioning) {
+      float elapsed = now - fadeStartTime;
+      float t = constrain(elapsed / (float)FADE_DURATION, 0, 1);
+      float eased = t * t * (3 - 2 * t);
+      fadeAlpha = eased * 255;
+
+      if (elapsed >= FADE_DURATION) {
+        currentSlide  = nextSlide;
+        transitioning = false;
+        nextSlide     = -1;
+        fadeAlpha     = 0;
+        lastSlideTime = millis();
+      }
+    }
+    imageMode(CENTER);
+    float cx = width / 2;
+    float cy = height * 0.65;
+    float iw = width * 0.75;
+    float ih = height * 0.55;
     
-    fill(200);
-    rect(planeX, planeY, planeW, planeH);
-      
-   }
-   void drawBackground(){
+    noStroke();
+    fill(0, 80);
+    rect(cx - iw/2 + 8, cy - ih/2 + 8, iw, ih);
 
-     fill(240, 200);
-     rect(0, 0, width, height);
-     
-     //Line at top
-     fill(0, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-     
-     imageMode(CENTER);
-     image(sunset, (width/2), height/2, width/1.7, height/2.5);
-     image(planeHomeScreen, width/2, height/1.9, width * 0.85, height*0.7);
-     imageMode(CORNER);
-   }
-   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("queries")) currentScreen = queries;
-      if (b.type.equals("graphs")) currentScreen = graphs;
-      if (b.type.equals("exit")) exit();
+    // Draw current slide (fully opaque)
+    tint(255, 255);
+    image(slides[currentSlide], cx, cy, iw, ih);
+
+    // Draw incoming slide fading in on top
+    if (transitioning && nextSlide >= 0) {
+      tint(255, fadeAlpha);
+      image(slides[nextSlide], cx, cy, iw, ih);
+    }
+
+    noTint();
+    noFill();
+    stroke(255, 30);
+    strokeWeight(3);
+    rect(cx - iw/2, cy - ih/2, iw, ih);
+    noStroke();
+    
+    imageMode(CORNER);
+    
+    // Draw arrow hints
+    drawArrowButtons();
+    
+    // Draw navigation dots
+    drawDots(cx, cy + ih * 0.5 + 20);
+    drawCaption(cx, cy + ih * 0.5 - 40);   // sits just below the dots
+  }
+
+  void drawArrowButtons() {
+    float half = arrowW / 2;
+    
+    leftHover = dist(mouseX, mouseY, leftArrowX, arrowY) < arrowW / 2;
+    rightHover = dist(mouseX, mouseY, rightArrowX, arrowY) < arrowW / 2;
+    
+    if(leftClickTimer > 0) leftClickTimer--;
+    if(rightClickTimer > 0) rightClickTimer--;
+    
+    float leftTarget = leftClickTimer > 0 ? 0.92 : (leftHover ? 1.2 : 1.0);
+    float rightTarget = rightClickTimer > 0 ? 0.92 : (rightHover ? 1.2 : 1.0);
+    
+    // Left arrow
+    lAlpha = lerp(lAlpha, leftHover ? 255 : 60, 0.8);
+
+    // Right arrow
+    rAlpha = lerp(rAlpha, rightHover ? 255 : 60, 0.8);
+    
+    leftScale = lerp(leftScale, leftTarget, 0.9);
+    rightScale = lerp(rightScale, rightTarget, 0.9);
+
+    pushMatrix();
+    translate(leftArrowX, arrowY);
+    scale(leftScale);
+    drawArrowButton(0, 0, half, lAlpha, "◀");
+    popMatrix();
+    
+    pushMatrix();
+    translate(rightArrowX, arrowY);
+    scale(rightScale);
+    drawArrowButton(0, 0, half, rAlpha, "▶");
+    popMatrix();
+  }
+
+  void drawArrowButton(float cx, float cy, float half, float alpha, String symbol) {
+    // Pill background
+    noStroke();
+    fill(255, alpha * 0.55);
+    ellipse(cx, cy, arrowW, arrowH);
+
+    // Border ring
+    stroke(255, alpha * 0.75);
+    strokeWeight(1.5);
+    noFill();
+    ellipse(cx, cy, arrowW, arrowH);
+    noStroke();
+
+    // Arrow glyph
+    fill(255, alpha);
+    textAlign(CENTER, CENTER);
+    textSize(20);
+    text(symbol, cx, cy);
+  }
+
+  boolean overLeftArrow(float mx, float my) {
+    return dist(mx, my, leftArrowX, arrowY) < arrowW / 2;
+  }
+  boolean overRightArrow(float mx, float my) {
+    return dist(mx, my, rightArrowX, arrowY) < arrowW / 2;
+  }
+
+  void drawDots(float x, float y) {
+    int gap = 20;
+    float totalW = (slides.length - 1) * gap;
+    float startX = x - totalW / 2;
+    int active = transitioning ? nextSlide : currentSlide;
+    for (int i = 0; i < slides.length; i++) {
+      noStroke();
+      float dotR = (i == active) ? 7 : 5;
+      fill(i == active ? color(255, 220) : color(255, 80));
+      ellipse(startX + i * gap, y, dotR, dotR);
     }
   }
+
+  void drawCaption(float cx, float y) {
+    // Pick the caption to show (cross-fade caption text too)
+    String cap = transitioning && nextSlide >= 0
+      ? captions[nextSlide]
+      : captions[currentSlide];
+
+    float boxW = 340;
+    float boxH = 32;
+    float bx   = cx - boxW / 2;
+
+    // Frosted glass pill
+    noStroke();
+    fill(10, 30, 70, 180);
+    rect(bx, y, boxW, boxH, 16);
+
+    // Thin highlight border
+    stroke(255, 40);
+    strokeWeight(1);
+    noFill();
+    rect(bx, y, boxW, boxH, 16);
+    noStroke();
+
+    // Caption text
+    fill(220, 235, 255);
+    textAlign(CENTER, CENTER);
+    textSize(13);
+    text(cap, cx, y + boxH / 2);
+  }
+
+  void startTransition(int target) {
+    if (target == currentSlide || transitioning) return;
+    nextSlide     = target;
+    fadeAlpha     = 0;
+    fadeStartTime = millis();
+    transitioning = true;
+  }
+
+  void mousePressed() {
+
+    // Arrow buttons
+    if (overLeftArrow(mouseX, mouseY)) {
+      leftClickTimer = 2;
+      startTransition((currentSlide - 1 + slides.length) % slides.length);
+      return;
+    }
+    if (overRightArrow(mouseX, mouseY)) {
+      rightClickTimer = 2;
+      startTransition((currentSlide + 1) % slides.length);
+      return;
+    }
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("queries")) goTo(queries);
+        if (b.type.equals("dashboard")) goTo(dashboard);
+        if (b.type.equals("myFlights")) goTo(bookingsScreens);
+        if (b.type.equals("exit")) exit();
+      }
+    }
+  }
+  
+  void mouseMoved() {
+    leftHover  = overLeftArrow(mouseX, mouseY);
+    rightHover = overRightArrow(mouseX, mouseY);
+    for (Button b : buttons) b.over(mouseX, mouseY);
+  }
+  void keyPressed(char k) {
+    if (keyCode == LEFT)  startTransition((currentSlide - 1 + slides.length) % slides.length);
+    if (keyCode == RIGHT) startTransition((currentSlide + 1) % slides.length);
   }
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
+
 class QueriesScreen extends Screen {
- 
-  boolean typingFirst = true;
-  TextEntryButton currentInput;
+
+  ArrayList<Flight> flights;
+
+  int NAV_HEIGHT = 85;
+
+  color bgTop = color(28, 45, 85);
+  color bgBottom = color(12, 20, 45);
 
   QueriesScreen() {
-    // Add back button at bottom center
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    
-    int queryX = width/4;
-    int queryY = height/4;
-    
+    this.title = "Flight Queries";
+    this.flights = flightsList;
+    setupButtons();
+  }
+
+  void setupButtons() {
+
+    int cardW = 260;
+    int cardH = 120;
+    int spacing = 50;
+
+    float startX = width/2 - (3*cardW + 2*spacing)/2;
+    float y = 260;
+
+    // back (navbar style)
+    buttons.add(new Button(
+      20, 22, 80, 30,
+      "BACK", "back", 15, false));
+
+    // card buttons
+    buttons.add(new Button(startX, y,
+      cardW, cardH, "FLIGHT SEARCH", "flightQuery", 18, true));
+
+    buttons.add(new Button(startX + cardW + spacing, y,
+      cardW, cardH, "TRAFFIC SEARCH", "airlineQuery", 18, true));
+
+    buttons.add(new Button(startX + 2*(cardW + spacing), y,
+      cardW, cardH, "DATE SEARCH", "dateQuery", 18, true));
+  }
+
+  void drawContent() {
+    drawPageHeader();
+    drawCardsBackground();
+    drawInfoPanel();
+  }
+
+
+  // PAGE HEADER
+  void drawPageHeader() {
 
     textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
-    textAlign(CORNER);
-    
-    buttons.add(new Button(queryX, queryY, buttonW, buttonH, "FLIGHT SEARCH", "flightQuery", 20, false));
-    buttons.add(new Button(queryX+buttonW, queryY, buttonW, buttonH, "TRAFFIC SEARCH", "airlineQuery", 20, false));
-    buttons.add(new Button(queryX+buttonW*2, queryY, buttonW, buttonH, "DATE SEARCH", "dateQuery", 20, false));
-    
-    
-   
-    
+
+    fill(255);
+    textSize(44);
+    text("Flight Queries", width/2, NAV_HEIGHT + 70);
+
+    fill(255, 170);
+    textSize(18);
+    text("Choose how you want to explore flight data",
+      width/2, NAV_HEIGHT + 100);
   }
 
-  void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--QUERY SEARCH--", width/2, 50);
-    textSize(30);
-    
-    text("Select the search you are interested in:", width/2, 150);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-    
+  // CARD BACKGROUND LAYER (adds website depth)
+  void drawCardsBackground() {
+
+    float w = width*0.8;
+    float h = 200;
+
+    float x = width/2 - w/2;
+    float y = 210;
+
+    // shadow
+    fill(0, 80);
+    rect(x+8, y+8, w, h, 25);
+
+    // glass panel
+    fill(255, 20);
+    rect(x, y, w, h, 25);
   }
-  
-  void draw(){
-    drawBackground();
-    
-    
-    
-    
-    for(Button b : buttons){
-      b.display();
+
+  // INFO PANEL
+  void drawInfoPanel() {
+
+    float w = width * 0.6;
+    float h = 170;
+    float x = width/2 - w/2;
+    float y = height - 230;
+
+    // shadow
+    fill(0, 80);
+    rect(x+6, y+6, w, h, 20);
+
+    // panel
+    fill(255, 25);
+    rect(x, y, w, h, 20);
+
+    textAlign(CENTER);
+
+    fill(255);
+    textSize(22);
+    text("SMART SEARCH FEATURES", width/2, y+40);
+
+    fill(255, 180);
+    textSize(16);
+
+    text("• Compare airline routes instantly", width/2, y+75);
+    text("• Analyze traffic across regions", width/2, y+100);
+    text("• Explore flights by travel date", width/2, y+125);
+  }
+
+  void mousePressed() {
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back")) goBack(); // changed for integration
+        if (b.type.equals("flightQuery")) goTo(flightsSearch);
+        if (b.type.equals("airlineQuery")) goTo(flightsTraffic);
+        if (b.type.equals("dateQuery")) goTo(flightsDate);
+      }
     }
-    
   }
-  
 
   void keyPressed(char k) {
-
-  
-  }
-  
-  void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("back")) currentScreen = home;
-      if (b.type.equals("flightQuery")) currentScreen = flightsSearch;
-      if (b.type.equals("airlineQuery")) currentScreen = flightsTraffic;
-      if (b.type.equals("dateQuery")) currentScreen = flightsDate;
-    }
-  }
   }
 }
-class GraphsScreen extends Screen {
 
-  GraphsScreen() {
-    
+// Card button class with hover animation
+class CardButton extends Button {
+  float hoverScale = 1.0;
+  float targetScale = 1.0;
+
+  CardButton(float x, float y, float w, float h, String label, String type) {
+    super(x, y, w, h, label, type, 18, true);
+  }
+
+  void update() {
+    if (over(mouseX, mouseY)) {
+      targetScale = 1.05;
+    } else {
+      targetScale = 1.0;
+    }
+    hoverScale = lerp(hoverScale, targetScale, 0.1);
+  }
+
+  @Override
+    void display() {
+    pushMatrix();
+    translate(x + w/2, y + h/2);
+    scale(hoverScale);
+    translate(-(x + w/2), -(y + h/2));
+
+    // Shadow
+    noStroke();
+    fill(0, 50);
+    rect(x+5, y+5, w, h, 20);
+
+    // Card background
+    fill(255);
+    stroke(200);
+    strokeWeight(1);
+    rect(x, y, w, h, 20);
+
+    // Icon
+    fill(RY_BLUE);
+    ellipse(x + 50, y + h/2, 60, 60);
+
+    // Text
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(18);
+    text(label, x + 100, y + h/2);
+
+    popMatrix();
+  }
+}
+
+
+
+class DashboardScreen extends Screen {
+
+  DashboardScreen() {
+    title = "Dashboard";
     int buttonW = 180;
     int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "back", 20, true));
+    int y = 252;
+    int mapW = buttonW + 700;
+    int barW = buttonW + 410;
+    int pieW = buttonW + 90;
+
     textAlign(CORNER);
+    buttons.add(new Button(width/2 - barW/2 + pieW/2 + 10, y + 150, buttonW + 410, buttonH + 220, "Bar Charts", "graphsPage", 30, false));
+    buttons.add(new Button(width/2 - barW/2 - pieW/2 - 10, y + 150, buttonW + 90, buttonH + 220, "Pie Charts", "pieChartsPage", 30, false));
+    buttons.add(new Button(width/2 - mapW/2, y - 195, buttonW + 700, buttonH + 253, "Flight Map", "flightMapPage", 30, false));
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
-  void drawBackground() {
-    background(209, 222, 218);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--Graphs--", width/2, 130);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
+  void drawImages() {
+    imageMode(CORNER);
+
+    Button pie = null, bar = null, map = null;
+    for (Button b : buttons) {
+      if (b.type.equals("pieChartsPage"))  pie = b;
+      if (b.type.equals("graphsPage"))  bar = b;
+      if (b.type.equals("flightMapPage")) map = b;
+    }
+
+    float x = 200;
+    float y = 465;
+    float w = 190;
+    float h = 190;
+
+    if  (pie != null) {
+      float s = pie.hoverScale;
+      pushMatrix();
+      translate(x + w/2, y + h/2);
+      scale(s);
+      translate(-(x+ w/2), -(y+ h/2));
+      image(pieChart, x, y, w, h);
+      popMatrix();
+    }
+
+    float bx = 560;
+    float by = 455;
+    float bw = 390;
+    float bh = 200;
+    if  (bar != null) {
+      float s = bar.hoverScale;
+      pushMatrix();
+      translate(bx + bw/2, by + bh/2);
+      scale(s);
+      translate(-(bx+ bw/2), -(by+ bh/2));
+      image(barChart, bx, by, bw, bh);
+      popMatrix();
+    }
+
+    float mx = 260;
+    float my = 80;
+    float mw = 670;
+    float mh = 270;
+
+    if  (map != null) {
+      float s = map.hoverScale;
+      pushMatrix();
+      translate(mx + mw/2, my + mh/2);
+      scale(s);
+      translate(-(mx+ mw/2), -(my+ mh/2));
+      image(flightMap, mx, my, mw, mh);
+      popMatrix();
+    }
   }
+
   void mousePressed() {
     for (Button b : buttons) {
       if (b.over(mouseX, mouseY)) {
         println("Clicked: " + b.type);
-        if (b.type.equals("back")) currentScreen = home;
+        if (b.type.equals("home")) goTo(home);
+        if (b.type.equals("graphs") || b.type.equals("graphsPage")) {
+          graphDashboardScreen.currentScreen = graphDashboardScreen.screen1;
+          graphDashboardScreen.activeFact = "";
+          goTo(graphDashboard);
+        }
+        if (b.type.equals("pieCharts") || b.type.equals("pieChartsPage")) {
+          graphDashboardScreen.goToPieCharts();
+          goTo(graphDashboard);
+        }
+        if  (b.type.equals("maps")) goTo(mapScreen);
+        if  (b.type.equals("flightMapPage")) goTo(mapScreen);
+        if (b.type.equals("back")) goBack();
       }
     }
   }
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
+
 class QueriesFlights extends Screen {
-  TextEntryButton inputButton;
-  TextEntryButton inputButton2;
-  TextEntryButton inputButton3;
-  boolean typingFirst = true;
+  TextEntryButton inputFrom, inputTo, inputStart, inputEnd;
   TextEntryButton currentInput;
+  boolean roundTrip = true;   // default like airline apps
+  Button roundTripBtn;
+  Button oneWayBtn;
+  PImage swapImg;
+  float swapX, swapY, swapW, swapH;
+  ArrayList<String> suggestions = new ArrayList<String>();// drop down suggestions
+  boolean showCalendar = false;
+  TextEntryButton calendarTarget = null;
+  String activeInput1; // "origin" or "destination"
+  int calMonth;
+  int calYear;
+  float calX, calY;
+  String availabilityMessage;
+  ArrayList<String> alternativeDestinations = new ArrayList<String>(); // for route suggestions
 
   QueriesFlights() {
-    // Add back button at bottom center
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    int queryW = width/4+100;
-    int queryH = 50;
-    int xq = width/4 -queryW/2;
-    int xq2 = xq+queryW;
-    int yq = height/4;
-    int xs = xq2 + queryW ;
-    
+    title = "Flight Search";
+    int margin = 100;
+    int spacing = 15;
+    int buttonH = 45;
+    int queryW = (width - (margin * 2) - (spacing * 3)) / 4;
+    calMonth = 1;
+    calYear  = 2022;
 
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
-    textAlign(CORNER);
-    
-    buttons.add(new Button(xs, yq, 200, 50, "Search", "flightsOutput", 20, false));
-    
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "", "enter", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "", "enter", 15, 20, false,2);
-    
-    buttons.add(inputButton);
-    buttons.add(inputButton2);
-  }
+    // White card layout
+    int cardX = 90;
+    int cardY = height/3 - 90;
+    int cardW = width - 140;
+    int cardH = 280;
 
-  void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--FLIGHT SEARCH--", width/2, 50);
+    int tripBtnY = cardY + 80;       // Trip buttons below title
+    int inputY   = tripBtnY + 45;    // Inputs below trip buttons
+    int labelOffset = 12;            // Labels above inputs
     
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
+    availabilityMessage = "";
+    activeInput1 = "";
     
+    // Trip type buttons
+    roundTripBtn = new Button(cardX + 10, tripBtnY-20, 140, 30, "Round Trip", "roundTrip", 14, false);
+    oneWayBtn    = new Button(cardX + 160, tripBtnY-20, 120, 30, "One Way", "oneWay", 14, false);
+    
+    buttons.add(roundTripBtn);
+    buttons.add(oneWayBtn);
+
+    // Inputs
+    inputFrom  = new TextEntryButton(cardX, inputY, queryW, buttonH, "Origin", "enter", 25, 16, false, 1);
+    inputTo    = new TextEntryButton(cardX + (queryW + spacing)+15, inputY, queryW, buttonH, "Destination", "enter", 25, 16, false, 2);
+    inputStart = new TextEntryButton(cardX + (queryW + spacing) * 2+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 3);
+    inputEnd   = new TextEntryButton(cardX + (queryW + spacing) * 3+15, inputY, queryW, buttonH, "MM/DD/YYYY", "enter", 10, 16, false, 4);
+
+    buttons.add(inputFrom);
+    buttons.add(inputTo);
+    buttons.add(inputStart);
+
+    // Swap arrow image
+    swapImg = loadImage("SwapArrow.png");
+    swapW = 40;
+    swapH = 35;
+    swapX = inputFrom.x + inputFrom.w + ((inputTo.x - (inputFrom.x + inputFrom.w))/2) - swapW/2;
+    swapY = inputFrom.y + inputFrom.h/2 - swapH/2;
+
+    // Search button
+    buttons.add(new Button(cardX + cardW - 200 - 40, inputY + 75, 200, 50, "Search flights", "flightsOutput", 20, false));
+
+    // Back button
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+
+    String activeInput = ""; // tracks which input field is currently active
   }
   
-  void draw(){
-    drawBackground();
-    
-    for(Button b : buttons){
-      b.display();
-    }
-    textSize(24);
-    fill(255);
-    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
-    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
-    image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
+  void searchFlights() {
+  
+      departureFlights.clear();
+      returnFlights.clear();
+      results.clear();
+  
+      DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+  
+      try {
+          LocalDate start = LocalDate.parse(selection.dateStart, csvFormat);
+          LocalDate end   = selection.dateEnd.isEmpty() ? null : LocalDate.parse(selection.dateEnd, csvFormat);
+  
+          // ---------- DATE VALIDATION ----------
+          if (end != null && end.isBefore(start)) {
+              availabilityMessage = "Return date cannot be earlier than departure date!";
+              return;
+          }
+  
+          // ---------- NORMALIZE USER INPUT ----------
+          String userOrigin = cleanCityName(selection.origin.split(",")[0].trim()).toLowerCase();
+          String userDest   = cleanCityName(selection.destination.split(",")[0].trim()).toLowerCase();
+  
+          // Get canonical city names for messages
+          String originCanonical = getCityNameFromIATA(getIATACodeFromInput(selection.origin));
+          String destCanonical   = getCityNameFromIATA(getIATACodeFromInput(selection.destination));
+  
+          LocalDate earliestDeparture = null;
+          LocalDate latestDeparture   = null;
+          LocalDate earliestReturn    = null;
+          LocalDate latestReturn      = null;
+  
+          boolean routeExists = false;
+          TreeSet<String> possibleDestinations = new TreeSet<String>();
+  
+          // ---------- LOOP THROUGH FLIGHTS ----------
+          for (Flight f : flightsList) {
+              LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+  
+              String flightOriginCode = f.origin.toLowerCase();
+              String flightDestCode   = f.destination.toLowerCase();
+              String flightOriginCity = cleanCityName(f.originCityName).toLowerCase();
+              String flightDestCity   = cleanCityName(f.destinationCityName).toLowerCase();
+  
+              // Track earliest/latest for messages
+              if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
+              if (latestDeparture   == null || flightDate.isAfter(latestDeparture))   latestDeparture   = flightDate;
+  
+              if (end != null) {
+                  if (earliestReturn == null || flightDate.isBefore(earliestReturn)) earliestReturn = flightDate;
+                  if (latestReturn   == null || flightDate.isAfter(latestReturn))   latestReturn   = flightDate;
+              }
+  
+              // ---------- CHECK ROUTE EXISTS ----------
+              if (flightOriginCity.equals(userOrigin)) {
+                  possibleDestinations.add(cleanCityName(f.destinationCityName));
+                  if (flightDestCity.equals(userDest)) {
+                      routeExists = true;
+                  }
+              }
+  
+              // ---------- DEPARTURE MATCH ----------
+              boolean depMatch =
+                  (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
+                  (flightDestCode.equals(userDest) || flightDestCity.contains(userDest)) &&
+                  !flightDate.isBefore(start) &&
+                  (end == null || !flightDate.isAfter(end));
+  
+              if (depMatch) departureFlights.add(f);
+  
+              // ---------- RETURN MATCH ----------
+              if (end != null) {
+                  boolean retMatch =
+                      (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
+                      (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin)) &&
+                      flightDate.equals(end);
+  
+                  if (retMatch) returnFlights.add(f);
+              }
+          }
+  
+          if (!routeExists) {
+            String tripType = roundTrip ? "round-trip" : "one-way";
+            String msg = "Sorry, no " + tripType + " flights exist from " 
+                         + capitalizeWords(originCanonical) + " to " 
+                         + capitalizeWords(destCanonical) + ".\n";
+        
+            // Track first 5 alternative destinations
+            alternativeDestinations.clear();
+            int count = 0;
+            for (String city : possibleDestinations) {
+                alternativeDestinations.add(city);
+                count++;
+                if (count >= 5) break; // only first 5
+            }
+        
+            if (!alternativeDestinations.isEmpty()) {
+                msg += "Here are some valid example destinations from " 
+                       + capitalizeWords(originCanonical) + ":\n";
+            }
+        
+            availabilityMessage = msg;
+            return;
+          }
+  
+          // ---------- SORT ----------
+          Collections.sort(departureFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+          Collections.sort(returnFlights, (a,b) -> Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime));
+  
+          // ---------- CHECK DATE AVAILABILITY ----------
+          if (departureFlights.isEmpty() || (end != null && returnFlights.isEmpty())) {
+              String msg = "No flights available for the selected dates.\n";
+              if (earliestDeparture != null && latestDeparture != null) {
+                  msg += "Valid departure dates: " + earliestDeparture.format(csvFormat) + " - " + latestDeparture.format(csvFormat) + "\n";
+              }
+              if (end != null && earliestReturn != null && latestReturn != null) {
+                  msg += "Valid return dates: " + earliestReturn.format(csvFormat) + " - " + latestReturn.format(csvFormat) + "\n";
+              }
+              availabilityMessage = msg;
+              return;
+          }
+  
+          // ---------- NAVIGATE TO RESULTS ----------
+          if (end == null) {
+              results.addAll(departureFlights);
+              goTo(flightsOutput);
+          } else {
+              twoWayFlightsOutputScreen.setFlights(departureFlights, returnFlights);
+              goTo(flightsOutputTwoWay);
+          }
+  
+      } catch (Exception e) {
+          println("Search Error: Check date format");
+      }
   }
 
-  void keyPressed(char k) {
-
-  if (currentInput == null) return;
-
-  if (keyCode == ENTER) {
-
-    if (currentInput == inputButton) {
-      selection.origin = currentInput.label;
-      println(selection.origin);
+// Clean city initials (start/end)
+// Remove city initials at start or end, allowing dash or comma separators
+String cleanCityName(String city) {
+    if (city == null) return "";
+    // Split by comma and take the first part (city only)
+    String[] parts = city.split(",");
+    return parts[0].trim();
+}
+// Check if a code is valid as an ORIGIN airport
+boolean isValidOriginAirport(String code) {
+    if (code == null || code.trim().isEmpty()) return false;
+    code = code.trim();
+    for (Flight f : flightsList) {
+        if (f.origin.equalsIgnoreCase(code)) return true;
     }
-    else if (currentInput == inputButton2) {
-      selection.destination = currentInput.label;
-      println(selection.destination);
+    return false;
+}
+
+// Check if a city is valid as an ORIGIN city
+boolean isValidOriginCity(String city) {
+    if (city == null || city.trim().isEmpty()) return false;
+    city = city.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.originCityName).equalsIgnoreCase(city)) return true;
     }
+    return false;
+}
+
+boolean isValidDestinationAirport(String code) {
+    if (code == null || code.trim().isEmpty()) return false;
+    code = code.trim();
+    for (Flight f : flightsList) {
+        if (f.destination.equalsIgnoreCase(code)) return true;
+    }
+    return false;
+}
+
+boolean isValidDestinationCity(String city) {
+    if (city == null || city.trim().isEmpty()) return false;
+    city = city.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.destinationCityName).equalsIgnoreCase(city)) return true;
+    }
+    return false;
+}
+
+// ---------------------------
+
+
+
+//////////////////ORIGIN ////////////////////////////////7
+boolean isOriginAirportCode(String value) {
+    return isValidOriginAirport(value);
+}
+
+boolean isOriginCityName(String value) {
+    return isValidOriginCity(value);
+}
+
+boolean originCityMatchesAirport(String city, String airport) {
+    city = city.trim();
+    airport = airport.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.originCityName).equalsIgnoreCase(city) &&
+            f.origin.equalsIgnoreCase(airport)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+boolean isValidOrigin(String input) {
+    if (input == null || input.trim().isEmpty()) return false;
+    String[] parts = input.split(",");
     
+    if (parts.length == 1) {
+        String value = parts[0].trim();
+        return isValidOriginAirport(value) || isValidOriginCity(value);
+    } else if (parts.length == 2) {
+        String part1 = parts[0].trim();
+        String part2 = parts[1].trim();
 
-  } else {
-    currentInput.addChar(k);
-  }
+        // Case: City, Code
+        if (isValidOriginCity(part1) && isValidOriginAirport(part2)) {
+            return originCityMatchesAirport(part1, part2);
+        }
+        // Case: Code, City
+        if (isValidOriginAirport(part1) && isValidOriginCity(part2)) {
+            return originCityMatchesAirport(part2, part1);
+        }
+
+        // fallback: both valid individually
+        return (isValidOriginCity(part1) || isValidOriginAirport(part1)) &&
+               (isValidOriginCity(part2) || isValidOriginAirport(part2));
+    }
+    return false;
+}
+////////////////// DESTINATION /////////////////////
+boolean isDestinationAirportCode(String value) {
+    return isValidDestinationAirport(value);
+}
+
+boolean isDestinationCityName(String value) {
+    return isValidDestinationCity(value);
+}
+
+boolean destinationCityMatchesAirport(String city, String airport) {
+    city = city.trim();
+    airport = airport.trim();
+    for (Flight f : flightsList) {
+        if (cleanCityName(f.destinationCityName).equalsIgnoreCase(city) &&
+            f.destination.equalsIgnoreCase(airport)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+boolean isValidDestination(String input) {
+    if (input == null || input.trim().isEmpty()) return false;
+    String[] parts = input.split(",");
+    
+    if (parts.length == 1) {
+        String value = parts[0].trim();
+        return isValidDestinationAirport(value) || isValidDestinationCity(value);
+    } else if (parts.length == 2) {
+        String part1 = parts[0].trim();
+        String part2 = parts[1].trim();
+
+        // Case: City, Code
+        if (isValidDestinationCity(part1) && isValidDestinationAirport(part2)) {
+            return destinationCityMatchesAirport(part1, part2);
+        }
+        // Case: Code, City
+        if (isValidDestinationAirport(part1) && isValidDestinationCity(part2)) {
+            return destinationCityMatchesAirport(part2, part1);
+        }
+
+        // fallback: both valid individually
+        return (isValidDestinationCity(part1) || isValidDestinationAirport(part1)) &&
+               (isValidDestinationCity(part2) || isValidDestinationAirport(part2));
+    }
+    return false;
+}
+
+String normalize(String city) {
+    if (city == null) return "";
+    return city.replace('\u00A0', ' ').trim();
+}
+
+// Full form validation
+boolean validateSearchInputs() {
+    ArrayList<String> messages = new ArrayList<>();
+
+    // Reset old errors
+    inputFrom.hasError  = false;
+    inputTo.hasError    = false;
+    inputStart.hasError = false;
+    inputEnd.hasError   = false;
+
+    // Normalize inputs
+    String originInput = normalize(inputFrom.label);
+    String destInput   = normalize(inputTo.label);
+    String startDate   = normalize(inputStart.label);
+    String endDate     = normalize(inputEnd.label);
+
+    // ---------- EMPTY CHECKS ----------
+    if (originInput.isEmpty() || originInput.equalsIgnoreCase("Origin")) {
+        messages.add("Please enter origin!");
+        inputFrom.hasError = true;
+        inputFrom.triggerError();
+    }
+
+    if (destInput.isEmpty() || destInput.equalsIgnoreCase("Destination")) {
+        messages.add("Please enter destination!");
+        inputTo.hasError = true;
+        inputTo.triggerError();
+    }
+
+    if (startDate.isEmpty() || startDate.equalsIgnoreCase("MM/DD/YYYY")) {
+        messages.add("Please enter departure date!");
+        inputStart.hasError = true;
+        inputStart.triggerError();
+    }
+
+    if (roundTrip && (endDate.isEmpty() || endDate.equalsIgnoreCase("MM/DD/YYYY"))) {
+        messages.add("Please enter return date!");
+        inputEnd.hasError = true;
+        inputEnd.triggerError();
+    }
+
+    if (!messages.isEmpty()) {
+        availabilityMessage = String.join("\n", messages);
+        return false;
+    }
+
+    // ---------- VALIDATE ORIGIN & DESTINATION ----------
+    if (!isValidOrigin(originInput)) {
+        messages.add("Please enter a valid origin (city, airport code, or both)!");
+        inputFrom.hasError = true;
+        inputFrom.triggerError();
+    }
+
+    if (!isValidDestination(destInput)) {
+        messages.add("Please enter a valid destination (city, airport code, or both)!");
+        inputTo.hasError = true;
+        inputTo.triggerError();
+    }
+
+    if (!messages.isEmpty()) {
+        availabilityMessage = String.join("\n", messages);
+        return false;
+    }
+
+    // ---------- SUCCESS ----------
+    availabilityMessage = "";
+    return true;
+}
+
+// Helper to get city name from IATA code
+String getCityNameFromIATA(String code) {
+    for (Flight f : flightsList) {
+        if (f.origin.equalsIgnoreCase(code)) return f.originCityName;
+        if (f.destination.equalsIgnoreCase(code)) return f.destinationCityName;
+    }
+    return code; // fallback
 }
   
+ void updateSuggestions(String input) {
+    if (currentInput == null) return;
+    if (!activeInput1.equals("origin") && !activeInput1.equals("destination")) return;
+
+    suggestions.clear();
+    if (input.length() < 2) return;
+
+    String inputLower = input.toLowerCase();
+
+    for (Flight f : flightsList) {
+        String city = activeInput1.equals("origin")
+            ? cleanCityName(f.originCityName)
+            : cleanCityName(f.destinationCityName);
+
+        if (city.toLowerCase().contains(inputLower)) {
+            // Add only clean city name
+            if (!suggestions.contains(city)) {
+                suggestions.add(city);
+            }
+            if (suggestions.size() >= 10) break;
+        }
+    }
+}
+
+// Handle clicking a suggestion
+void handleSuggestionClick(int mouseX, int mouseY) {
+    if (currentInput == null || suggestions.size() == 0) return;
+
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float h = 35;
+
+    for (int i = 0; i < suggestions.size(); i++) {
+        float sy = y + i * h;
+
+        if (mouseX > x && mouseX < x + currentInput.w &&
+            mouseY > sy && mouseY < sy + h) {
+
+            // Only paste the city name
+            String selectedCity = suggestions.get(i);
+
+            currentInput.label = selectedCity;
+
+            if (activeInput1.equals("origin")) selection.origin = selectedCity;
+            else if (activeInput1.equals("destination")) selection.destination = selectedCity;
+
+            suggestions.clear();
+            break;
+        }
+    }
+}
+///////////////////////////////////////////////////////////////////////////////
+////////////////            DRAW METHOD          //////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+  void drawContent() {
+    drawTripSelector();
+
+    // White card
+    fill(255);
+    noStroke();
+    rect(70, height/3 - 90, width - 140, 280, 12);
+
+    // Title
+    fill(RY_BLUE);
+    textAlign(LEFT);
+    textSize(22);
+    text("Book your next trip", 100, height/3 - 65);
+
+    // Labels
+    fill(120);
+    textSize(12);
+    int labelOffset = 12;
+    text("FLY FROM", inputFrom.x, inputFrom.y - labelOffset);
+    text("FLY TO", inputTo.x, inputTo.y - labelOffset);
+    text("DEPARTURE", inputStart.x, inputStart.y - labelOffset);
+    if (roundTrip) text("RETURN", inputEnd.x, inputEnd.y - labelOffset);
+
+    // Draw inputs
+    inputFrom.display();
+    inputTo.display();
+    inputStart.display();
+    if (roundTrip) inputEnd.display();
+
+    // Swap arrow
+    image(swapImg, swapX, swapY, swapW, swapH);
+
+    // Draw suggestions
+    drawSuggestions();
+
+    // Draw buttons
+    for (Button b : buttons) {
+      if (b == inputEnd && !roundTrip) continue;
+      b.display();
+    }
+
+    //DRAW CALENDAR LAST - ensures it visually floats above everything
+    drawCalendar();
+    if (!availabilityMessage.equals("")) {
+      fill(255, 0, 0);
+      textAlign(CENTER);
+      textSize(16);
+      textAlign(CENTER, TOP);
+      text(availabilityMessage, width/2, height/3 + 200);
+    }
+    if (alternativeDestinations.size() > 0) {
+        float startY = height/3 + 260; // below message (added 30)
+        float startX = width/2 - 100;  // center
+        float w = 200;
+        float h = 30;
+        textSize(16);
+        textAlign(CENTER, CENTER);
+    
+        for (int i = 0; i < alternativeDestinations.size(); i++) {
+            float y = startY + i * (h + 5);
+            String city = alternativeDestinations.get(i);
+    
+            // Hover effect
+            if (mouseX > startX && mouseX < startX + w &&
+                mouseY > y && mouseY < y + h) {
+                fill(#C0E8FF); // hover color
+            } else {
+                fill(#E0F7FF); // default color
+            }
+    
+            stroke(0);
+            rect(startX, y, w, h, 6);
+    
+            fill(0);
+            noStroke();
+            text(city, startX + w/2, y + h/2);
+        }
+    }
+  }
+  void drawSuggestions() {
+    if (suggestions.size()==0||currentInput == null) return;
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float w = currentInput.w;
+    float h = 35;
+    if (currentInput == null || suggestions.size() == 0) return;
+    if (currentInput != inputFrom && currentInput != inputTo) return;    
+    for (int i = 0; i<suggestions.size(); i++) {
+      fill(255);
+      stroke(200);
+      rect(x, y + i*h, w, h);
+      fill(0);
+      textAlign(LEFT, CENTER);
+      text(suggestions.get(i), x+10, y + i*h +h/2);
+    }
+  }
+  void drawCalendar() {
+    if (!showCalendar || calendarTarget == null) return;
+
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 35;
+    int cols = 7;
+    int rows = 6; // Max rows for calendar
+
+    // Calendar background card
+    fill(255);
+    stroke(200);
+    strokeWeight(1);
+    rect(x, y, cell * cols, cell * rows + 70, 12); // Extra space for header
+
+    // ---------- MONTH HEADER ----------
+    String[] months = {
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    };
+
+    fill(RY_BLUE);
+    noStroke();
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text(months[calMonth-1] + " " + calYear, x + cell*cols/2, y + 25);
+
+    // Left/Right arrows
+    fill(220);
+    stroke(180);
+    rect(x + 10, y + 15, 25, 25, 5);
+    rect(x + cell*cols - 35, y + 15, 25, 25, 5);
+    fill(0);
+    textSize(14);
+    text("<", x + 22, y + 27);
+    text(">", x + cell*cols - 22, y + 27);
+
+    // ---------- WEEKDAY NAMES ----------
+    String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    textSize(12);
+    fill(100);
+    for (int c=0; c<7; c++) {
+      text(weekdays[c], x + c*cell + cell/2, y + 55);
+    }
+
+    // ---------- DAYS ----------
+    int daysInMonth = getDaysInMonth(calMonth, calYear);
+    int startDay = getStartDay(calMonth, calYear); // Day of week of 1st day
+
+    textAlign(CENTER, CENTER);
+    textSize(14);
+
+    for (int d = 1; d <= daysInMonth; d++) {
+      int index = d + startDay - 2;
+      int col = index % 7;
+      int row = index / 7;
+
+      float dx = x + col*cell;
+      float dy = y + row*cell + 70;
+
+      // Hover effect
+      if (mouseX > dx && mouseX < dx+cell && mouseY > dy && mouseY < dy+cell) {
+        fill(#E0F0FF);
+        rect(dx+2, dy+2, cell-4, cell-4, 6);
+      }
+
+      // Selected date
+      if (calendarTarget.label.equals(nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear)) {
+        fill(RY_BLUE);
+        ellipse(dx + cell/2, dy + cell/2, cell-10, cell-10);
+        fill(255);
+      } else fill(0);
+
+      text(d, dx + cell/2, dy + cell/2);
+    }
+  }
+
+  // Returns the weekday (1=Sunday,..7=Saturday) for the first day of month
+  int getStartDay(int month, int year) {
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.set(year, month-1, 1);
+    int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+    return day;
+  }
+  int getDaysInMonth(int m, int y) {
+
+    if (m == 2) { // February
+      if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)
+        return 29;
+      return 28;
+    }
+
+    if (m==4 || m==6 || m==9 || m==11) return 30;
+
+    return 31;
+  }
+  
+  
+  
   void mousePressed() {
-  currentInput = null;
 
-  // Check TextEntryButtons
-  if (mouseX > inputButton.x && mouseX < inputButton.x + inputButton.w &&
-      mouseY > inputButton.y && mouseY < inputButton.y + inputButton.h) {
-    currentInput = inputButton;
-  }
-  if (mouseX > inputButton2.x && mouseX < inputButton2.x + inputButton2.w &&
-      mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
-    currentInput = inputButton2;
-  }
-  if (inputButton3 != null &&
-      mouseX > inputButton3.x && mouseX < inputButton3.x + inputButton3.w &&
-      mouseY > inputButton3.y && mouseY < inputButton3.y + inputButton3.h) {
-    currentInput = inputButton3;
-  }
+    // =====================================================
+    // ---- CALENDAR MONTH SWITCH (MOVED TO TOP) ----
+    // =====================================================
+    if (showCalendar && calendarTarget != null) {
+      float x = calendarTarget.x;
+      float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+      float cell = 35;
 
-  // Handle regular buttons
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-        if (b.type.equals("backQ")) currentScreen = queries;
-        if (b.type.equals("flightsOutput")) {
-            searchFlight(); 
-            currentScreen = flightsOutput;
+      // LEFT ARROW
+      if (mouseX > x + 10 && mouseX < x + 35 &&
+        mouseY > y + 15 && mouseY < y + 40) {
+        calMonth--;
+        if (calMonth < 1) {
+          calMonth = 12;
+          calYear--;
+          if (calYear < 2022) calYear = 2022;
         }
-        if (b.type.equals("dateOutput")) {
-            searchFlight(); 
-            currentScreen = dateOutput;
+        return;
+      }
+
+      // RIGHT ARROW
+      if (mouseX > x + cell*7 - 35 && mouseX < x + cell*7 - 10 &&
+        mouseY > y + 15 && mouseY < y + 40) {
+        calMonth++;
+        if (calMonth > 12) {
+          calMonth = 1;
+          calYear++;
         }
-        if (b.type.equals("trafficOutput")) {
-            searchFlight(); 
-            currentScreen = trafficOutput;
+        return;
+      }
+    }
+
+    // =====================================================
+    // ---- CALENDAR DAY CLICK (MOVED UP)
+    // =====================================================
+    if (showCalendar && calendarTarget != null) {
+      float x = calendarTarget.x;
+      float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
+      float cell = 35;
+
+      int daysInMonth = getDaysInMonth(calMonth, calYear);
+      int startDay = getStartDay(calMonth, calYear);
+
+      for (int d = 1; d <= daysInMonth; d++) {
+        int index = d + startDay - 2;
+        int col = index % 7;
+        int row = index / 7;
+
+        float dx = x + col*cell;
+        float dy = y + row*cell + 70; // match drawCalendar offset
+
+        if (mouseX > dx && mouseX < dx + cell &&
+          mouseY > dy && mouseY < dy + cell) {
+          String date = nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
+          calendarTarget.label = date;
+          showCalendar = false;
+          calendarTarget = null;
+          return;
         }
       }
     }
+
+    // =====================================================
+    // ---- SUGGESTIONS DROPDOWN ----
+    // =====================================================
+    if (currentInput != null && suggestions.size() > 0) {
+        float x = currentInput.x;
+        float y = currentInput.y + currentInput.h;
+        float h = 35;
+    
+        for (int i = 0; i < suggestions.size(); i++) {
+            float sy = y + i * h;
+    
+            if (mouseX > x && mouseX < x + currentInput.w &&
+                mouseY > sy && mouseY < sy + h) {
+    
+                // Only city name, no split needed
+                String city = suggestions.get(i).trim();
+    
+                // Update input label
+                currentInput.label = city;
+    
+                // Update canonical selection
+                if (activeInput1.equals("origin")) selection.origin = city;
+                else if (activeInput1.equals("destination")) selection.destination = city;
+    
+                // Clear suggestions after click
+                suggestions.clear();
+                break;
+            }
+        }
+    }
+
+    // =====================================================
+    // INPUT SELECTION
+    // =====================================================
+    TextEntryButton[] allInputs = roundTrip
+      ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
+      : new TextEntryButton[]{inputFrom, inputTo, inputStart};
+
+    currentInput = null;
+
+    for (TextEntryButton b : allInputs) {
+      if (b.over(mouseX, mouseY)) {
+
+        currentInput = b;
+        
+        if (b == inputFrom) {
+            activeInput1 = "origin";
+          }
+          else if (b == inputTo) {
+            activeInput1 = "destination";
+          }
+
+        // OPEN CALENDAR FOR DATE INPUTS
+        if (b == inputStart || b == inputEnd) {
+          showCalendar = true;
+          calendarTarget = b;
+        } else {
+          showCalendar = false;
+        }
+
+        if (b.label.equals("MM/DD/YYYY") ||
+          b.label.equals("Origin") ||
+          b.label.equals("Destination")) {
+          b.label = "";
+        }
+      }
+    }
+
+    // =====================================================
+    // BUTTONS (UNCHANGED)
+    // =====================================================
+    for (Button b : buttons) {
+      if (b == inputEnd && !roundTrip) continue;
+
+      if (b.over(mouseX, mouseY)) {
+
+        if (b.type.equals("back")) goBack();
+        if (b.type.equals("roundTrip")) roundTrip = true;
+        if (b.type.equals("oneWay")) roundTrip = false;
+
+        if (b.type.equals("flightsOutput")) {
+          if (validateSearchInputs()) {
+            selection.origin      = inputFrom.label;
+            selection.destination = inputTo.label;
+            selection.dateStart   = inputStart.label;
+            selection.dateEnd     = roundTrip ? inputEnd.label : "";
+        
+            searchFlights(); // move to next screen
+          }
+        }
+      }
+    }
+
+    // =====================================================
+    // SWAP BUTTON
+    // =====================================================
+    if (mouseX > swapX && mouseX < swapX + swapW &&
+        mouseY > swapY && mouseY < swapY + swapH) {
+    
+      // Swap labels (what user sees)
+      String tempLabel = inputFrom.label;
+      inputFrom.label = inputTo.label;
+      inputTo.label = tempLabel;
+    
+      // Swap canonical codes (used for validation)
+      String tempCode = selection.origin;
+      selection.origin = selection.destination;
+      selection.destination = tempCode;
+    
+      // Clear previous errors
+      inputFrom.hasError = false;
+      inputTo.hasError = false;
+      availabilityMessage = "";
+    
+      // Clear suggestions
+      suggestions.clear();
+    }
+    
+    if (alternativeDestinations.size() > 0) {
+          float startY = height/3 + 260;
+          float startX = width/2 - 100;
+          float w = 200;
+          float h = 30;
+      
+          for (int i = 0; i < alternativeDestinations.size(); i++) {
+              float y = startY + i * (h + 5);
+      
+              if (mouseX > startX && mouseX < startX + w &&
+                  mouseY > y && mouseY < y + h) {
+      
+                  // Update destination input
+                  inputTo.label = alternativeDestinations.get(i);
+                  selection.destination = alternativeDestinations.get(i);
+      
+                  // Clear message and alternatives
+                  availabilityMessage = "";
+                  alternativeDestinations.clear();
+                  break;
+              }
+          }
+      }
+    
+  }
+  void drawTripSelector() {
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    if (roundTrip) {
+      fill(#A8D05F);
+      rect(roundTripBtn.x-5, roundTripBtn.y-5, roundTripBtn.w+10, roundTripBtn.h+10, 8);
+    } else {
+      fill(#A8D05F);
+      rect(oneWayBtn.x-5, oneWayBtn.y-5, oneWayBtn.w+10, oneWayBtn.h+10, 8);
+    }
+  }
+
+  void keyPressed(char k) {
+    if(currentInput == inputStart || currentInput == inputEnd) return;
+    if (currentInput != null) {
+      currentInput.addChar(k);
+      availabilityMessage = "";
+    }
+  
+    if (currentInput == inputFrom || currentInput == inputTo) {
+      updateSuggestions(currentInput.label);
+    }
+  }
+
+
+  // Helper function to map city name to IATA code
+  String getIATACodeFromInput(String input) {
+    input = input.trim().toLowerCase();
+    for (Flight f : flightsList) {
+      if (f.originCityName.toLowerCase().contains(input)) return f.origin;
+      if (f.destinationCityName.toLowerCase().contains(input)) return f.destination;
+    }
+    return input; // fallback if already an IATA code
   }
 }
+
 class QueriesDate extends Screen {
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
-  boolean typingFirst = true;
+  TextEntryButton originButton;
   TextEntryButton currentInput;
-
+  TextEntryButton calendarTarget = null;
+  boolean showCalendar;
+  boolean showOriginSuggestions;
+  int calMonth;
+  int calYear;
+  // Button bounds for the manual Search button
+  float btnX, btnY, btnW = 120, btnH = 40;
+  float leftArrowX, rightArrowX;
+  float arrowY;
+  float arrowSize;
+  String availabilityMessage;
+  ArrayList<String> suggestions;
+  String activeInput1;
+  ArrayList<String> allCities;
+  float layoutOffsetY = -40;   // negative = move everything UP
+  float adjustedMouseY;
+  boolean originInvalid;
+  int shakeTimer;
   QueriesDate() {
-    // Add back button at bottom center
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    int queryW = width/4+100;
-    int queryH = 50;
-    int xq = width/4 -queryW/2;
-    int xq2 = xq+queryW;
-    int yq = height/4;
-    int xs = xq2 + queryW ;
-    
-    
+    title = "Date Search";
 
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
-    textAlign(CORNER);
+    int inputW = 240;
+    int inputH = 50;
+    int spacingX = 20;            // horizontal spacing between date inputs
+    int spacingYOriginDates = 40; // vertical spacing between origin and dates
+    int spacingYDatesButton = 60; // vertical spacing between dates and search button
+    int centerX = width / 2;
+    int startY = height/4 + 80;   // shifted up from 120 → 80
+    showCalendar = false;
+    availabilityMessage = "";
+    calMonth = 1;
+    calYear  = 2022;
+    arrowSize = 25;
     
-    buttons.add(new Button(xs, yq, 200, 50, "Search", "dateOutput", 20, false));
-    
-    inputButton = new TextEntryButton(xq,yq, queryW, queryH, "", "date1", 15, 20, false, 1);
-    inputButton2 = new TextEntryButton(xq2,yq, queryW, queryH, "", "date2", 15, 20, false,2);
-    
+    originInvalid = false;
+    shakeTimer = 0;
+
+    allCities = new ArrayList<String>();
+    populateAllCities();
+    suggestions = new ArrayList<String>();
+    activeInput1 = ""; // tracks which input is active (e.g., "origin")
+    showOriginSuggestions = false;
+    // --- Back Button ---
+    buttons.add(new Button(30, 22-layoutOffsetY, 80, 30, "BACK", "back", 15, false));
+
+    // --- Origin Input (width = 2x date + spacing) ---
+    int originW = inputW * 2 + spacingX;
+    originButton = new TextEntryButton(centerX - originW / 2, startY, originW, inputH, "Origin City", "origin", 15, 20, false, 0);
+    buttons.add(originButton);
+
+    // --- Departure Date Input ---
+    inputButton = new TextEntryButton(centerX - inputW - spacingX / 2, startY + inputH + spacingYOriginDates, inputW, inputH, "MM/DD/YYYY", "date1", 15, 20, false, 1);
     buttons.add(inputButton);
+
+    // --- Return Date Input ---
+    inputButton2 = new TextEntryButton(centerX + spacingX / 2, startY + inputH + spacingYOriginDates, inputW, inputH, "MM/DD/YYYY", "date2", 15, 20, false, 2);
     buttons.add(inputButton2);
-  }
 
-  void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--DATE SEARCH--", width/2, 50);
+    // --- Search Flights Button ---
+    buttons.add(new Button(centerX - 100, startY + inputH + spacingYOriginDates + inputH + spacingYDatesButton-40, 200, 50, "Search flights", "dateOutput", 20, false));
+
+}
+  void drawCard() {
+  fill(255);
+  // Make it taller to fit all content comfortably
+  rect(150, 180, width-300, 300, 20);
+}
+
+  String capitalize(String s) {
+      if (s == null || s.length() == 0) return s;
+  
+      String[] words = s.split(" ");
+      String result = "";
+  
+      for (int i = 0; i < words.length; i++) {
+          if (words[i].length() > 0) {
+              result += Character.toUpperCase(words[i].charAt(0))
+                        + words[i].substring(1).toLowerCase();
+          }
+          if (i < words.length - 1) result += " ";
+      }
+  
+      return result;
+  }
+// -------------------------------
+// Populate allCities from flightsList
+// -------------------------------
+  void populateAllCities() {
+  
+        HashSet<String> unique = new HashSet<String>();
     
+        for (Flight f : flightsList) {
     
+            if (f.originCityName == null) continue;
     
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
+            String[] parts = f.originCityName.split(",");
+            String city = parts[0].trim().toLowerCase();
     
+            unique.add(city);
+        }
+    
+        allCities.clear();
+    
+        for (String c : unique) {
+            allCities.add(capitalize(c));
+        }
+    
+        Collections.sort(allCities);
+  }
+  int getStartDay(int month, int year) {
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.set(year, month-1, 1);
+    int day = cal.get(java.util.Calendar.DAY_OF_WEEK);
+    return day;
+  }
+  int getDaysInMonth(int m, int y) {
+
+    if (m == 2) { // February
+      if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)
+        return 29;
+      return 28;
+    }
+
+    if (m==4 || m==6 || m==9 || m==11) return 30;
+
+    return 31;
+  }
+  //////////////////////// VALIDATION //////////////////////////////////
+  // Remove city initials at start or end, allowing dash or comma separators
+  String cleanCityName(String city) {
+        if (city == null) return "";
+        // Split by comma and take the first part (city only)
+        String[] parts = city.split(",");
+        return parts[0].trim();
+    }
+  // Check if a code is valid as an ORIGIN airport
+  boolean isValidOriginAirport(String code) {
+      if (code == null || code.trim().isEmpty()) return false;
+      code = code.trim();
+      for (Flight f : flightsList) {
+          if (f.origin.equalsIgnoreCase(code)) return true;
+      }
+      return false;
   }
   
-  void draw(){
-    drawBackground();
-    
-    for(Button b : buttons){
-      b.display();
+  // Check if a city is valid as an ORIGIN city
+  boolean isValidOriginCity(String city) {
+      if (city == null || city.trim().isEmpty()) return false;
+      city = city.trim();
+      for (Flight f : flightsList) {
+          if (cleanCityName(f.originCityName).equalsIgnoreCase(city)) return true;
+      }
+      return false;
+  }
+  String normalize(String city) {
+      if (city == null) return "";
+      return city.replace('\u00A0', ' ').trim();
+  }
+  boolean isOriginAirportCode(String value) {
+      return isValidOriginAirport(value);
+  }
+
+  boolean isOriginCityName(String value) {
+      return isValidOriginCity(value);
+  }
+
+  boolean originCityMatchesAirport(String city, String airport) {
+        city = city.trim();
+        airport = airport.trim();
+        for (Flight f : flightsList) {
+            if (cleanCityName(f.originCityName).equalsIgnoreCase(city) &&
+                f.origin.equalsIgnoreCase(airport)) {
+                return true;
+            }
+        }
+        return false;
     }
-    textSize(24);
+
+    boolean isValidOrigin(String input) {
+          if (input == null || input.trim().isEmpty()) return false;
+          String[] parts = input.split(",");
+          
+          if (parts.length == 1) {
+              String value = parts[0].trim();
+              return isValidOriginAirport(value) || isValidOriginCity(value);
+          } else if (parts.length == 2) {
+              String part1 = parts[0].trim();
+              String part2 = parts[1].trim();
+      
+              // Case: City, Code
+              if (isValidOriginCity(part1) && isValidOriginAirport(part2)) {
+                  return originCityMatchesAirport(part1, part2);
+              }
+              // Case: Code, City
+              if (isValidOriginAirport(part1) && isValidOriginCity(part2)) {
+                  return originCityMatchesAirport(part2, part1);
+              }
+      
+              // fallback: both valid individually
+              return (isValidOriginCity(part1) || isValidOriginAirport(part1)) &&
+                     (isValidOriginCity(part2) || isValidOriginAirport(part2));
+          }
+          return false;
+      }
+  ////////////////////////////////////////////////////////////////////////////////////
+  void searchFlightsByDate() {
+    results.clear();
+    DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+    
+    // ---------------- ORIGIN VALIDATION ----------------
+    String originInput = originButton.label.trim();
+    
+    // ignore placeholder text
+    if (originInput.equals("Origin City")) {
+        originInput = "";
+    }
+    
+    // if user entered something -> validate it
+    if (!isValidOrigin(originInput)) {
+
+        availabilityMessage =
+            "Invalid origin. Please enter a valid city or airport code.";
+    
+        originButton.hasError = true;   // 🔴 red border
+        originButton.triggerError();    // 💥 shake
+    
+        return;
+    }
+  
+    try {
+      // Parse dates from inputs
+      LocalDate start = LocalDate.parse(inputButton.label, csvFormat);
+      LocalDate end   = LocalDate.parse(inputButton2.label, csvFormat);
+  
+      // --- Validate input ---
+      if (start.isAfter(end)) {
+        this.availabilityMessage = "Invalid input: 'From' date is after 'To' date.";
+        originInvalid = true;
+        shakeTimer = 20; // frames to shake
+        return;
+      }
+  
+      // --- Search flights in the selected date range ---
+      String originInputLower = originInput.toLowerCase();
+      for (Flight f : flightsList) {
+          LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+      
+          // Check date range
+          if (flightDate.isBefore(start) || flightDate.isAfter(end)) continue;
+      
+          // Check origin (if user typed one)
+          if (!originInputLower.isEmpty()) {
+              String flightOriginCity =
+                  f.originCityName != null ? f.originCityName.toLowerCase() : "";
+          
+              if (!flightOriginCity.contains(originInputLower)) continue;
+          }
+      
+          results.add(f);
+      }
+  
+      // --- Show message if no flights found ---
+      if (results.isEmpty()) {
+        // Find the valid departure range
+        LocalDate minDate = null;
+        LocalDate maxDate = null;
+        for (Flight f : flightsList) {
+          LocalDate fd = LocalDate.parse(f.date, csvFormat);
+          if (minDate == null || fd.isBefore(minDate)) minDate = fd;
+          if (maxDate == null || fd.isAfter(maxDate)) maxDate = fd;
+        }
+        String minStr = minDate != null ? minDate.format(csvFormat) : "N/A";
+        String maxStr = maxDate != null ? maxDate.format(csvFormat) : "N/A";
+  
+        this.availabilityMessage = "No flights found. Valid departure dates: " + minStr + " to " + maxStr;
+        return;
+      }
+  
+      // --- Sort by date and departure time ---
+      Collections.sort(results, (a, b) -> {
+        LocalDate dateA = LocalDate.parse(a.date, csvFormat);
+        LocalDate dateB = LocalDate.parse(b.date, csvFormat);
+        int cmp = dateA.compareTo(dateB);
+        if (cmp != 0) return cmp;
+        return Integer.compare(a.scheduledDepartureTime, b.scheduledDepartureTime);
+      });
+  
+      // --- Navigate to output screen ---
+      goTo(flightsOutput);
+  
+    } catch (Exception e) {
+      println("Error: check date format");
+      if(inputButton.label.equals("")||inputButton.label.equals("MM/DD(YYYY")) this.availabilityMessage = "Please enter minimum parameter of date range";
+      else if(inputButton2.label.equals("")||inputButton2.label.equals("MM/DD(YYYY")) this.availabilityMessage = "Please enter maximum parameter of date range";
+      else this.availabilityMessage = "Invalid date format, please use MM/DD/YYYY.";
+    }
+  }
+  
+  void drawCalendar() {
+    adjustedMouseY = mouseY - layoutOffsetY;
+    float topOffset = 70;
+    if (!showCalendar || calendarTarget == null) return;
+
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 40;  // smaller size of each day
+    int cols = 7;
+    int rows = 6;
+
+    // ---------- WHITE CARD (smaller) ----------
+    float rectWidth  = cell * 7;
+    float rectHeight = cell * 6 + 70;
     fill(255);
-    text("From: ", width/4 -(width/4 +100)/2 +40, height/4+25);
-    text("To: ", width/4 +(width/4 +100)/2 +40, height/4+25);
-    image(SearchButton, 1080.0-20, 192.0, 20.0, 20.0);
-  }
+    stroke(200);
+    rect(x, y, rectWidth, rectHeight, 12);
 
-  void keyPressed(char k) {
+    // ---------- HEADER ----------
+    String[] months = {
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    };
 
-  if (currentInput == null) return;
+    fill(RY_BLUE);
+    textAlign(CENTER, CENTER);
+    textSize(14);  // smaller text for header
 
-  if (keyCode == ENTER) {
+    float headerY = y + 20;
+    float centerX = x + rectWidth / 2;
+    text(months[calMonth - 1] + " " + calYear, centerX, headerY);
 
-    if (currentInput == inputButton) {
-      selection.dateStart = currentInput.label;
-      println(selection.dateStart);
+    // arrows
+    leftArrowX = x + 15;
+    rightArrowX = x + rectWidth - 15;
+    arrowY = headerY;
+
+    // LEFT ARROW  (<)
+    triangle(leftArrowX - 6, arrowY, leftArrowX + 6, arrowY - 6, leftArrowX + 6, arrowY + 6);
+    // RIGHT ARROW (>)
+    triangle(rightArrowX + 6, arrowY, rightArrowX - 6, arrowY - 6, rightArrowX - 6, arrowY + 6);
+
+    // ---------- WEEKDAYS ----------
+    String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    textSize(10);  // smaller text for weekdays
+    fill(100);
+    for (int c = 0; c < 7; c++) {
+        text(weekdays[c], x + c * cell + cell / 2, y + 50);
     }
-    else if (currentInput == inputButton2) {
-      selection.dateEnd = currentInput.label;
-      println(selection.dateEnd);
-    }
-    
 
-  } else {
-    currentInput.addChar(k);
-  }
+    // ---------- DAYS ----------
+    int days = getDaysInMonth(calMonth, calYear);
+    int start = getStartDay(calMonth, calYear);
+    textSize(12);  // smaller numbers for days
+
+    for (int d = 1; d <= days; d++) {
+        int index = (start - 1) + (d - 1);
+        int col = index % 7;
+        int row = index / 7;
+
+        float dx = x + col * cell;
+        float dy = y + row * cell + topOffset;
+        boolean hovering = mouseX > dx &&
+                           mouseX < dx + cell &&
+                           adjustedMouseY > dy &&
+                           adjustedMouseY < dy + cell;
+        String thisDate = nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
+
+        // SELECTED DATE
+        if (calendarTarget.label.equals(thisDate)) {
+            fill(RY_BLUE);
+            ellipse(dx + cell / 2, dy + cell / 2, cell - 8, cell - 8);
+            fill(255);
+        }
+        // HOVER EFFECT
+        else if (hovering) {
+            fill(200, 220, 255);
+            ellipse(dx + cell / 2, dy + cell / 2, cell - 8, cell - 8);
+            fill(0);
+        }
+        // NORMAL DAY
+        else {
+            fill(0);
+        }
+
+        text(d, dx + cell / 2, dy + cell / 2);
+    }
 }
-  
-  void mousePressed() {
-  currentInput = null;
 
-  // Check TextEntryButtons
-  if (mouseX > inputButton.x && mouseX < inputButton.x + inputButton.w &&
-      mouseY > inputButton.y && mouseY < inputButton.y + inputButton.h) {
-    currentInput = inputButton;
-  }
-  if (mouseX > inputButton2.x && mouseX < inputButton2.x + inputButton2.w &&
-      mouseY > inputButton2.y && mouseY < inputButton2.y + inputButton2.h) {
-    currentInput = inputButton2;
-  }
-  
 
-  // Handle regular buttons
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-        if (b.type.equals("backQ")) currentScreen = queries;
-        if (b.type.equals("flightsOutput")) {
-            searchFlight(); 
-            currentScreen = flightsOutput;
-        }
-        if (b.type.equals("dateOutput")) {
-            searchFlight(); 
-            currentScreen = dateOutput;
-        }
-        if (b.type.equals("trafficOutput")) {
-            searchFlight(); 
-            currentScreen = trafficOutput;
-        }
-      }
+  void draw() {
+    layout.beginPage(title);
+    pushMatrix();
+    translate(0, layoutOffsetY);   
+    adjustedMouseY = mouseY - layoutOffsetY;
+
+    drawCard();
+
+    fill(RY_BG);
+    textAlign(LEFT);
+    textSize(22);
+    text("Book your next trip", 150, height/3 - 65);
+    
+    float shakeOffset = 0;
+
+    if (shakeTimer > 0) {
+        shakeOffset = random(-4, 4);
+        shakeTimer--;
     }
-  }
-}
-class QueriesTraffic extends Screen {
-  TextEntryButton inputButton;
-  TextEntryButton inputButton2;
-  TextEntryButton inputButton3;
-  boolean typingFirst = true;
-  TextEntryButton currentInput;
+    
+    for (Button b : buttons) {
 
-  QueriesTraffic() {
-    // Add back button at bottom center
-    int buttonW = 180;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    int queryW = width/4+100;
-    int queryH = 50;
-    int xq = width/4;
-    int xq2 = xq+queryW;
-    int yq = height/2;
-    int xs = xq2 + queryW ;
-    int xq3 = xq;
-    
-
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 110, buttonH - 20, "BACK", "backQ", 20, true));
-    textAlign(CORNER);
-    
-    buttons.add(new Button(xq, yq, 200, 50, "EAST-COAST", "trafficOutputEastCoast", 20, false));
-    buttons.add(new Button(xq2, yq, 200, 50, "WEST-COAST", "trafficOutputWestCoast", 20, false));
-    buttons.add(new Button((xq+xq2)/2, yq, 200, 50, "CENTRAL", "trafficOutputCentral", 20, false));
-    
-    
-  }
-
-  void drawBackground() {
-    background(206, 216, 222);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, 80);
-    text("--AIRPORT TRAFFIC--", width/2, 50);
-    
-    //Line at top
-     fill(255, 50);
-     noStroke();
-     rect(0, 70, width, 2);
-    
-  }
+      pushMatrix();
   
-  void draw(){
-    drawBackground();
-    
-    for(Button b : buttons){
+      
+  
       b.display();
-    }
-    textSize(32);
-    textAlign(CENTER,CENTER);
+  
+      popMatrix();
+  }
+    textSize(18);
     fill(0);
-    text("Select which traffic pattern you want to observe", width/2, height/2-100);
+    textAlign(LEFT);
+
+    text("Origin:", originButton.x, originButton.y - 10);
+    text("From:", inputButton.x, inputButton.y - 10);
+    text("To:", inputButton2.x, inputButton2.y - 10);
+
+
+    if (!availabilityMessage.equals("")) {
+        fill(255, 80, 80);
+        textAlign(CENTER);
+        textSize(18);
+        text(availabilityMessage, width/2, height/2 + 160);
+    }
+    
+    drawSuggestions();
+    drawCalendar();
+    popMatrix();
+    
+   
+
+}
+  void updateOriginSuggestions(String typed) {
+    suggestions.clear();
+    if (typed == null || typed.isEmpty()) return;
+  
+    typed = typed.toLowerCase();
+  
+    for (String city : allCities) {
+      if (city.toLowerCase().contains(typed)) {
+        suggestions.add(city); // only the city name
+      }
+      if (suggestions.size() >= 6) break;
+    }
+  }
+  void drawSuggestions() {
+    if (currentInput != originButton ||
+        !showOriginSuggestions ||
+        suggestions.size() == 0) return;
+    float x = currentInput.x;
+    float y = currentInput.y + currentInput.h;
+    float h = 35;
+
+    fill(255);
+    stroke(200);
+    rect(x, y, currentInput.w, suggestions.size() * h, 5);
+
+    textSize(20);
+    fill(0);
+    textAlign(LEFT, CENTER);
+
+    for (int i = 0; i < suggestions.size(); i++) {
+        float sy = y + i * h;
+        if (mouseX > x && mouseX < x + currentInput.w &&
+            adjustedMouseY > sy && adjustedMouseY < sy + h) {
+            fill(200, 220, 255); // hover color
+            rect(x, sy, currentInput.w, h);
+            fill(0);
+        }
+        text(suggestions.get(i), x + 5, sy + h/2);
+    }
+}
+  void handleSuggestionClick(int mouseX, int mouseY) {
+      if (currentInput == null || suggestions.size() == 0) return;
+  
+      float x = currentInput.x;
+      float y = currentInput.y + currentInput.h;
+      float h = 35;
+  
+      for (int i = 0; i < suggestions.size(); i++) {
+          float sy = y + i * h;
+  
+          if (mouseX > x && mouseX < x + currentInput.w &&
+              adjustedMouseY > sy && adjustedMouseY < sy + h) {
+  
+              String city = suggestions.get(i).trim(); // just the city
+              currentInput.label = city;
+  
+              if (currentInput == originButton) {
+                  selection.origin = city; // store the origin
+              }
+  
+              suggestions.clear();
+              break;
+          }
+      }
   }
 
   void keyPressed(char k) {
 
+    if (currentInput != null) {
+      currentInput.addChar(k);
+      availabilityMessage = "";
+    }
   
-}
-  
+    if (currentInput == originButton) {
+        activeInput1 = "origin";
+        updateOriginSuggestions(currentInput.label);
+        showOriginSuggestions = suggestions.size() > 0;
+    }
+  }
+
   void mousePressed() {
+  
+  adjustedMouseY = mouseY - layoutOffsetY;
+  
+  // ----------------------------
+  // --- ORIGIN SUGGESTIONS CLICK
+  // ----------------------------
+  if (showOriginSuggestions && suggestions.size() > 0) {
+    float x = originButton.x;
+    float y = originButton.y + originButton.h;
+    float h = 35;
+  
+    for (int i = 0; i < suggestions.size(); i++) {
+      float sy = y + i * h;
+  
+      if (mouseX > x && mouseX < x + originButton.w &&
+          mouseY > sy + layoutOffsetY &&
+          mouseY < sy + h + layoutOffsetY) {
+  
+        String city = suggestions.get(i);
+        originButton.label = city;
+        selection.origin = city;
+  
+        showOriginSuggestions = false;
+        currentInput = null;
+        return;
+      }
+    }
+  }
 
-  // Handle regular buttons
+  // ----------------------------
+  // --- CALENDAR CLICK LOGIC ---
+  // ----------------------------
+  if (showCalendar && calendarTarget != null) {
+    float x = calendarTarget.x;
+    float y = calendarTarget.y + calendarTarget.h + 10;
+    float cell = 40;
+
+    int days = getDaysInMonth(calMonth, calYear);
+    int start = getStartDay(calMonth, calYear);
+
+    // LEFT ARROW
+    if (dist(mouseX, adjustedMouseY, leftArrowX, arrowY) < arrowSize) {
+      calMonth--;
+      if (calMonth < 1) { calMonth = 12; calYear--; }
+      return;
+    }
+
+    // RIGHT ARROW
+    if (dist(mouseX, adjustedMouseY, rightArrowX, arrowY) < arrowSize) {
+      calMonth++;
+      if (calMonth > 12) { calMonth = 1; calYear++; }
+      return;
+    }
+
+    float topOffset = 70;
+
+    for (int d = 1; d <= days; d++) {
+    
+      int index = (start - 1) + (d - 1);
+      int col = index % 7;
+      int row = index / 7;
+    
+      float dx = x + col * cell;
+      float dy = y + row * cell + topOffset;
+    
+      if (mouseX >= dx && mouseX <= dx + cell &&
+          adjustedMouseY >= dy && adjustedMouseY <= dy + cell) {
+    
+        calendarTarget.label =
+          nf(calMonth, 2) + "/" + nf(d, 2) + "/" + calYear;
+    
+        showCalendar = false;
+        calendarTarget = null;
+        return;
+      }
+    }
+  }
+
+  // ----------------------------
+  // --- ORIGIN BUTTON CLICK ----
+  // ----------------------------
+  if (originButton.over(mouseX, adjustedMouseY)) {
+      originButton.hasError = false;
+      currentInput = originButton;
+      activeInput1 = "origin";
+      showOriginSuggestions = true;
+      updateOriginSuggestions(originButton.label);
+
+      // clear placeholder
+      if (originButton.label.equals("Origin City")) {
+          originButton.label = "";
+      }
+      return;
+  }
+
+  // ----------------------------
+  // --- DATE INPUT BUTTONS -----
+  // ----------------------------
+  if (inputButton.over(mouseX, adjustedMouseY)) {
+    showOriginSuggestions = false;
+    currentInput = inputButton;
+    calendarTarget = inputButton;
+    showCalendar = true;
+    if (inputButton.label.equals("MM/DD/YYYY")) inputButton.label = "";
+  } else if (inputButton2.over(mouseX, adjustedMouseY)) {
+    showOriginSuggestions = false;
+    currentInput = inputButton2;
+    calendarTarget = inputButton2;
+    showCalendar = true;
+    if (inputButton2.label.equals("MM/DD/YYYY")) inputButton2.label = "";
+  }
+
+  
+  
+
+  // ----------------------------
+  // --- OTHER BUTTONS ----------
+  // ----------------------------
   for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-        println("Clicked: " + b.type);
-        if (b.type.equals("backQ")) currentScreen = queries;
+    if (b.over(mouseX, adjustedMouseY)) {
+      println("Clicked: " + b.type);
 
-        if (b.type.equals("trafficOutputEastCoast")) {
-            searchEurope(); 
-            currentScreen = trafficOutputEastCoast;
-        }
-        if (b.type.equals("trafficOutputWestCoast")) {
-            searchWorldwide(); 
-            currentScreen = trafficOutputWestCoast;
-        }
-        if (b.type.equals("trafficOutputCentral")) {
-            searchAmerica(); 
-            currentScreen = trafficOutputCentral;
-        }
+      if (b.type.equals("back")) goBack();
+
+      if (b.type.equals("dateOutput")) {
+        selection.origin = originButton.label; // ensure origin is set
+        selection.dateStart = inputButton.label;
+        selection.dateEnd = inputButton2.label;
+
+        searchFlightsByDate(); // your screen method
       }
     }
   }
 }
+}
+class TrafficScreen extends Screen {
+
+  ArrayList<Route> east;
+  ArrayList<Route> central;
+  ArrayList<Route> west;
+  RegionPieChart eastPie;
+  RegionPieChart westPie;
+  RegionPieChart centralPie;
+
+  String currentZone = "East";
+
+  Button backBtn;
+  Button eastBtn, centralBtn, westBtn;
+
+  float[] routeRowY = new float[0];  // fixed declaration
+
+  TrafficScreen(ArrayList<Route> east,
+    ArrayList<Route> central,
+    ArrayList<Route> west) {
+    title = "Traffic Analytics";
+    this.east = east;
+    this.central = central;
+    this.west = west;
+    eastPie    = new RegionPieChart(eastCoastAirports);
+    centralPie = new RegionPieChart(centralAirports);
+    westPie    = new RegionPieChart(westCoastAirports);
+
+    backBtn    = new Button(30, 22, 80, 30, "BACK", "back", 15, false);
+    buttons.add(backBtn);
+
+
+    int buttonW = width/3 - 30;
+
+    // Zone selection buttons
+
+
+    int buttonH = 30;
+    int spacing = 10;
+    int y       = 75;
+    int xStart  = width/2 - buttonW*3/2 - spacing;
+     
+    eastBtn    = new Button(xStart,                      y, buttonW, buttonH, "EAST-COAST", "east",    16, false);
+    centralBtn = new Button(xStart + buttonW + spacing,  y, buttonW, buttonH, "CENTRAL",    "central", 16, false);
+    westBtn    = new Button(xStart + (buttonW+spacing)*2,y, buttonW, buttonH, "WEST-COAST", "west",    16, false);
+
+    buttons.add(eastBtn);
+    buttons.add(centralBtn);
+    buttons.add(westBtn);
+  }
+
+  void drawContent() {
+    ui.drawNavbar(title);
+
+    for (Button b : buttons) {
+      if      (b == eastBtn    && currentZone.equals("East"))    highlightButton(b);
+      else if (b == centralBtn && currentZone.equals("Central")) highlightButton(b);
+      else if (b == westBtn    && currentZone.equals("West"))    highlightButton(b);
+      else b.display();
+    }
+
+    ArrayList<Route> currentList;
+    String zoneTitle;
+    if (currentZone.equals("East")) {
+      currentList = east;
+      zoneTitle   = "EAST COAST";
+    } else if (currentZone.equals("Central")) {
+      currentList = central;
+      zoneTitle   = "CENTRAL";
+    } else {
+      currentList = west;
+      zoneTitle   = "WEST COAST";
+    }
+
+    drawRoutesPanel(zoneTitle, currentList);
+
+   backBtn.display();
+    if      (currentZone.equals("East"))    eastPie.draw(width - 420, 150);
+    else if (currentZone.equals("Central")) centralPie.draw(width - 420, 150);
+    else if (currentZone.equals("West"))    westPie.draw(width - 420, 150);
+    backBtn.display(); 
+    if (currentZone.equals("East")) {
+      eastPie.draw(width - 420, 150);
+    } else if (currentZone.equals("Central")) {
+      centralPie.draw(width - 420, 150);
+    } else if (currentZone.equals("West")) {
+      westPie.draw(width - 420, 150);
+    }
+
+  }
+
+  void highlightButton(Button b) {
+    fill(255, 215, 0);
+    rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
+    b.display();
+  }
+
+  void drawRoutesPanel(String title, ArrayList<Route> routes) {
+    float panelWidth  = width - 50;
+    float panelHeight = 560;
+    float x           = panelWidth/2 + 25;
+    float yStart      = 120;
+    float rowH        = 28;
+
+    fill(RY_BG);
+    rectMode(CENTER);
+    rect(x, yStart + panelHeight/2, panelWidth, panelHeight, 20);
+    rectMode(CORNER);
+
+    fill(0);
+    textAlign(CENTER);
+    textSize(30);
+    text(title, x, yStart + 40);
+
+    fill(100);
+    textSize(13);
+    textAlign(LEFT);
+    float lx = x - panelWidth/2 + 20;
+    text("RANK           ROUTE                                                                 FLIGHTS      CANCEL%   DELAY%           ONTIME%", lx, yStart + 75);
+
+    stroke(180);
+    line(lx, yStart + 85, x + panelWidth/2 - 20, yStart + 85);
+    noStroke();
+
+    float y  = yStart + 100;
+    int rank = 1;
+
+    routeRowY = new float[routes.size()];
+
+    for (int i = 0; i < routes.size(); i++) {
+      Route r = routes.get(i);
+      routeRowY[i] = y;
+
+      boolean hovering = mouseX > lx && mouseX < x + panelWidth/2 - 20 &&
+                         mouseY > y  && mouseY < y + rowH;
+      if (hovering) {
+        fill(200, 220, 255, 150);
+        noStroke();
+        rect(lx - 5, y - 2, panelWidth - 30, rowH, 5);
+        cursor(HAND);
+      }
+
+      fill(30);
+      textSize(14);
+      textAlign(LEFT);
+      text(rank + ".", lx, y + 18);
+      text(r.origin + " > " + r.destination, lx + 40, y + 18);
+ 
+      textAlign(RIGHT);
+      fill(50);
+      text(r.passengers, lx + 280, y + 18);
+      
+      fill(r.cancelRate > 10 ? color(220,50,50) :
+           r.cancelRate > 5  ? color(255,160,0) : color(40,180,40));
+      text(nf(r.cancelRate, 1, 1) + "%", lx + 360, y + 18);
+
+      fill(r.delayRate > 20 ? color(220,50,50) :
+           r.delayRate > 10 ? color(255,160,0) : color(40,180,40));
+      text(nf(r.delayRate, 1, 1) + "%", lx + 430, y + 18);
+
+      fill(r.onTimeRate > 80 ? color(40,180,40) :
+           r.onTimeRate > 60 ? color(255,160,0) : color(220,50,50));
+      text(nf(r.onTimeRate, 1, 1) + "%", lx + 510, y + 18);
+
+      stroke(200, 80);
+      line(lx, y + rowH, x + panelWidth/2 - 20, y + rowH);
+      noStroke();
+
+      y += rowH;
+      rank++;
+      if (y > yStart + panelHeight - 20) break;
+    }
+  }
+
+  void mousePressed() {
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY)) {
+        if (b.type.equals("back"))    goBack();
+        if (b.type.equals("east"))    currentZone = "East";
+        if (b.type.equals("central")) currentZone = "Central";
+        if (b.type.equals("west"))    currentZone = "West";
+      }
+    }
+
+    // Check route row clicks
+    ArrayList<Route> currentList = currentZone.equals("East")    ? east :
+                                   currentZone.equals("Central") ? central : west;
+
+    float panelWidth = width - 50;
+    float lx         = 45; // x - panelWidth/2 + 20 = (panelWidth/2+25) - panelWidth/2 + 20
+
+    for (int i = 0; i < routeRowY.length && i < currentList.size(); i++) {
+      if (mouseX > lx && mouseX < lx + panelWidth - 30 &&
+          mouseY > routeRowY[i] && mouseY < routeRowY[i] + 28) {
+        selectedRoute = currentList.get(i);
+        goTo(routeDetails);
+        return;
+      }
+    }
+  } 
+
+} 
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
 class FlightsOutputScreen extends Screen {
 
+  float scrollY = 0;        // current scroll offset
+  float scrollSpeed = 40;   // how much the list scrolls per mouse wheel tick
+  float cardHeight = 110;   // height of each flight card
+  float topMargin = 110;    // space from top before first card
+
   FlightsOutputScreen() {
-    int buttonW = 100;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backQueries", 20, true));
-    textAlign(CORNER);
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
-  void drawBackground() {
-    background(240, 220, 255);
-    fill(0);
-    textSize(40);
+  void drawContent() {
+    background(RY_BG);
+    fill(RY_BLUE);
+    noStroke();
+    rect(0, 0, width, 80); // header
+
+    // Header Content
+    fill(255);
     textAlign(CENTER, CENTER);
-    text("--FLIGHTS FOUND--", width/2, 80);
     textSize(24);
-    text(flightsFound, width-250,100);
+    String route = selection.origin.toUpperCase() + " → " + selection.destination.toUpperCase();
+    text(route, width/2, 35);
+
+    textSize(14);
+    fill(255, 200);
+    text(results.size() + " flights found • " + selection.dateStart + " - " + selection.dateEnd, width/2, 60);
+    
+    for (Button b : buttons) b.display();
+
+    // --- Draw the flights with scrolling & clipping ---
+    pushMatrix();
+    clip(0, 80, width, height - 80); // clip below header (header height = 80)
+    translate(0, scrollY); // scroll
+    if (results.size() > 0) {
+      for (int i = 0; i < results.size(); i++) {
+        drawFlightCard(width/2 - 450, topMargin + i * cardHeight, results.get(i));
+      }
+    } else {
+      drawEmptyState();
+    }
+    popMatrix(); // restores matrix and removes clip automatically
 
   }
-  void draw() {
-    drawBackground();
-    for (Button b : buttons) {
-      b.display();
+
+  void drawFlightCard(float x, float y, Flight f) {
+    float w = 900;
+    float h = 100;
+
+    fill(255);
+    stroke(220);
+    strokeWeight(1);
+    rect(x, y, w, h, 8);
+
+    fill(RY_BLUE);
+    textAlign(LEFT, TOP);
+    textSize(12);
+    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
+
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(18);
+    text(f.origin + " → " + f.destination, x + 20, y + 50);
+
+    textSize(14);
+    fill(120);
+    text("Departure: " + formatTime(f.scheduledDepartureTime), x + 20, y + 75);
+    text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
+
+    // SELECT button
+    boolean isAlreadyBooked = bookedFlights.contains(f);
+
+    if (isAlreadyBooked)
+    {
+      fill(180); // Gray color
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("SELECTED", x + w - 70, y + 50);
+    } else
+    {
+      fill(RY_GOLD);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(16);
+      text("SELECT", x + w - 70, y + 50);
     }
-    myFlights.display();
   }
+
+  void drawEmptyState() {
+    fill(150);
+    textAlign(CENTER);
+    textSize(20);
+    text("No flights found for this route or date.", width/2, height/2);
+  }
+  boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+    float selectX = cardX + cardW - 120;
+    float selectY = cardY + 25;
+    float selectW = 100;
+    float selectH = 50;
+  
+    // ✅ Adjust for scroll offset
+    float adjustedMouseY = mouseY - scrollY;
+  
+    return (
+      mouseX > selectX &&
+      mouseX < selectX + selectW &&
+      adjustedMouseY > selectY &&
+      adjustedMouseY < selectY + selectH
+    );
+  }
+
+
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("backQueries")) currentScreen = queries;
-    }
+  
+      // --- BACK button ---
+      for (Button b : buttons) {
+          if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+              goBack();
+              return; // stop further checks if back pressed
+          }
+      }
+  
+      // --- Flight SELECT buttons ---
+      for (int i = 0; i < results.size(); i++) {
+          float cardX = width/2 - 450;
+          float cardY = topMargin + i * cardHeight;
+          float cardW = 900;
+  
+          if (clickedSelectButton(cardX, cardY, cardW)) {
+              Flight selected = results.get(i);
+  
+              if (!bookedFlights.contains(selected)) {
+                  bookedFlights.add(selected);
+                  println("Flight added!");
+  
+                  // Show confirmation screen
+                  ArrayList<Flight> justBooked = new ArrayList<Flight>();
+                  justBooked.add(selected);
+                  flightConfirmedScreenObj.start();
+                  goTo(flightConfirmedScreen);
+              } else {
+                  println("Already in your list!");
+              }
+          }
+      }
   }
+
+  // SCROLLING with mouse wheel
+
+  void scrollFlights(float e) {
+    scrollY += -e * scrollSpeed;
+
+    // Limit scrolling so content doesn't go too far
+    float minScroll = min(0, height - (topMargin + results.size() * cardHeight));
+    scrollY = constrain(scrollY, minScroll, 0);
   }
 }
-class DatesOutputScreen extends Screen {
+class TwoWayFlightsOutputScreen extends Screen {
 
-  DatesOutputScreen() {
-    int buttonW = 100;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backQueries", 20, true));
-    textAlign(CORNER);
+  ArrayList<Flight> outboundFlights;
+  ArrayList<Flight> returnFlights;
+
+  int selectedOutbound = -1;
+  int selectedReturn = -1;
+
+  float scrollY = 0;
+  float cardHeight = 110;
+  float topMargin = 130;
+  float scrollSpeed = 40;
+
+  ArrayList<Button> buttons;
+
+  TwoWayFlightsOutputScreen(ArrayList<Flight> outbound, ArrayList<Flight> ret) {
+    this.outboundFlights = outbound;
+    this.returnFlights = ret;
+
+    buttons = new ArrayList<Button>();
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
+    // Removed redundant corner "Select" button
   }
 
-  void drawBackground() {
-    background(240, 220, 255);
-    fill(0);
-    textSize(40);
+  void setFlights(ArrayList<Flight> outbound, ArrayList<Flight> ret) {
+    this.outboundFlights = outbound;
+    this.returnFlights = ret;
+    selectedOutbound = -1;
+    selectedReturn = -1;
+    scrollY = 0;
+  }
+
+  void drawContent() {
+    background(RY_BG);
+  
+    // --- FIXED HEADER ---
+    fill(RY_BLUE);
+    noStroke();
+    rect(0, 0, width, 80);
+  
+    fill(255);
     textAlign(CENTER, CENTER);
-    text("--FLIGHTS FOUND WITHIN DATE RANGE--", width/2, 80);
     textSize(24);
-    text(flightsFound, width-250,120);
+    String route = selection.origin.toUpperCase() + " → " + selection.destination.toUpperCase();
+    text(route, width / 2, 35);
+  
+    textSize(14);
+    fill(255, 200);
+    text(outboundFlights.size() + " outbound flights • " + selection.dateStart +
+      (selection.dateEnd.isEmpty() ? "" : " - " + selection.dateEnd),
+      width / 2, 60);
+    
+    for (Button b : buttons) b.display();
 
-  }
-  void draw() {
-    drawBackground();
-    for (Button b : buttons) {
-      b.display();
+    // --- SCROLLABLE CONTENT ---
+    pushMatrix();
+    clip(0, 80, width, height - 80); // clip below header
+    translate(0, scrollY + 80); // scroll offset + header
+  
+    float yOffset = 10;
+  
+    // Outbound flights title
+    fill(0);
+    textAlign(LEFT, TOP);
+    textSize(18);
+    text("Outbound Flights", width / 2 - 450, yOffset - 40);
+  
+    if (selectedOutbound >= 0) {
+      drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(selectedOutbound), "outbound", selectedOutbound);
+      yOffset += cardHeight;
+    } else {
+      for (int i = 0; i < outboundFlights.size(); i++) {
+        drawFlightCard(width / 2 - 450, yOffset, outboundFlights.get(i), "outbound", i);
+        yOffset += cardHeight;
+      }
     }
-    myFlights.display();
+  
+    yOffset += 40; // spacing before return flights
+  
+    fill(0);
+    textSize(18);
+    text("Return Flights", width / 2 - 450, yOffset - 40);
+  
+    for (int i = 0; i < returnFlights.size(); i++) {
+      drawFlightCard(width / 2 - 450, yOffset, returnFlights.get(i), "return", i);
+      yOffset += cardHeight;
+    }
+  
+    popMatrix();
+  
   }
+
+  void drawFlightCard(float x, float y, Flight f, String type, int index) {
+    float w = 900;
+    float h = 100;
+
+    fill(255); // neutral background
+    stroke(220);
+    rect(x, y, w, h, 8);
+
+    fill(RY_BLUE);
+    textAlign(LEFT, TOP);
+    textSize(12);
+    text(f.date + " | Flight: " + f.carrier + " " + f.flightNumber, x + 20, y + 10);
+
+    textSize(18);
+    text(f.origin + " → " + f.destination, x + 20, y + 50);
+
+    textSize(14);
+    fill(120);
+    text("Departure: " + formatTime(f.scheduledDepartureTime), x + 20, y + 75);
+    text("Arrival: " + formatTime(f.scheduledArrivalTime), x + w - 200, y + 75);
+
+    // SELECT button
+    boolean isAlreadyBooked = bookedFlights.contains(f);
+    if (isAlreadyBooked) {
+      fill(180);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("SELECTED", x + w - 70, y + 50);
+    } else {
+      fill(RY_GOLD);
+      noStroke();
+      rect(x + w - 120, y + 25, 100, 50, 6);
+      fill(RY_BLUE);
+      textAlign(CENTER, CENTER);
+      textSize(16);
+      text("SELECT", x + w - 70, y + 50);
+    }
+  }
+  
+  boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+
+    float selectX = cardX + cardW - 120;
+    float selectY = cardY + 25;
+    float selectW = 100;
+    float selectH = 50;
+  
+    // ✅ Adjust for scroll offset
+    float adjustedMouseY = mouseY - scrollY -80;
+  
+    return (
+      mouseX > selectX &&
+      mouseX < selectX + selectW &&
+      adjustedMouseY > selectY &&
+      adjustedMouseY < selectY + selectH
+    );
+  }
+
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("backQueries")) currentScreen = queries;
+
+    // --- BACK button ---
+    for (Button b : buttons) {
+        if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+            goBack();
+            return; // stop further checks if back pressed
+        }
     }
-  }
+
+    float yOffset = 10;
+
+    // --- OUTBOUND flights ---
+    if (selectedOutbound >= 0) {
+        float cardX = width / 2 - 450;
+        float cardY = yOffset;
+        Flight f = outboundFlights.get(selectedOutbound);
+
+        if (clickedSelectButton(cardX, cardY, 900)) {
+            bookedFlights.remove(f);
+            selectedOutbound = -1;
+            selectedReturn = -1;
+            scrollY = 0;
+            println("Outbound flight unselected!");
+        }
+        yOffset += cardHeight;
+    } else {
+        for (int i = 0; i < outboundFlights.size(); i++) {
+            float cardX = width / 2 - 450;
+            float cardY = yOffset;
+            Flight f = outboundFlights.get(i);
+
+            if (clickedSelectButton(cardX, cardY, 900)) {
+                if (selectedOutbound >= 0) bookedFlights.remove(outboundFlights.get(selectedOutbound));
+                bookedFlights.add(f);
+                selectedOutbound = i;
+                selectedReturn = -1;
+                scrollY = 0;
+                println("Outbound flight selected!");
+            }
+            yOffset += cardHeight;
+        }
+    }
+
+    yOffset += 40; // spacing before return flights
+
+    // --- RETURN flights ---
+    for (int i = 0; i < returnFlights.size(); i++) {
+        float cardX = width / 2 - 450;
+        float cardY = yOffset;
+        Flight f = returnFlights.get(i);
+
+        if (clickedSelectButton(cardX, cardY, 900)) {
+            if (selectedReturn >= 0) bookedFlights.remove(returnFlights.get(selectedReturn));
+            bookedFlights.add(f);
+            selectedReturn = i;
+            println("Return flight selected!");
+        }
+
+        yOffset += cardHeight;
+    }
+
+    // --- Show confirmation if both selected ---
+    if (selectedOutbound >= 0 && selectedReturn >= 0) {
+        ArrayList<Flight> justBooked = new ArrayList<Flight>();
+        justBooked.add(outboundFlights.get(selectedOutbound));
+        justBooked.add(returnFlights.get(selectedReturn));
+        flightConfirmedScreenObj.start();
+        goTo(flightConfirmedScreen);
+    }
+}
+
+  void mouseWheel(MouseEvent event) {
+    scrollY += -event.getCount() * scrollSpeed;
+
+    float outboundHeight = (selectedOutbound >= 0 ? cardHeight : outboundFlights.size() * cardHeight);
+    float totalHeight = topMargin + outboundHeight + 40 + returnFlights.size() * cardHeight;
+    float minScroll = min(0, height - totalHeight);
+    scrollY = constrain(scrollY, minScroll, 0);
   }
 }
-class TrafficOutputScreenWestCoast extends Screen {
+class BookingsScreen extends Screen {
+  float scrollY = 0;
+  float scrollSpeed = 40;
+  float cardHeight = 80; // Slimmer cards for the list
+  float listX = 50;      // Positioned on the left
+  
+  Flight selectedForPass = null; // The flight currently being viewed as a boarding pass
 
-  TrafficOutputScreenWestCoast() {
-    int buttonW = 100;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
-    textAlign(CORNER);
+  BookingsScreen() {
+    buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
   }
 
-  void drawBackground() {
-    background(240, 220, 255);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES WESTCOAST--", width/2, 80);
-    textSize(24);
-
-  }
   void draw() {
-    drawBackground();
-    for (Button b : buttons) {
-      b.display();
+    background(RY_BG);
+    
+    // --- HEADER ---
+    fill(RY_BLUE);
+    rect(0, 0, width, 80);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text("MY BOOKED FLIGHTS", width/2, 40);
+
+    //  flight list
+    pushMatrix();
+    translate(0, scrollY);
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      drawFlightTab(listX, 120 + i * (cardHeight + 10), bookedFlights.get(i));
     }
-    myFlights.display();
+    popMatrix();
+
+    //  boarding pass
+    if (selectedForPass != null) {
+      drawBoardingPass(width / 2 + 50, 120, selectedForPass);
+    } else {
+      fill(150);
+      textAlign(CENTER);
+      text("Select a flight to view boarding pass", width * 0.75, height / 2);
+    }
+
+    for (Button b : buttons) b.display();
   }
+
+  // Simple card showing flights
+  void drawFlightTab(float x, float y, Flight f) {
+    boolean isSelected = (f == selectedForPass);
+    
+    fill(isSelected ? RY_GOLD : 255);
+    stroke(RY_BLUE);
+    strokeWeight(isSelected ? 2 : 1);
+    rect(x, y, width/3, cardHeight, 10);
+    
+    fill(RY_BLUE);
+    textAlign(LEFT, CENTER);
+    textSize(18);
+    text(f.origin + "  →  " + f.destination, x + 20, y + cardHeight/2);
+    
+    text(">", x + width/3 - 30, y + cardHeight/2);
+  }
+
+  void drawBoardingPass(float x, float y, Flight f) {
+    float w = 400;
+    float h = 500;
+    
+    fill(255);
+    stroke(200);
+    rect(x, y, w, h, 15);
+    
+    fill(RY_BLUE);
+    rect(x, y, w, 60, 15, 15, 0, 0);
+    fill(255);
+    textSize(20);
+    textAlign(CENTER);
+    text("BOARDING PASS", x + w/2, y + 35);
+    
+    fill(50);
+    textAlign(LEFT);
+    textSize(14);
+    float textY = y + 100;
+    
+    detailRow(x + 30, textY, "PASSENGER", "VALUED CUSTOMER");
+    detailRow(x + 30, textY + 60, "FLIGHT", f.carrier + " " + f.flightNumber);
+    detailRow(x + 30, textY + 120, "DATE", f.date);
+    detailRow(x + 30, textY + 180, "FROM", f.originCityName + " (" + f.origin + ")");
+    detailRow(x + 30, textY + 240, "TO", f.destinationCityName + " (" + f.destination + ")");
+    detailRow(x + 30, textY + 300, "DEPARTS", formatTime(f.scheduledDepartureTime));
+    
+    // Barcode
+    fill(0);
+    for(int i=0; i<w-60; i+=4) {
+      rect(x + 30 + i, y + h - 60, random(1, 3), 40);
+    }
+  }
+
+  void detailRow(float x, float y, String label, String value) {
+    fill(150);
+    textSize(12);
+    text(label, x, y);
+    fill(RY_BLUE);
+    textSize(18);
+    text(value, x, y + 25);
+  }
+
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
+    // Back Button
+    for (Button b : buttons) {
+      if (b.over(mouseX, mouseY) && b.type.equals("back")) {
+        goBack();
+        return;
+      }
     }
-  }
+
+    // List selection logic
+    for (int i = 0; i < bookedFlights.size(); i++) {
+      float cardY = 120 + i * (cardHeight + 10) + scrollY;
+      if (mouseX > listX && mouseX < listX + width/3 &&
+          mouseY > cardY && mouseY < cardY + cardHeight) {
+        selectedForPass = bookedFlights.get(i);
+      }
+    }
   }
 }
-class TrafficOutputScreenEastCoast extends Screen {
 
-  TrafficOutputScreenEastCoast() {
-    int buttonW = 100;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
-    textAlign(CORNER);
+class FlightConfirmedScreen extends Screen {
+
+  String message;
+  int timer = 0;         
+  int delayFrames = 360; 
+
+  FlightConfirmedScreen(String msg) {
+    this.message = msg;
   }
 
-  void drawBackground() {
-    background(240, 220, 255);
-    fill(0);
-    textSize(40);
+  void drawContent() {
+    background(RY_BG);
+
+    fill(RY_BLUE);
     textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES EASTCOAST--", width/2, 80);
-    textSize(24);
+    textSize(32);
+    text(message, width / 2, height / 2);
 
-  }
-  void draw() {
-    drawBackground();
-    for (Button b : buttons) {
-      b.display();
-    }
-    myFlights.display();
-  }
-  void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
+    textSize(16);
+    fill(150);
+    text("Returning to home...", width / 2, height / 2 + 40);
+
+    timer++;
+    if (timer >= delayFrames) {
+      goTo(home); 
     }
   }
-  }
+  void start() {
+  timer = 0;
 }
-class TrafficOutputScreenCentral extends Screen {
-
-  TrafficOutputScreenCentral() {
-    int buttonW = 100;
-    int buttonH = 50;
-    int x = 30;
-    int y = 22;
-    textAlign(CENTER);
-    buttons.add(new Button(x, y, buttonW - 20, buttonH - 20, "BACK", "backTraffic", 20, true));
-    textAlign(CORNER);
-  }
-
-  void drawBackground() {
-    background(240, 220, 255);
-    fill(0);
-    textSize(40);
-    textAlign(CENTER, CENTER);
-    text("--BUSIEST ROUTES CENTRAL--", width/2, 80);
-    textSize(24);
-
-  }
-  void draw() {
-    drawBackground();
-    for (Button b : buttons) {
-      b.display();
-    }
-    myFlights.display();
-  }
   void mousePressed() {
-  for (Button b : buttons) {
-    if (b.over(mouseX, mouseY)) {
-      println("Clicked: " + b.type);
-      if (b.type.equals("backTraffic")) currentScreen = flightsTraffic;
-    }
-  }
+    goTo(home);
   }
 }

@@ -1,58 +1,41 @@
+// ===== TABLE DISPLAY =====
 class TableDisplay {
   Table table;
-  float x, y, w, h;
+  float x, y;
   float rowHeight = 50;
   float colWidth = 250;
 
   TableDisplay(Table t, float x, float y) {
     this.table = t;
-    this.x = x;
-    this.y = y;
+    this.x = x; this.y = y;
   }
-//|----|-------------1200------------|----|
+
   void display() {
-    float rowHeight = 60;
-    float colWidth = 183;
-    
-    // Set global text alignment for the table
-    textAlign(CENTER, CENTER); // This centers horizontally and vertically
+    float rowH = 60;
+    float colW = (width - x*2) / table.getColumnCount();
+    textAlign(CENTER, CENTER);
     textSize(18);
-  
-    // 1. DRAW HEADER ROW
+
+    // Header
     for (int c = 0; c < table.getColumnCount(); c++) {
-      float px = x + (c * colWidth);
-      
-      // Header Box
+      float px = x + c*colW;
       fill(200);
-      rect(px, y, colWidth, rowHeight);
-      
-      // Header Text
+      rect(px, y, colW, rowH);
       fill(0);
-      // Center point = start of cell + half the width
-      text(table.getColumnTitle(c), px + (colWidth / 2), y + (rowHeight / 2));
+      text(table.getColumnTitle(c), px + colW/2, y + rowH/2);
     }
-  
-    // 2. DRAW DATA ROWS
+
+    // Data rows with alternating colors
     for (int r = 0; r < table.getRowCount(); r++) {
-      float py = y + ((r + 1) * rowHeight);
-      
+      float py = y + (r+1)*rowH;
       for (int c = 0; c < table.getColumnCount(); c++) {
-        float px = x + (c * colWidth);
-        
-        // Cell border
-        fill(255);
+        float px = x + c*colW;
+        fill(r % 2 == 0 ? 255 : 245);
         stroke(220);
-        rect(px, py, colWidth, rowHeight);
-        
-        // Cell text centered
+        rect(px, py, colW, rowH);
         fill(50);
-        // Center point = start of cell + half the width/height
-        text(table.getString(r, c), px + (colWidth / 2), py + (rowHeight / 2));
+        text(table.getString(r, c), px + colW/2, py + rowH/2);
       }
     }
   }
-  
-
-
-
 }
