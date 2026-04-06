@@ -1341,7 +1341,7 @@ class AirlineRateChart {
   float[] rates;
   String mode = "cancel";
   boolean showLegend = false;
-  int btnX = 10, btnY = 310, btnW = 160, btnH = 28;
+  int btnX = 360, btnY = 0, btnW = 160, btnH = 28;
   float drawnAtX = 0;
   float drawnAtY = 0;
 
@@ -1424,7 +1424,7 @@ class AirlineRateChart {
 
     pg.fill(200);
     pg.noStroke();
-    pg.rect(btnX, btnY, btnW, btnH, 5);
+    pg.rect(btnX , btnY, btnW, btnH, 5);
     pg.fill(0);
     pg.textAlign(CENTER, CENTER);
     pg.textSize(12);

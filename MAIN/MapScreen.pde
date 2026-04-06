@@ -154,8 +154,9 @@ class MapScreen extends Screen {
     fill(218, 224, 242);
     rect(0, headerH, width, height - headerH - footerH, 25);
 
-    fill(255);
-    textSize(35);
+    fill(150);
+    textAlign(RIGHT, CENTER);
+    textSize(26);
     text("Flight Map", width-85, headerH-30);
   }
 
