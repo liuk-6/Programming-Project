@@ -313,7 +313,7 @@ class TopAirlinesPie {
     pg.fill(120);
     pg.textSize(10);
     pg.textAlign(LEFT, TOP);
-    pg.text("click a label to highlight", lx, ly + labels.length * 20 + 6);
+    pg.text("Click a label to highlight", lx, ly + labels.length * 20 + 6);
 
     // Title
     pg.textSize(15);

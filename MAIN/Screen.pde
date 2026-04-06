@@ -419,8 +419,8 @@ class QueriesScreen extends Screen {
 
     // back (navbar style)
     buttons.add(new Button(
-      20, 22, 120, 38,
-      "BACK", "back", 16, true));
+      20, 22, 80, 30,
+      "BACK", "back", 15, false));
 
     // card buttons
     buttons.add(new Button(startX, y,
