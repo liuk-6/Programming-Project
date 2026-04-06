@@ -25,7 +25,7 @@ color TEXT_SUB  = #9AA3B2;
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
-     
+
 UILayout ui;
 
 /////////// MAIN SCREENS AT START ////////////////
@@ -181,8 +181,7 @@ ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
 PFont font;
 
 //////////////////////METHODS/////////////////////////////////////////////////////
-
-<<<<<<< HEAD
+boolean clickedSelectButton(float cardX, float cardY, float cardW) {
   float selectX = cardX + cardW - 120;
   float selectY = cardY + 25;
   float selectW = 100;
@@ -195,8 +194,7 @@ PFont font;
     mouseY < selectY + selectH
     );
 }
-=======
->>>>>>> f01303547912594156196de0e97b734afe798e14
+
 void goToWithTransition(Screen s) {
   nextScreen = s;
   transitionAlpha = 0;
@@ -227,7 +225,7 @@ void drawSearchInfoPanel() {
   text("• Explore flights by travel date", width/2, y + 120);
 }
 void goTo(int nextScreen) {
-  if(nextScreen == mapScreen){
+  if (nextScreen == mapScreen) {
     flightMapScreen.reset();
   }
   screenHistory.add(currentScreen);
@@ -352,44 +350,45 @@ void searchBusiestRoutes() {
 
 // ---- FLIGHT SEARCH METHODS ----
 void checkDepartureDateAvailability(String typedDate) {
-    DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
-    LocalDate queryDate = null;
+  DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
+  LocalDate queryDate = null;
 
-    try {
-        queryDate = LocalDate.parse(typedDate, csvFormat);
-    } catch (Exception e) {
-        flightsSearchScreen.availabilityMessage = "Invalid date format!";
-        return;
+  try {
+    queryDate = LocalDate.parse(typedDate, csvFormat);
+  }
+  catch (Exception e) {
+    flightsSearchScreen.availabilityMessage = "Invalid date format!";
+    return;
+  }
+
+  LocalDate earliestDeparture = null;
+  LocalDate latestDeparture = null;
+  boolean matchFound = false;
+
+  for (Flight f : flightsList) {
+    LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
+
+    // Track earliest and latest departures
+    if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
+    if (latestDeparture == null || flightDate.isAfter(latestDeparture)) latestDeparture = flightDate;
+
+    // Check if any flight matches the typed date
+    if (flightDate.equals(queryDate)) {
+      matchFound = true;
+      break;
     }
+  }
 
-    LocalDate earliestDeparture = null;
-    LocalDate latestDeparture = null;
-    boolean matchFound = false;
-
-    for (Flight f : flightsList) {
-        LocalDate flightDate = LocalDate.parse(f.date, csvFormat);
-
-        // Track earliest and latest departures
-        if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
-        if (latestDeparture == null || flightDate.isAfter(latestDeparture)) latestDeparture = flightDate;
-
-        // Check if any flight matches the typed date
-        if (flightDate.equals(queryDate)) {
-            matchFound = true;
-            break;
-        }
+  if (!matchFound) {
+    String msg = "No flights available for " + typedDate + ".\n";
+    if (earliestDeparture != null && latestDeparture != null) {
+      msg += "Valid departure dates: " + earliestDeparture.format(csvFormat) +
+        " - " + latestDeparture.format(csvFormat);
     }
-
-    if (!matchFound) {
-        String msg = "No flights available for " + typedDate + ".\n";
-        if (earliestDeparture != null && latestDeparture != null) {
-            msg += "Valid departure dates: " + earliestDeparture.format(csvFormat) +
-                   " - " + latestDeparture.format(csvFormat);
-        }
-        flightsSearchScreen.availabilityMessage = msg;
-    } else {
-        flightsSearchScreen.availabilityMessage = ""; // Clear message if flights exist
-    }
+    flightsSearchScreen.availabilityMessage = msg;
+  } else {
+    flightsSearchScreen.availabilityMessage = ""; // Clear message if flights exist
+  }
 }
 
 
@@ -412,26 +411,26 @@ void generateFlightCards() {
 // CLEAN CITY NAME METHOD
 // -------------------------
 String cleanCityName(String city) {
-    if (city == null) return "";
-    // Remove uppercase initials at start (e.g., "NY - New York")
-    city = city.replaceAll("^[A-Z]{1,3}\\s*-?\\s*", "");
-    // Remove uppercase initials at end (e.g., "New York - NY")
-    city = city.replaceAll("\\s*-?\\s*[A-Z]{1,3}$", "");
-    return city.trim();
+  if (city == null) return "";
+  // Remove uppercase initials at start (e.g., "NY - New York")
+  city = city.replaceAll("^[A-Z]{1,3}\\s*-?\\s*", "");
+  // Remove uppercase initials at end (e.g., "New York - NY")
+  city = city.replaceAll("\\s*-?\\s*[A-Z]{1,3}$", "");
+  return city.trim();
 }
 
-  String capitalizeWords(String str) {
-      if (str == null || str.isEmpty()) return "";
-      String[] words = str.trim().toLowerCase().split("\\s+"); // split by spaces
-      StringBuilder sb = new StringBuilder();
-      for (int i = 0; i < words.length; i++) {
-          if (words[i].length() == 0) continue;
-          sb.append(Character.toUpperCase(words[i].charAt(0))); // first letter uppercase
-          if (words[i].length() > 1) sb.append(words[i].substring(1)); // rest lowercase
-          if (i < words.length - 1) sb.append(" "); // add space between words
-      }
-      return sb.toString();
+String capitalizeWords(String str) {
+  if (str == null || str.isEmpty()) return "";
+  String[] words = str.trim().toLowerCase().split("\\s+"); // split by spaces
+  StringBuilder sb = new StringBuilder();
+  for (int i = 0; i < words.length; i++) {
+    if (words[i].length() == 0) continue;
+    sb.append(Character.toUpperCase(words[i].charAt(0))); // first letter uppercase
+    if (words[i].length() > 1) sb.append(words[i].substring(1)); // rest lowercase
+    if (i < words.length - 1) sb.append(" "); // add space between words
   }
+  return sb.toString();
+}
 
 
 
