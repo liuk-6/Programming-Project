@@ -10,7 +10,7 @@ class Screen {
 
     for (Button b : buttons)
       b.display();
-    //drawContent();
+      drawContent();
 
     drawImages();
   }
@@ -782,13 +782,32 @@ class QueriesFlights extends Screen {
               String flightOriginCity = cleanCityName(f.originCityName).toLowerCase();
               String flightDestCity   = cleanCityName(f.destinationCityName).toLowerCase();
   
-              // Track earliest/latest for messages
-              if (earliestDeparture == null || flightDate.isBefore(earliestDeparture)) earliestDeparture = flightDate;
-              if (latestDeparture   == null || flightDate.isAfter(latestDeparture))   latestDeparture   = flightDate;
-  
-              if (end != null) {
-                  if (earliestReturn == null || flightDate.isBefore(earliestReturn)) earliestReturn = flightDate;
-                  if (latestReturn   == null || flightDate.isAfter(latestReturn))   latestReturn   = flightDate;
+             // ---------- TRACK VALID DATE RANGES (ROUTE-SPECIFIC) ----------
+
+              // Forward route (departure dates)
+              boolean sameRouteForward =
+                  (flightOriginCode.equals(userOrigin) || flightOriginCity.contains(userOrigin)) &&
+                  (flightDestCode.equals(userDest) || flightDestCity.contains(userDest));
+              
+              if (sameRouteForward) {
+                  if (earliestDeparture == null || flightDate.isBefore(earliestDeparture))
+                      earliestDeparture = flightDate;
+              
+                  if (latestDeparture == null || flightDate.isAfter(latestDeparture))
+                      latestDeparture = flightDate;
+              }
+              
+              // Reverse route (return dates)
+              boolean sameRouteReturn =
+                  (flightOriginCode.equals(userDest) || flightOriginCity.contains(userDest)) &&
+                  (flightDestCode.equals(userOrigin) || flightDestCity.contains(userOrigin));
+              
+              if (end != null && sameRouteReturn) {
+                  if (earliestReturn == null || flightDate.isBefore(earliestReturn))
+                      earliestReturn = flightDate;
+              
+                  if (latestReturn == null || flightDate.isAfter(latestReturn))
+                      latestReturn = flightDate;
               }
   
               // ---------- CHECK ROUTE EXISTS ----------
