@@ -1110,13 +1110,13 @@ boolean validateSearchInputs() {
 
     // ---------- VALIDATE ORIGIN & DESTINATION ----------
     if (!isValidOrigin(originInput)) {
-        messages.add("Please enter a valid origin (city, airport code, or both)!");
+        messages.add("Please enter a valid origin (city)!");
         inputFrom.hasError = true;
         inputFrom.triggerError();
     }
 
     if (!isValidDestination(destInput)) {
-        messages.add("Please enter a valid destination (city, airport code, or both)!");
+        messages.add("Please enter a valid destination (city)!");
         inputTo.hasError = true;
         inputTo.triggerError();
     }
@@ -1858,7 +1858,7 @@ class QueriesDate extends Screen {
     if (!isValidOrigin(originInput)) {
 
         availabilityMessage =
-            "Invalid origin. Please enter a valid city or airport code.";
+            "Invalid origin. Please enter a valid city.";
     
         originButton.hasError = true;   // 🔴 red border
         originButton.triggerError();    // 💥 shake
