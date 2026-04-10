@@ -1,4 +1,4 @@
-class FlightCard {    
+class FlightCard {    // Samuel Cumani, 04/04/2026, Card that shows a flight object with a select button to add the flight to the booked array
   float x, y, w, h;
   Flight f;
 
