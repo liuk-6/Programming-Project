@@ -11,7 +11,6 @@ class GraphDashboardScreen extends Screen {    // continuous code
   AirlineRateChart cancelRateChart;
   AirlineRateChart delayRateChart;
   HashMap<String, AirlineStats> airlineStats;
-                                    // } Sophie 1/4 {
   String activePieView = "Overall Flights";
     // --- NEW: Airport search pie chart fields ---
   String airportSearchInput = "";        // what the user has typed
