@@ -1,3 +1,5 @@
+//written by: Diya Reddy Sama
+
 class MapScreen extends Screen {
 
   // Core objects
@@ -12,7 +14,7 @@ class MapScreen extends Screen {
 
   FlightLocation hoveredFlight = null;
 
-  // ── Setup ─────────────────────────────────────────────────────
+  // Setup 
   MapScreen() {
 
     // Layout measurements
@@ -48,7 +50,7 @@ class MapScreen extends Screen {
     panel.setFlight(null);
     airportSearch.clear();
   }
-  // ── Draw loop ─────────────────────────────────────────────────
+  // Draw loop
   void draw() {
     background(14, 42, 71);
 
@@ -84,7 +86,7 @@ class MapScreen extends Screen {
     for  (Button b : buttons) b.display();
   }
 
-  // ── Draw airport dots and hover tooltips ──────────────────────
+  // Draw airport dots and hover tooltips
   void drawAirports() {
     for (String code : locationManager.locations.keySet()) {
       PVector geo    = locationManager.getCoords(code);
@@ -138,7 +140,7 @@ class MapScreen extends Screen {
     }
   }
 
-  // ── Header / footer / content background ─────────────────────
+  // Header / footer / content background
   void drawLayout() {
     noStroke();
 
@@ -160,7 +162,7 @@ class MapScreen extends Screen {
     text("Flight Map", width-85, headerH-30);
   }
 
-  // ── Small box showing the currently selected airport ─────────
+  //Small box showing the currently selected airport
   void drawSelectedAirportBox() {
     if (selectedAirport == null) return;
 
@@ -184,7 +186,7 @@ class MapScreen extends Screen {
     textSize(11);
     text(cityName, x + 10, y + 52);
 
-    // ── Clear button ─────────────────────────────────────────────
+    // Clear button
     float btnX = x + 175;
     float btnY = y + 8;
     float btnW = 35;
@@ -210,7 +212,7 @@ class MapScreen extends Screen {
     return "";
   }
 
-  // Add this helper method to MapScreen:
+
   boolean checkClearButtonClick(float mx, float my) {
     if (selectedAirport == null) return false;
     float x    = 20;
@@ -221,7 +223,7 @@ class MapScreen extends Screen {
     float btnH = 35;
     return mx > btnX && mx < btnX + btnW && my > btnY && my < btnY + btnH;
   }
-  // ── Returns flights that match the active airport + status filters ──
+  // Returns flights that match the active airport + status filters 
   ArrayList<FlightLocation> getVisibleFlights() {
     ArrayList<FlightLocation> visible = new ArrayList<FlightLocation>();
 
@@ -241,7 +243,7 @@ class MapScreen extends Screen {
     return visible;
   }
 
-  // ── Check if user clicked on an airport dot ──────────────────
+  // Check if user clicked on an airport dot
   String checkAirportClick(float mx, float my) {
     for (String code : locationManager.locations.keySet()) {
       if (!manager.allowedAirports.contains(code)) continue;
@@ -259,7 +261,7 @@ class MapScreen extends Screen {
     airportSearch.handleScroll(mouseX, mouseY, event.getCount());
   }
 
-  // ── Mouse click handler ───────────────────────────────────────
+  //  Mouse click handler
   void mousePressed() {
 
     for (Button b : buttons) {
@@ -290,7 +292,7 @@ class MapScreen extends Screen {
     if (airportSearch.focused || airportSearch.dropOpen) return;
 
 
-    // 1. Check legend buttons first
+    // Check legend buttons first
     String legendClick = legend.checkClick(mouseX, mouseY);
     if (legendClick != null) {
       statusFilter = legendClick;
@@ -298,7 +300,7 @@ class MapScreen extends Screen {
       return;
     }
 
-    // 2. Check airport dots
+    // Check airport dots
     String airport = checkAirportClick(mouseX, mouseY);
     if (airport != null) {
       // Toggle: clicking the same airport deselects it
@@ -308,7 +310,7 @@ class MapScreen extends Screen {
       return;
     }
 
-    // 3. Check flight arcs
+    // Check flight arcs
     FlightLocation clicked = interaction.checkClick(
       getVisibleFlights(), mouseX, mouseY, world);
     panel.setFlight(clicked);

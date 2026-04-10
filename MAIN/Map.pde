@@ -1,4 +1,6 @@
-// FlightLocation //<>//
+// written by: Diya Reddy Sama //<>//
+
+// FlightLocation
 // Represents a single flight that has been geo-resolved and status-labelled.
 // Responsible for drawing itself as a curved arc on the map.
 class FlightLocation {
@@ -71,7 +73,7 @@ class FlightLocation {
     quadraticVertex(cx, cy, p2.x, p2.y);
     endShape();
   }
-}
+}                                                                                                     // Diya Reddy Sama - 19/03/2025 - created flightLocation class
 // FlightManager
 // Loads raw flight rows from a CSV table, resolves coordinates via LocationManager, computes each flight's status, 
 // and provides a filtered view of the resulting FlightLocation list.
@@ -166,7 +168,7 @@ class FlightManager {
   int timeToMinutes(int t) {
     return (t / 100) * 60 + (t % 100);
   }
-}
+}                                                                                                            // Diya Reddy Sama - 19/03/2026 - created FlightManager
 
 // InfoPanel
 // Renders a floating card showing details of the currently selected flight.
@@ -221,7 +223,7 @@ class InfoPanel {
     if (parts.length != 3) return raw;  // return unchanged if format is unexpected
     return parts[1] + "/" + parts[0] + "/" + parts[2];
   }
-}
+}                                                                                          // Diya Reddy Sama - 19/03/2025 - created info panel
 
 // InteractionManager
 // Checks if mouse clicks or hovers against the set of visible flight arcs.
@@ -271,7 +273,8 @@ class InteractionManager {
     }
     return minDist;
   }
-}
+}                                                                                                  // Diya Reddy Sama - 19/03/2025 - created interaction manager 
+
 
 // Legend
 // Draws the colour-key overlay and handles clicks that toggle the statusFilter variable in the main sketch.
@@ -326,7 +329,7 @@ class Legend {
   boolean over(float mx, float my, float x, float y, float w, float h) {
     return mx > x && mx < x + w && my > y && my < y + h;
   }
-}
+}                                                                                                // Diya Reddy Sama - 25/03/2026 - created legend and filtering by status 
 
 // LocationManager
 // Loads and stores a mapping from IATA airport code → (lat, lon).
@@ -367,7 +370,7 @@ class LocationManager {
   boolean hasLocation(String code) {
     return locations.containsKey(code);
   }
-}
+}                                                                                                  // Diya Reddy Sama - 24/03/2025 - filter by airports
 
 // WorldMap
 // Wraps a USA SVG file and provides two services:
@@ -401,7 +404,7 @@ class WorldMap {
     float offsetY = y + (h - svgHeight * scale) / 2;
     shape(mapShape, offsetX, offsetY, svgWidth * scale, svgHeight * scale);
   }
-
+                                                                                          // Diya Reddy Sama - 3/04/2025 - made map more accurate
   // Convert geographic coordinates to screen pixels.
   // Uses a Web Mercator projection to match how MapSVG placed the paths, then maps from SVG space into the on-screen content rectangle.  
   PVector geoToScreen(float lat, float lon,
@@ -427,7 +430,7 @@ class WorldMap {
       offsetY + (py - svgMinY) * scale
       );
   }
-}
+}                                                                                               // Diya Reddy SAma - 18/03/2025 - created map display 
 
 // AirportSearch
 // A self-contained search widget: text field + Search button + scrollable dropdown.  
@@ -662,7 +665,7 @@ class AirportSearch {
     focused  = false;
     dropOpen = false;
     return null;
-  }
+  }                                                                                        // Diya Reddy Sama - 4/04/2025 - added search feature 
 
   // Helpers for search 
 
