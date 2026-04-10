@@ -1,4 +1,4 @@
-class FlightCard {
+class FlightCard {    
   float x, y, w, h;
   Flight f;
 
@@ -16,7 +16,7 @@ class FlightCard {
       mouseX > x && mouseX < x + w &&
       mouseY > y && mouseY < y + h;
 
-    // ✅ unified selection system
+    // unified selection system
     boolean isSelected = bookedFlights.contains(f);
 
     // Card background

@@ -1,4 +1,4 @@
-class UILayout {
+class UILayout { //---------------- Nicolas -- 16/03/26 - 30/03/26 --- creates a standard design for every screen
 
   final int NAV_HEIGHT = 80;
   final int PAGE_PADDING = 40;
