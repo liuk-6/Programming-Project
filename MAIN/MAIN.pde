@@ -80,7 +80,7 @@ float footerH;
 String statusFilter = "ALL";
 String selectedAirport = null;  // currently selected airport code
 
-//---------------AIRPORT REGIONS ----------------------------
+//---------------AIRPORT REGIONS ---------------------------- (Sebastian Aleman - hardcoding divides of regions of the US)
 String[] westCoastAirports = {
   "LAX", "SFO", "SAN", "OAK", "SJC", "BUR", "LGB", "SNA", "SMF", "ONT", "SBA", "MRY", "FAT", "PSP", "SCK", "SMX",
   "PDX", "SEA", "EUG", "MFR", "BLI", "GEG",
@@ -111,7 +111,7 @@ String[] centralAirports = {
   "BHM"
 };
 
-////////////TABLE FOR ROUTES DISPLAY//////////////
+////////////TABLE FOR ROUTES DISPLAY////////////// (Sebastian Aleman -creating the table that will be displayed containing the routes)
 Table myTrafficData;
 TableDisplay myTrafficRoutes;
 
@@ -307,7 +307,8 @@ ArrayList<Route> computeTopRoutes(String[] airports, int topN) {
     }
   }
 
-  ArrayList<String> keys = new ArrayList<String>(counts.keySet());
+  ArrayList<String> keys = new ArrayList<String>(counts.keySet()); //(Sebastian Aleman 17/3- used collection to tidy up the data and extract needed are more efficiently)
+
   Collections.sort(keys, (a, b) -> counts.get(b) - counts.get(a));
 
   ArrayList<Route> routes = new ArrayList<Route>();
@@ -328,7 +329,7 @@ ArrayList<Route> computeTopRoutes(String[] airports, int topN) {
   }
   return routes;
 }
-
+                                                              //(Sebastian Aleman- 22/3- computes top 15 airports in given region)
 void loadRouteData() {
   eastCoastRoutes = computeTopRoutes(eastCoastAirports, 15);
   westCoastRoutes = computeTopRoutes(westCoastAirports, 15);
@@ -408,8 +409,9 @@ void generateFlightCards() { // --------- Nicolas - 30/03/26
   }
 }
 
-// CLEAN CITY NAME METHOD
-String cleanCityName(String city) {    // ----Nicolas - 06/04/26
+// CLEAN CITY NAME METHOD  
+String cleanCityName(String city) {    // ----Nicolas - 06/04/26 & Sebastian Aleman -18/3 drop down effect and autofilling for search bar 
+
   if (city == null) return "";
   // Remove uppercase initials at start (e.g., "NY - New York")
   city = city.replaceAll("^[A-Z]{1,3}\\s*-?\\s*", "");
@@ -433,7 +435,8 @@ String capitalizeWords(String str) {   // --------Nicolas - 06/04/26
 
 
 
-// ---- DRAWING METHODS FOR TRAFFIC PANEL ----
+// ---- DRAWING METHODS FOR TRAFFIC PANEL ---- // (Sebastian Aleman- 19/3 - function to call when drawing traffic panel )
+
 void drawPanel() {
   background(RY_BLUE);
 
@@ -484,6 +487,7 @@ void setup() {
 
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
+                                                     //(Sebastian Aleman 18/3 - calling all the needed screens for traffic analysis) 
 
   //////////////////// Screens //////////////////////-------------- Nicolas - 16/03/26 - 30/03/26 --- 
   currentScreen            = home;
@@ -590,7 +594,7 @@ void draw() { //--------------------- Nicolas - 23/03/26
   if (currentScreenObject != null) currentScreenObject.draw();
 
 
-  // Traffic panel drawn ON TOP only on traffic output screens
+  // Traffic panel drawn ON TOP only on traffic output screens ----  (Sebastian Aleman - 20/3 - calling previous function to visualise traffic screen)
   if (currentScreen == trafficOutputEastCoast) {
     drawPanel();
     drawSingleZone(eastCoastRoutes, "EAST COAST", color(135, 206, 250, 180));

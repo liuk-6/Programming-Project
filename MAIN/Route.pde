@@ -1,4 +1,4 @@
-class Route {
+class Route {  // ---- (// Sebastian Aleman - 27/3 - initialise variables)
   String origin;
   String destination;
   int passengers;
