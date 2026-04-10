@@ -1,5 +1,5 @@
-class Booking {
-  Flight flight;
+class Booking { // Samuel Cumani, 04/04/2026, Returns a simple string representation for display in BookingsScreen
+  Flight flight; 
   String passengerName;
 
   Booking(Flight flight, String passengerName) {
@@ -7,7 +7,7 @@ class Booking {
     this.passengerName = passengerName;
   }
 
-  // Returns a simple string representation for display in BookingsScreen
+   
   String info() {
     return flight.flightNumber + " | " + flight.origin + " → " + flight.destination +
            " | " + flight.date + " | " + passengerName;
