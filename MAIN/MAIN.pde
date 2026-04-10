@@ -459,7 +459,7 @@ void setup() {
   textSize(18);
   ui = new UILayout();
   allFlightCards = new ArrayList<FlightCard>();
-  bookedFlights = new ArrayList<Flight>();
+  bookedFlights = new ArrayList<Flight>();                            // Samuel Cumani, 02/04/2026, save global array to save booked flights
   eastCoastRoutes = new ArrayList<Route>();
   westCoastRoutes = new ArrayList<Route>();
   centralRoutes   = new ArrayList<Route>();

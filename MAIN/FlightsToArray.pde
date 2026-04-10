@@ -1,4 +1,5 @@
-class Flight {
+class Flight                                                            // Samuel Cumani, 22/03/2026, flight class to store each flight as an object with attributes for visualization 
+{                                                                       // Revision: Nicolas Abrante, 27/03/2026, added functionality for further use 
   String date;
   String carrier;
   int flightNumber;
@@ -14,7 +15,7 @@ class Flight {
   boolean diverted;
   int distance;
 
-  // Constructor from table row
+  // Samuel Cumani, 22/03/2026, Constructor loads desired flight data (row x) from csv columns 
   Flight(int rowIndex) {
     date = table.getRow(rowIndex).getString("FL_DATE").split(" ")[0];
     carrier = table.getRow(rowIndex).getString("MKT_CARRIER");
@@ -32,8 +33,8 @@ class Flight {
     distance = table.getRow(rowIndex).getInt("DISTANCE");
   }
 
-  // Format HHMM int to "HH:mm" string
-  String formatTime(int t) {
+  // Nicolas Abrante, 27/03/2026, Format HHMM int to "HH:mm" string
+  String formatTime(int t) {                                                         
     int h = t / 100;
     int m = t % 100;
     return nf(h, 2) + ":" + nf(m, 2); // ensures two digits
@@ -45,8 +46,8 @@ class Flight {
            " Arr: " + formatTime(scheduledArrivalTime);
   }
 
-  // Get flight duration as "Xh Ym"
-  String getDuration() {
+  // Nicolas Abrante, 27/03/2026, Get flight duration as "Xh Ym"
+  String getDuration() {  
     int depMin = (scheduledDepartureTime / 100) * 60 + (scheduledDepartureTime % 100);
     int arrMin = (scheduledArrivalTime / 100) * 60 + (scheduledArrivalTime % 100);
 
