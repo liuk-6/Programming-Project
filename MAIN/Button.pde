@@ -13,7 +13,7 @@ class Button {
 
   void display() {
     boolean hovers = over(mouseX, mouseY);
-    
+                                                                                                  // Katie Liu, 27/03/2026, Added buttons to become bigger  {
     if (hovers)  {
       targetScale = 1.04;
     } else {
@@ -45,7 +45,7 @@ class Button {
       fill(0, 40);
       rect(x + 2, y + 4, w, h, 8);
     }
-
+                                                                                                        // }
     if (type.equals("flightsOutput")) {
       noStroke();
       fill(hovers ? color(255, 215, 0) : RY_YELLOW);

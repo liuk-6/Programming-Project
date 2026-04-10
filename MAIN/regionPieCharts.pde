@@ -1,4 +1,4 @@
-//  Sophie 30/3 creating pie charts about most popular pie charts {
+                                                                                    //  Sophie 30/3 creating pie charts about most popular pie charts {
 HashMap<String, String> airlineNames = new HashMap<String, String>();
 
 void loadAirlineNames() {
@@ -108,7 +108,7 @@ class TopAirlinesPie {
       values[limit] = otherTotal;
     }
 
-    color[] palette = {//Katie{
+    color[] palette = {                                                          //Katie 02/04/2026, Changed colours of Pie Charts{
       color(#f0c571),
       color(#59a89c),
       color(#0b81a2),
@@ -219,7 +219,7 @@ class TopAirlinesPie {
     }
   }
 }
-                                    //  } Sophie 16/3 creating simple pie chart to represent total flight punctuality {
+                                                                          //  } Sophie 16/3 creating simple pie chart to represent total flight punctuality {
 /////////PIE CHART///////
 class PieChart {
   float percentOnTime;
