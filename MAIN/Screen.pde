@@ -2878,7 +2878,10 @@ class TwoWayFlightsOutputScreen extends Screen {
     scrollY = constrain(scrollY, minScroll, 0);
   }
 }
-class BookingsScreen extends Screen {
+
+
+class BookingsScreen extends Screen //Samuel Cumani, 02/04/2025, added booking screen tab which shows the flights booked in the queries screen
+{
   float scrollY = 0;
   float scrollSpeed = 40;
   float cardHeight = 80; // Slimmer cards for the list
@@ -2893,7 +2896,7 @@ class BookingsScreen extends Screen {
   void draw() {
     background(RY_BG);
     
-    // --- HEADER ---
+    // header
     fill(RY_BLUE);
     rect(0, 0, width, 80);
     fill(255);
@@ -2938,7 +2941,8 @@ class BookingsScreen extends Screen {
     text(">", x + width/3 - 30, y + cardHeight/2);
   }
 
-  void drawBoardingPass(float x, float y, Flight f) {
+  void drawBoardingPass(float x, float y, Flight f) 
+  {
     float w = 400;
     float h = 500;
     
@@ -2965,7 +2969,7 @@ class BookingsScreen extends Screen {
     detailRow(x + 30, textY + 240, "TO", f.destinationCityName + " (" + f.destination + ")");
     detailRow(x + 30, textY + 300, "DEPARTS", formatTime(f.scheduledDepartureTime));
     
-    // Barcode
+    // Procedural barcode generator 
     fill(0);
     for(int i=0; i<w-60; i+=4) {
       rect(x + 30 + i, y + h - 60, random(1, 3), 40);
