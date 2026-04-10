@@ -1,4 +1,4 @@
-public class UserSelection {
+public class UserSelection {//-------------- Nicolas - 16/03/26 - 30/03/26 --- stores user selections
   String destination;
   String origin;
   String dateStart;

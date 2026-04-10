@@ -1,4 +1,4 @@
-class Button {
+class Button {  //-------------- Nicolas - 23/03/26 - 30/03/26
   float x, y, w, h;
   String label, type;
   int textSize;
@@ -112,7 +112,7 @@ class Button {
 }
 
 // ===== TEXT ENTRY BUTTON =====
-class TextEntryButton extends Button {
+class TextEntryButton extends Button {  //-------------- Nicolas - 23/03/26 - 30/03/26
   int maxlen, inputOrder;
   boolean hasError;
   int shakeTimer;

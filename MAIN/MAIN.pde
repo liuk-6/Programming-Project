@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.TreeSet;
 
-///////////// CONSTANT VALUES ////////////////
+//--------------CONSTANT VALUES ----------------- (Nicolas - 16/03/26 - Added color constant for UI consistency)
 color RY_BLUE = #2B4779;
 color RY_GOLD = #F4CA35;
 color RY_WHITE = #FFFFFF;
@@ -21,26 +21,26 @@ color ACCENT    = #F4CA35; // gold
 color TEXT_MAIN = #EAEAF0;
 color TEXT_SUB  = #9AA3B2;
 
-/////////////GLOBAL VARIABLES///////////////////////
+//---------------GLOBAL VARIABLES------------------- (Nicolas - 16/03/26 - Added cursor blink feature + declare and initialize UI 
 String[] lines;
 boolean showCursor = true;
 int cursorBlinkRate = 30; // frames (≈0.5 sec at 60fps)
 
 UILayout ui;
 
-/////////// MAIN SCREENS AT START ////////////////
+//--------------MAIN SCREENS AT START --------------- (Nicolas - 16/03/2026 - 23/03/26 - Added screens constant identifiers
 final int home = 1;
 final int queries = 2;
 final int dashboard = 3;
 final int exit = 4;
 
-////////// SECOND LAYER SCREENS ////////////////
+//------------- SECOND LAYER SCREENS -----------------
 final int flightsSearch = 5;
 final int flightsDate = 6;
 final int flightsTraffic = 7;
 final int flightsBooked = 20;
 
-/////////THIRD LAYER - OUTPUT SCREENS ///////////
+//-------------THIRD LAYER - OUTPUT SCREENS -------------
 final int flightsOutput = 8;
 final int dateOutput = 9;
 final int trafficOutput = 10;
@@ -52,18 +52,17 @@ final int bookingsScreens = 15;
 final int flightsOutputTwoWay = 16;
 final int mapScreen = 17;
 final int routeDetails = 18;
-
-
 final int flightConfirmedScreen = 19;
 
-//////// STORING CHOICE //////////////////////
+//----------------STORING CHOICE --------------------------- (Nicolas - 23/03/26 - Addded screen history feature)
 int currentScreen;
 ArrayList<Integer> screenHistory = new ArrayList<Integer>();
 UserSelection selection;
 Screen nextScreen = null;    // the screen we're transitioning to
 float transitionAlpha = 0;   // fade opacity
 boolean inTransition = false;
-////////DISPLAY TABLE FOOTPRINT ///////////
+
+//--------------DISPLAY TABLE FOOTPRINT ----------------------
 Table myData;
 TableDisplay myFlights;
 
@@ -81,7 +80,7 @@ float footerH;
 String statusFilter = "ALL";
 String selectedAirport = null;  // currently selected airport code
 
-///////// AIRPORT REGIONS ///////////////////
+//---------------AIRPORT REGIONS ----------------------------
 String[] westCoastAirports = {
   "LAX", "SFO", "SAN", "OAK", "SJC", "BUR", "LGB", "SNA", "SMF", "ONT", "SBA", "MRY", "FAT", "PSP", "SCK", "SMX",
   "PDX", "SEA", "EUG", "MFR", "BLI", "GEG",
@@ -139,21 +138,22 @@ PImage CLT;
 PImage DEN;
 PImage ORD;
 
+//-----------------SCREENS DECLARATIONS --------------------- (Nicolas - 16/03/26 - Declared first 8 screens)
 QueriesScreen queriesScreen;
 QueriesFlights flightsSearchScreen;
 QueriesDate flightDateScreen;
 TrafficScreen trafficScreen;
 FlightsOutputScreen flightsOutputScreen;
+Screen getMessage;
+FlightConfirmedScreen flightConfirmedScreenObj;
+TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
+//------------------------------------------------------------- 
+RouteDetailsScreen routeDetailsScreen;
 DashboardScreen dashboardScreen;
 GraphDashboardScreen graphDashboardScreen;
 MapScreen flightMapScreen;
-Screen getMessage;
-RouteDetailsScreen routeDetailsScreen;
 
 
-FlightConfirmedScreen flightConfirmedScreenObj;
-
-TwoWayFlightsOutputScreen twoWayFlightsOutputScreen;
 BookingsScreen bookingsScreen;
 Route selectedRoute = null;
 
@@ -180,8 +180,8 @@ ArrayList<Flight> returnFlights    = new ArrayList<Flight>();
 
 PFont font;
 
-//////////////////////METHODS/////////////////////////////////////////////////////
-boolean clickedSelectButton(float cardX, float cardY, float cardW) {
+//-----------------------------METHODS------------------------------------------------
+boolean clickedSelectButton(float cardX, float cardY, float cardW) { //---Nicolas - 30/03/26 )
   float selectX = cardX + cardW - 120;
   float selectY = cardY + 25;
   float selectW = 100;
@@ -195,7 +195,7 @@ boolean clickedSelectButton(float cardX, float cardY, float cardW) {
     );
 }
 
-void goToWithTransition(Screen s) {
+void goToWithTransition(Screen s) { 
   nextScreen = s;
   transitionAlpha = 0;
   inTransition = true;
@@ -224,7 +224,7 @@ void drawSearchInfoPanel() {
   text("• Analyze traffic across regions", width/2, y + 95);
   text("• Explore flights by travel date", width/2, y + 120);
 }
-void goTo(int nextScreen) {
+void goTo(int nextScreen) {  // ----Nicolas - 30/03/26)
   if (nextScreen == mapScreen) {
     flightMapScreen.reset();
   }
@@ -232,12 +232,13 @@ void goTo(int nextScreen) {
   currentScreen = nextScreen;
 }
 
-void goBack() {
+void goBack() { // ----Nicolas - 30/03/26)
   if (screenHistory.size() > 0) {
     currentScreen = screenHistory.remove(screenHistory.size() - 1);
   }
 }
-void addFlightsToTable(ArrayList<Flight> list) {
+
+void addFlightsToTable(ArrayList<Flight> list) { // ----------Nicolas - 16/03/26
   myData.clearRows();
   for (Flight f : list) {
     TableRow row = myData.addRow();
@@ -260,13 +261,13 @@ void addFlightsRoutesToTable(ArrayList<Flight> list) {
   }
 }
 
-String formatTime(int time) {
+String formatTime(int time) { //---------------Nicolas - 30/03/26-----------------
   // Converts HHMM integer to "HH:MM" string
   int h = time / 100;
   int m = time % 100;
   return nf(h, 2) + ":" + nf(m, 2);
 }
-String formatDate(String date) {
+String formatDate(String date) { // -------------Nicolas - 30/03/26---------------
   // Converts "YYYY-MM-DD" or "MM/DD/YYYY" to "DD/MM/YYYY"
   if (date.indexOf("-") > -1) {
     String[] parts = date.split("-");
@@ -349,7 +350,7 @@ void searchBusiestRoutes() {
 
 
 // ---- FLIGHT SEARCH METHODS ----
-void checkDepartureDateAvailability(String typedDate) {
+void checkDepartureDateAvailability(String typedDate) {                  //--------Nicolas - 06/03/26
   DateTimeFormatter csvFormat = DateTimeFormatter.ofPattern("M/d/yyyy");
   LocalDate queryDate = null;
 
@@ -392,7 +393,7 @@ void checkDepartureDateAvailability(String typedDate) {
 }
 
 
-void generateFlightCards() {
+void generateFlightCards() { // --------- Nicolas - 30/03/26
   departureCards.clear();
   returnCards.clear();
 
@@ -410,7 +411,7 @@ void generateFlightCards() {
 // -------------------------
 // CLEAN CITY NAME METHOD
 // -------------------------
-String cleanCityName(String city) {
+String cleanCityName(String city) {    // ----Nicolas - 06/04/26
   if (city == null) return "";
   // Remove uppercase initials at start (e.g., "NY - New York")
   city = city.replaceAll("^[A-Z]{1,3}\\s*-?\\s*", "");
@@ -419,7 +420,7 @@ String cleanCityName(String city) {
   return city.trim();
 }
 
-String capitalizeWords(String str) {
+String capitalizeWords(String str) {   // --------Nicolas - 06/04/26
   if (str == null || str.isEmpty()) return "";
   String[] words = str.trim().toLowerCase().split("\\s+"); // split by spaces
   StringBuilder sb = new StringBuilder();
@@ -534,7 +535,7 @@ void setup() {
   twoWayFlightsOutputScreen = new TwoWayFlightsOutputScreen(departureFlights, returnFlights);
 }
 
-void draw() {
+void draw() { //--------------------- Nicolas - 23/03/26
   background(30);
   if (frameCount % cursorBlinkRate == 0) {
     showCursor = !showCursor;
@@ -648,7 +649,7 @@ void drawSingleZone(ArrayList<Route> routes, String title, color bgColor) {
     text("No routes found", width/2, startY + cardH/2);
   }
 }
-void mousePressed() {
+void mousePressed() { // ---------- Nicolas - 23/03/26
   // Back button handled globally
   if (currentScreen == flightsTraffic &&
     mouseX > 30 && mouseX < 110 &&
@@ -663,11 +664,11 @@ void mousePressed() {
   }
 }
 
-void keyPressed() {
+void keyPressed() { // ----Nicolas - 23/03/26
   if (currentScreenObject != null) currentScreenObject.keyPressed(key);
 }
 
-void mouseWheel(MouseEvent event) {
+void mouseWheel(MouseEvent event) { // -----Nicolas - 23/03/26
   float e = event.getCount();
   if (currentScreenObject != null) {
     if (currentScreenObject instanceof FlightsOutputScreen) {

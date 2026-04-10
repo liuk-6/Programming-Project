@@ -1,4 +1,4 @@
-class Screen {
+class Screen {          //-------------- Nicolas - 16/03/26 - 30/03/26 ---- super class for each class implementation
 
   UILayout layout = new UILayout();
   ArrayList<Button> buttons = new ArrayList<Button>();
@@ -67,7 +67,7 @@ class Screen {
   }
 }
 /////////////////////// MENU SCREEN //////////////////////////////////////
-class HomeScreen extends Screen {
+class HomeScreen extends Screen {  //-------------- Nicolas - 16/03/26 - 30/03/26 ---- shows features menu
 
   int NAV_HEIGHT = 85;
 
@@ -395,7 +395,7 @@ class HomeScreen extends Screen {
 }
 /////////////////////////////////FIRST OPTIONS SCREENS /////////////////////////////////
 
-class QueriesScreen extends Screen {
+class QueriesScreen extends Screen {//-------------- Nicolas - 16/03/26 - 30/03/26 --- allows you to select which type of search to do
 
   ArrayList<Flight> flights;
 
@@ -521,7 +521,7 @@ class QueriesScreen extends Screen {
 }
 
 // Card button class with hover animation
-class CardButton extends Button {
+class CardButton extends Button {  //-------------- Nicolas - 16/03/26 - 30/03/26 ----- model footprint for showing flights in output screens
   float hoverScale = 1.0;
   float targetScale = 1.0;
 
@@ -668,7 +668,7 @@ class DashboardScreen extends Screen {
 }
 //////////////////// SECOND SELECTION CLASSES AFTER CHOOSEN QUERIES SEARCH //////////////////////////////////////
 
-class QueriesFlights extends Screen {
+class QueriesFlights extends Screen {  //-------------- Nicolas - 16/03/26 - 30/03/26 --- search engine for one way and two way flights
   TextEntryButton inputFrom, inputTo, inputStart, inputEnd;
   TextEntryButton currentInput;
   boolean roundTrip = true;   // default like airline apps
@@ -1393,9 +1393,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
   
   void mousePressed() {
 
-    // =====================================================
-    // ---- CALENDAR MONTH SWITCH (MOVED TO TOP) ----
-    // =====================================================
+    // ---- CALENDAR MONTH SWITCH ----
     if (showCalendar && calendarTarget != null) {
       float x = calendarTarget.x;
       float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
@@ -1425,9 +1423,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
       }
     }
 
-    // =====================================================
-    // ---- CALENDAR DAY CLICK (MOVED UP)
-    // =====================================================
+    // ---- CALENDAR DAY CLICK 
     if (showCalendar && calendarTarget != null) {
       float x = calendarTarget.x;
       float y = calendarTarget.y + calendarTarget.h + 10; // match drawCalendar y
@@ -1455,9 +1451,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
       }
     }
 
-    // =====================================================
     // ---- SUGGESTIONS DROPDOWN ----
-    // =====================================================
     if (currentInput != null && suggestions.size() > 0) {
         float x = currentInput.x;
         float y = currentInput.y + currentInput.h;
@@ -1486,9 +1480,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
         }
     }
 
-    // =====================================================
     // INPUT SELECTION
-    // =====================================================
     TextEntryButton[] allInputs = roundTrip
       ? new TextEntryButton[]{inputFrom, inputTo, inputStart, inputEnd}
       : new TextEntryButton[]{inputFrom, inputTo, inputStart};
@@ -1523,9 +1515,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
       }
     }
 
-    // =====================================================
-    // BUTTONS (UNCHANGED)
-    // =====================================================
+    // BUTTONS 
     for (Button b : buttons) {
       if (b == inputEnd && !roundTrip) continue;
 
@@ -1548,9 +1538,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
       }
     }
 
-    // =====================================================
     // SWAP BUTTON
-    // =====================================================
     if (mouseX > swapX && mouseX < swapX + swapW &&
         mouseY > swapY && mouseY < swapY + swapH) {
     
@@ -1634,7 +1622,7 @@ void handleSuggestionClick(int mouseX, int mouseY) {
   }
 }
 
-class QueriesDate extends Screen {
+class QueriesDate extends Screen {  //-------------- Nicolas - 16/03/26 - 30/03/26 --- allows you to do a search by date range and origin
   TextEntryButton inputButton;
   TextEntryButton inputButton2;
   TextEntryButton originButton;
@@ -1723,9 +1711,7 @@ class QueriesDate extends Screen {
   
       return result;
   }
-// -------------------------------
 // Populate allCities from flightsList
-// -------------------------------
   void populateAllCities() {
   
         HashSet<String> unique = new HashSet<String>();
@@ -2164,9 +2150,7 @@ class QueriesDate extends Screen {
   
   adjustedMouseY = mouseY - layoutOffsetY;
   
-  // ----------------------------
   // --- ORIGIN SUGGESTIONS CLICK
-  // ----------------------------
   if (showOriginSuggestions && suggestions.size() > 0) {
     float x = originButton.x;
     float y = originButton.y + originButton.h;
@@ -2190,9 +2174,7 @@ class QueriesDate extends Screen {
     }
   }
 
-  // ----------------------------
   // --- CALENDAR CLICK LOGIC ---
-  // ----------------------------
   if (showCalendar && calendarTarget != null) {
     float x = calendarTarget.x;
     float y = calendarTarget.y + calendarTarget.h + 10;
@@ -2239,9 +2221,7 @@ class QueriesDate extends Screen {
     }
   }
 
-  // ----------------------------
   // --- ORIGIN BUTTON CLICK ----
-  // ----------------------------
   if (originButton.over(mouseX, adjustedMouseY)) {
       originButton.hasError = false;
       currentInput = originButton;
@@ -2256,9 +2236,7 @@ class QueriesDate extends Screen {
       return;
   }
 
-  // ----------------------------
   // --- DATE INPUT BUTTONS -----
-  // ----------------------------
   if (inputButton.over(mouseX, adjustedMouseY)) {
     showOriginSuggestions = false;
     currentInput = inputButton;
@@ -2276,9 +2254,7 @@ class QueriesDate extends Screen {
   
   
 
-  // ----------------------------
   // --- OTHER BUTTONS ----------
-  // ----------------------------
   for (Button b : buttons) {
     if (b.over(mouseX, adjustedMouseY)) {
       println("Clicked: " + b.type);
@@ -2482,7 +2458,7 @@ class TrafficScreen extends Screen {
 
 } 
 ////////////////////////OUTPUT RESULTS OF QUERIES CHOOSEN //////////////////////////////////////
-class FlightsOutputScreen extends Screen {
+class FlightsOutputScreen extends Screen {  //-------------- Nicolas - 16/03/26 - 30/03/26 - to show flights for one-way searches in flight query and date query
 
   float scrollY = 0;        // current scroll offset
   float scrollSpeed = 40;   // how much the list scrolls per mouse wheel tick
@@ -2647,7 +2623,7 @@ class FlightsOutputScreen extends Screen {
     scrollY = constrain(scrollY, minScroll, 0);
   }
 }
-class TwoWayFlightsOutputScreen extends Screen {
+class TwoWayFlightsOutputScreen extends Screen {  //-------------- Nicolas - 16/03/26 - 30/03/26 ---- shows flights output search for two-way flights
 
   ArrayList<Flight> outboundFlights;
   ArrayList<Flight> returnFlights;
@@ -3007,7 +2983,7 @@ class BookingsScreen extends Screen //Samuel Cumani, 02/04/2025, added booking s
   }
 }
 
-class FlightConfirmedScreen extends Screen {
+class FlightConfirmedScreen extends Screen {//-------------- Nicolas - 16/03/26 - 30/03/26 --- To show the user a confirmation message once flight is booked
 
   String message;
   int timer = 0;         
