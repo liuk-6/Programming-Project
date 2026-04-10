@@ -408,9 +408,7 @@ void generateFlightCards() { // --------- Nicolas - 30/03/26
   }
 }
 
-// -------------------------
 // CLEAN CITY NAME METHOD
-// -------------------------
 String cleanCityName(String city) {    // ----Nicolas - 06/04/26
   if (city == null) return "";
   // Remove uppercase initials at start (e.g., "NY - New York")
@@ -487,12 +485,12 @@ void setup() {
   searchHistory = new ArrayList<UserSelection>();
   results = new ArrayList<Flight>();
 
-  //////////////////// Screens ////////////////////
+  //////////////////// Screens //////////////////////-------------- Nicolas - 16/03/26 - 30/03/26 --- 
   currentScreen            = home;
   queriesScreen            = new QueriesScreen();
   flightsSearchScreen      = new QueriesFlights();
   flightDateScreen         = new QueriesDate();
-  trafficScreen            = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes); // <--- NEW
+  trafficScreen            = new TrafficScreen(eastCoastRoutes, centralRoutes, westCoastRoutes);
   flightsOutputScreen      = new FlightsOutputScreen();
   dashboardScreen          = new DashboardScreen();
   graphDashboardScreen     = new GraphDashboardScreen();
