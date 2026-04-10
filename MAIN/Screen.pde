@@ -123,6 +123,8 @@ class HomeScreen extends Screen {
     buttons.add(new Button(pad, pad,
       100, buttonH, "EXIT", "exit", 16, true));
 
+                                                                                     // Diya Sama, 01/04/2026, Base of Slideshow along with captions
+                                                                                     // Katie Liu, 04/04/2026, Updated Slideshow images and improved Buttons
 
     slides = new PImage[]{
       loadImage("Manhatten.jpg"),
@@ -569,7 +571,7 @@ class CardButton extends Button {
 }
 
 
-
+                                                                                              //Katie Liu, 26/03/2026 Created Dashboard Screen
 class DashboardScreen extends Screen {
 
   DashboardScreen() {

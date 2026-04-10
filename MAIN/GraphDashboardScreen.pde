@@ -5,7 +5,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
   graphScreen screen1, screen2;
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
-                    // Sophie 25/3 - initialising variables for the search airport piechart   {
+                                                                      // Sophie 25/3 - initialising variables for the search airport piechart   {
   String activeFact = "";
   String activeBarView = "Destination";
   AirlineRateChart cancelRateChart;
@@ -31,7 +31,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
   float searchBoxX, searchBoxY, searchBoxW = 200, searchBoxH = 38;
   // Search button bounds
   float searchBtnX, searchBtnY, searchBtnW = 100, searchBtnH = 38;
-                                     // } Katie{ 
+                                                                        // } Katie{ 
   color[] airportColours = {
      color(#4F772D),
       color(#FCBF49),
@@ -505,7 +505,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
       }
     }
   }
-              // } Sophie 20/3 hard coding fun facts for airports . Katie 29/3 - further improving formating and UI {
+                                                              // } Sophie 20/3 hard coding fun facts for airports . Katie 29/3 - further improving formating and UI {
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
       activeFact = "LAX - \nLos Angeles International Airport. \n\nThe eighth-busiest airport in the world serving over 75 million guests in 2023 \n\n It has an official song.";
@@ -607,7 +607,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
       activeFact = code + " - No facts available yet.";
     }
   }
-
+                                                                                        // Katie Liu, 05/04 Improved text boxes
   void drawInfoBox(String msg) {
     int boxW = 250;
     int x = 700;
@@ -706,7 +706,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
      popMatrix();
      popStyle();
   }
-                        // } Sophie 2/4 - creating the tab for the search pie chart  {
+                                                                                    // } Sophie 2/4 - creating the tab for the search pie chart  {
 void drawAirportSearchView() {
     pushStyle();
 
@@ -926,7 +926,7 @@ void runAirportSearch() {
     activeFact = "";
   }
 }
-                          // } Sophie 19/3 - basic widget class for navigating the screens  {
+                                                                                    // } Sophie 19/3 - basic widget class for navigating the screens  {
 /////////WIDGETS////////////
 class Widget {
   int x, y, w, h;
@@ -990,7 +990,7 @@ class OriginBarChart {
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
   HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
-  OriginBarChart(){ // Katie{
+  OriginBarChart(){                                                                         // Katie 31/03/2026, Changed Colours{
     airportColours.put("ATL", color(78, 96, 129));
     airportColours.put("LAX", color(65, 74, 90));
     airportColours.put("ORD", color(51));
@@ -1129,7 +1129,7 @@ class OriginBarChart {
       return null;
     }
 }
-                              //} Katie {
+                                                                                                //} Katie {
 //////////GRAPHS SCREEN////////
 class graphScreen{
   ArrayList<Widget> widgets = new ArrayList<Widget>();
@@ -1161,14 +1161,14 @@ class graphScreen{
     }
   }
 }
-                    //} Sophie 18/3 {
+                                                                                            //} Sophie 18/3 {
 class BarChart {
   String[] airports;   // top 10 airport codes
   float[] values;      // top 10 counts
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
   HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
-  BarChart(){ // Katie{
+  BarChart(){                                                                       // Katie 31/03/2026, Changed colours {
     airportColours.put("ATL", color(78, 96, 129));
     airportColours.put("LAX", color(65, 74, 90));
     airportColours.put("ORD", color(51));
@@ -1307,7 +1307,7 @@ class BarChart {
       return null;
     }
 }
-                        // } Sophie 25/3{
+                                                                                          // } Sophie 25/3{
 class AirlineStats {
   int total = 0;
   int cancelled = 0;
@@ -1353,7 +1353,7 @@ class AirlineRateChart {
 
   HashMap<String, Integer> airlineColours = new HashMap<String, Integer>();
 
-  AirlineRateChart() {// Katie{
+  AirlineRateChart() {                                                              // Katie 31/03/2026 Changed colours{
     pg = createGraphics(530, 400);
     airlineColours.put("AA", color(78, 96, 129));
     airlineColours.put("DL", color(65, 74, 90));
