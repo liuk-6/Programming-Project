@@ -424,7 +424,7 @@ class GraphDashboardScreen extends Screen {    // continuous code
                 airportSearchInput = "";
             }
         
-          // ✅ suggestion clicks MUST be inside this block
+          // suggestion clicks MUST be inside this block
           } else if (airportSuggestions.size() > 0 && airportInputActive) {
         
             float sugH = 30;
