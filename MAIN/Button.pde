@@ -199,7 +199,7 @@ class TextEntryButton extends Button {  //-------------- Nicolas - 23/03/26 - 30
   // Add a character to the text entry
  void addChar(char s) {
   
-    hasError = false; // ⭐ remove error when user edits
+    hasError = false; // remove error when user edits
     shakeTimer = 0;
     
     if (s == BACKSPACE) {

@@ -2566,7 +2566,7 @@ class FlightsOutputScreen extends Screen {  //-------------- Nicolas - 16/03/26 
     float selectW = 100;
     float selectH = 50;
   
-    // ✅ Adjust for scroll offset
+    // Adjust for scroll offset
     float adjustedMouseY = mouseY - scrollY;
   
     return (
@@ -2764,7 +2764,7 @@ class TwoWayFlightsOutputScreen extends Screen {  //-------------- Nicolas - 16/
     float selectW = 100;
     float selectH = 50;
   
-    // ✅ Adjust for scroll offset
+    // Adjust for scroll offset
     float adjustedMouseY = mouseY - scrollY -80;
   
     return (
