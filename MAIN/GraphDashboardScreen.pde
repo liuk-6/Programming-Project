@@ -1,17 +1,17 @@
-class GraphDashboardScreen extends Screen {
+class GraphDashboardScreen extends Screen {    // continuous code
   BarChart destChart;
   OriginBarChart originChart;
   PieChart pieChart;
   graphScreen screen1, screen2;
   graphScreen currentScreen;
   TopAirlinesPie airlinePie;
-  
+                    // Sophie 25/3 - initialising variables for the search airport piechart   {
   String activeFact = "";
   String activeBarView = "Destination";
   AirlineRateChart cancelRateChart;
   AirlineRateChart delayRateChart;
   HashMap<String, AirlineStats> airlineStats;
-  
+                                    // } Sophie 1/4 {
   String activePieView = "Overall Flights";
     // --- NEW: Airport search pie chart fields ---
   String airportSearchInput = "";        // what the user has typed
@@ -21,7 +21,7 @@ class GraphDashboardScreen extends Screen {
   boolean airportSearchHasResult = false;
   ArrayList<String> airportSuggestions = new ArrayList<String>();
   int airportHoveredSlice = -1;
-  
+                                      
   // Results from airport search
   int airportOnTime = 0;
   int airportDelayed = 0;
@@ -32,13 +32,13 @@ class GraphDashboardScreen extends Screen {
   float searchBoxX, searchBoxY, searchBoxW = 200, searchBoxH = 38;
   // Search button bounds
   float searchBtnX, searchBtnY, searchBtnW = 100, searchBtnH = 38;
-  
+                                     // } Katie{ 
   color[] airportColours = {
      color(#4F772D),
       color(#FCBF49),
       color(#D62828)
   }; 
-  
+                                     
   boolean showDestinationChart = true; // default view
   PImage currentAirportImg;
   float ImgX;
@@ -46,8 +46,8 @@ class GraphDashboardScreen extends Screen {
   float w;
   float h;
 
-  
-  GraphDashboardScreen() {
+              // }                        
+  GraphDashboardScreen() {  
     // for top airlines
     loadAirlineNames();
     HashMap<String, Integer> counts = countAirlineTraffic();
@@ -65,7 +65,7 @@ class GraphDashboardScreen extends Screen {
   
     screen1 = new graphScreen(color(150, 200, 255));
     screen2 = new graphScreen(color(255, 200, 150));
-  
+      
         // --- Rate charts (setup) ---
     airlineStats = computeAirlineStats();
     cancelRateChart = new AirlineRateChart();
@@ -76,17 +76,17 @@ class GraphDashboardScreen extends Screen {
     delayRateChart.compute(airlineStats);
  
     buttons.add(new Button(30, 22, 80, 30, "BACK", "back", 15, false));
-    
+                        // Sophie 1/4 - location of search box { 
     searchBoxX = width/2 - 160;
     searchBoxY = 160;
     searchBtnX = searchBoxX + searchBoxW + 15;
     searchBtnY = searchBoxY;
-  
+                      // } 
     currentScreen = screen1;
     
   }
   
-  void draw() {
+  void draw() {      
     layout.beginPage(title);
     drawContent();
     drawImages();
@@ -116,7 +116,7 @@ class GraphDashboardScreen extends Screen {
       float chartY = (height - 250) /2;
       pushMatrix();
       translate(chartX, chartY);
-      
+      //                  Sophie 5/4 - reformatting previous code and changing UI to have a bar at the top to switch between tabs {
        if (activeBarView.equals("Destination")) {
         destChart.draw();
       } else if (activeBarView.equals("Origin")) {
@@ -135,7 +135,7 @@ class GraphDashboardScreen extends Screen {
       
         if (activeBarView.equals("% Cancelled") || activeBarView.equals("% Delayed")) {
         AirlineRateChart chart = activeBarView.equals("% Cancelled") ? cancelRateChart : delayRateChart;
-        
+                            // } 
         // Y-axis label (rotated) — now in screen coords
         pushMatrix();
         translate(chartX - 15, chartY + chart.pg.height/2);
@@ -183,7 +183,7 @@ class GraphDashboardScreen extends Screen {
         drawAirportSearchView();
       }
     }
-  
+                           // }
   
     // Draw airport fact box
     if (activeFact != "" && currentScreen == screen1) {
@@ -204,7 +204,7 @@ class GraphDashboardScreen extends Screen {
       drawPieTabs();
     }
 
-    // Draw airport suggestions last so they appear over all charts and panels
+    // Sophie 6/4 {
     if (currentScreen == screen2 && activePieView.equals("Search Airport") &&
         airportInputActive && airportSuggestions.size() > 0) {
       float sugH = 30;
@@ -235,6 +235,7 @@ class GraphDashboardScreen extends Screen {
            searchBoxW, airportSuggestions.size() * sugH, 0, 0, 4, 4);
       noStroke();
     }
+    
   }
   
     void highlightButton(Button b)  {
@@ -242,8 +243,9 @@ class GraphDashboardScreen extends Screen {
       rect(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 8);
       b.display();
     
-     // Draw dropdown on top of everything else
+     
   }
+                         // } Sophie 3/5 - creating code to draw the tabs at the top of the graphs screens { 
   void drawPieTabs() {
     String[] tabs = {"Overall Flights", "By Airline", "Search Airport"};
     int tabCount = tabs.length;
@@ -302,7 +304,7 @@ class GraphDashboardScreen extends Screen {
       boolean isHovered = (mouseX > tx && mouseX < tx + tabW &&
                            mouseY > tabY && mouseY < tabY + tabH);
 
-      // Shadow
+      // Kate{
       noStroke();
       fill(0, 40);
       rect(tx + 2, tabY + 3, tabW, tabH, 10);
@@ -327,7 +329,9 @@ class GraphDashboardScreen extends Screen {
       textSize(14);
       text(tabs[i].toUpperCase(), tx + tabW/2, tabY + tabH/2);
     }
+    // } 
   }
+                          // } 
   void mousePressed() {
     for (Button b : buttons) {
       if(b.over(mouseX, mouseY)) {
@@ -338,7 +342,7 @@ class GraphDashboardScreen extends Screen {
       }
     }
     if (currentScreen == screen1) {
-    
+    //       Sophie 5/4 - making the tabs at the top of the screen interactive {
       String[] tabs = {"Destination", "Origin", "% Cancelled", "% Delayed"};
       int tabCount = tabs.length;
       float tabW = 210;
@@ -464,7 +468,7 @@ class GraphDashboardScreen extends Screen {
           }
       }
      }
-  
+  // } Sophie 1/4 changing variable values based on screen {
     Widget w = currentScreen.getEvent(mouseX, mouseY);
   
     if (w == null) return;
@@ -480,10 +484,12 @@ class GraphDashboardScreen extends Screen {
       currentAirportImg = null;
     }
   }
+  // }
   
   void mouseMoved() {
     currentScreen.updateHover(mouseX, mouseY);
   }
+                // Sophie 2/4 - creating a new function for the search airport pie chart section {
   void keyPressed(char k) {
     // NEW: route keyboard input to airport search box when it's active
     if (currentScreen == screen2 && activePieView.equals("Search Airport") && airportInputActive) {
@@ -500,7 +506,7 @@ class GraphDashboardScreen extends Screen {
       }
     }
   }
-  
+              // } Sophie 20/3 hard coding fun facts for airports . Katie 29/3 - further improving formating and UI {
   void showAirportFacts(String code) {
     if (code.equals("LAX")) {
       activeFact = "LAX - \nLos Angeles International Airport. \n\nThe eighth-busiest airport in the world serving over 75 million guests in 2023 \n\n It has an official song.";
@@ -665,8 +671,8 @@ class GraphDashboardScreen extends Screen {
   
     int boxW = 260;
     int boxH = 120;
-    int x = width/2 +200;                 // right side of screen
-    int y = 500;                 // adjust as needed
+    int x = width/2 +200;               
+    int y = 500;                
   
     // Background
     fill(255);
@@ -701,6 +707,7 @@ class GraphDashboardScreen extends Screen {
      popMatrix();
      popStyle();
   }
+                        // } Sophie 2/4 - creating the tab for the search pie chart  {
 void drawAirportSearchView() {
     pushStyle();
 
@@ -920,7 +927,7 @@ void runAirportSearch() {
     activeFact = "";
   }
 }
-
+                          // } Sophie 19/3 - basic widget class for navigating the screens  {
 /////////WIDGETS////////////
 class Widget {
   int x, y, w, h;
@@ -957,7 +964,7 @@ class Widget {
     return mx > x && mx < x+w && my > y && my < y+h;
   }
 }
-
+          
 ////////////AIRPORT////////////
 
 class AirportButton {
@@ -984,7 +991,7 @@ class OriginBarChart {
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
   HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
-  OriginBarChart(){
+  OriginBarChart(){ // Katie{
     airportColours.put("ATL", color(78, 96, 129));
     airportColours.put("LAX", color(65, 74, 90));
     airportColours.put("ORD", color(51));
@@ -997,7 +1004,7 @@ class OriginBarChart {
     airportColours.put("CLT", color(142, 89, 99));
     airportColours.put("PHX", color(103, 71, 44));
     airportColours.put("LGA", color(236, 174, 164));
-  }
+  }// }
     void setup() {
       buttons.clear();
       
@@ -1123,7 +1130,7 @@ class OriginBarChart {
       return null;
     }
 }
-
+                              //} Katie {
 //////////GRAPHS SCREEN////////
 class graphScreen{
   ArrayList<Widget> widgets = new ArrayList<Widget>();
@@ -1155,14 +1162,14 @@ class graphScreen{
     }
   }
 }
-
+                    //} Sophie 18/3 {
 class BarChart {
   String[] airports;   // top 10 airport codes
   float[] values;      // top 10 counts
   PGraphics pg;
   ArrayList<AirportButton> buttons = new ArrayList<AirportButton>();
   HashMap<String, Integer> airportColours = new HashMap<String, Integer>();
-  BarChart(){
+  BarChart(){ // Katie{
     airportColours.put("ATL", color(78, 96, 129));
     airportColours.put("LAX", color(65, 74, 90));
     airportColours.put("ORD", color(51));
@@ -1175,7 +1182,7 @@ class BarChart {
     airportColours.put("CLT", color(142, 89, 99));
     airportColours.put("PHX", color(103, 71, 44));
     airportColours.put("LGA", color(236, 174, 164));
-  }
+  }// }
     void setup() {
       buttons.clear();
       
@@ -1301,7 +1308,7 @@ class BarChart {
       return null;
     }
 }
-
+                        // } Sophie 25/3{
 class AirlineStats {
   int total = 0;
   int cancelled = 0;
@@ -1347,7 +1354,7 @@ class AirlineRateChart {
 
   HashMap<String, Integer> airlineColours = new HashMap<String, Integer>();
 
-  AirlineRateChart() {
+  AirlineRateChart() {// Katie{
     pg = createGraphics(530, 400);
     airlineColours.put("AA", color(78, 96, 129));
     airlineColours.put("DL", color(65, 74, 90));
@@ -1361,7 +1368,7 @@ class AirlineRateChart {
     airlineColours.put("HA", color(142, 89, 99));
     airlineColours.put("PHX", color(103, 71, 44));
     airlineColours.put("LGA", color(236, 174, 164));
-  }
+  }// }
 
   void compute(HashMap<String, AirlineStats> stats) {
     ArrayList<String> keys = new ArrayList<>(stats.keySet());
@@ -1478,3 +1485,4 @@ class AirlineRateChart {
     popStyle();
   }
 }
+                        //}

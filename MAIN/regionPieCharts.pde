@@ -1,14 +1,4 @@
-////////// REGIONS //////////////////////////////////////////////////////
-
-/////////////// AIRLINES/////////////////////////////////////////////////////
-// =========================================================
-//  AIRLINE CODE → AIRLINE NAME MAP
-// =========================================================
-
-// =========================================================
-//  AIRLINE CODE → AIRLINE NAME MAP
-// =========================================================
-
+//  Sophie 30/3 creating pie charts about most popular pie charts {
 HashMap<String, String> airlineNames = new HashMap<String, String>();
 
 void loadAirlineNames() {
@@ -77,14 +67,8 @@ HashMap<String, Integer> countAirlineTraffic() {
   }
 
   return counts;
-}
-
-
-
-// =========================================================
-//  TOP 10 PLUS OTHER PIE CHART CLASS (AIRLINES)
-// =========================================================
-
+} 
+                 
 class TopAirlinesPie {
   String[] labels;
   float[] values;
@@ -124,7 +108,7 @@ class TopAirlinesPie {
       values[limit] = otherTotal;
     }
 
-    color[] palette = {
+    color[] palette = {//Katie{
       color(#f0c571),
       color(#59a89c),
       color(#0b81a2),
@@ -145,10 +129,6 @@ class TopAirlinesPie {
     }
   }
 
-
-  // ---------------------------------------------------------
-  // DRAW PIE CHART
-  // ---------------------------------------------------------
   void draw(float x, float y) {
     float total = 0;
     for (float v : values) total += v;
@@ -239,7 +219,7 @@ class TopAirlinesPie {
     }
   }
 }
-
+                                    //  } Sophie 16/3 creating simple pie chart to represent total flight punctuality {
 /////////PIE CHART///////
 class PieChart {
   float percentOnTime;
@@ -477,4 +457,4 @@ class PieChart {
       };
     }
     
-}
+}                  //}
